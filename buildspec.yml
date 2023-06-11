@@ -11,7 +11,7 @@ phases:
       - echo Logging in to Amazon ECR...
       - aws --version
       - aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 570772999717.dkr.ecr.us-east-2.amazonaws.com
-      - REPOSITORY_URI=570772999717.dkr.ecr.us-east-2.amazonaws.com/recipi-container-repository/recipi-application
+      - REPOSITORY_URI=570772999717.dkr.ecr.us-east-2.amazonaws.com/recipi-container-repository
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
