@@ -9,6 +9,7 @@ phases:
   install:
     runtime-versions:
       docker: 24
+      aws: 2.10.0
   pre_build:
     commands:
       - echo Logging in to Amazon ECR...
