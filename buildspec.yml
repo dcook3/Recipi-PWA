@@ -14,6 +14,8 @@ phases:
       - REPOSITORY_URI=570772999717.dkr.ecr.us-east-2.amazonaws.com/recipi/application
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
+      - CLUSTER_NAME=RecipiCluster
+      - SERVICE_NAME=Recipi-PWA-WebServer
   build:
     commands:
       - echo Build started on `date`
@@ -27,7 +29,7 @@ phases:
       - docker push $REPOSITORY_URI:latest
       - docker push $REPOSITORY_URI:$IMAGE_TAG
       - echo Writing image definitions file...
-      - aws ecs update-service --cluster RecipiCluster --service Recipi-PWA-WebServer --force-new-deployment --region us-east-2
+#      - aws ecs update-service --cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment --region us-east-2
 #      - printf '[{"name”:"recipi-container-repository","imageUri":"%s"}]' $REPOSITORY_URI:$IMAGE_TAG > imagedefinitions.json
 #artifacts:
 #  files: imagedefinitions.json
