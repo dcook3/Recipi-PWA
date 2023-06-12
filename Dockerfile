@@ -11,4 +11,4 @@ RUN dotnet publish Foodi-Application-NET-7.0.csproj -c Release -o /app/publish
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
 COPY --from=publish /app/publish/wwwroot .
-COPY nginx.conf /etc/nginx/nginx.co
+COPY nginx.conf /etc/nginx/nginx.conf
