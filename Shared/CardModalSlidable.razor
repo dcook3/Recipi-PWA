@@ -1,0 +1,40 @@
+﻿<div @ontouchenter="HandleTouchEnter" @ontouchmove="HandleTouchMove" class="@collapseStatus" id="collapsable" style="background-color: @backgroundColor; height: @height; width:@width">
+   
+</div>
+
+@code {
+    private float height;
+    private float width;
+    private string backgroundColor;
+    private string collapseStatus;
+    bool touchEnterHasHappened = false;
+    double xDown;
+    double yDown;
+
+    public void HandleTouchEnter(TouchEventArgs e)
+    {
+        xDown = e.TargetTouches[0].ClientX;
+        yDown = e.TargetTouches[0].ClientY;
+        touchEnterHasHappened = true;
+    }
+
+    public void HandleTouchMove(TouchEventArgs e)
+    {
+        if (touchEnterHasHappened)
+        {
+            double xDiff = xDown - e.TargetTouches[0].ClientX;
+            double yDiff = yDown - e.TargetTouches[0].ClientY;
+            if (yDiff > 0)
+            {
+                if (Math.Abs(xDiff) <= Math.Abs(yDiff))
+                {
+                    
+                }
+                else
+                {
+                    //hide element
+                }
+            }
+        }
+    }
+}
