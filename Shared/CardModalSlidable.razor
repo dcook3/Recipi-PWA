@@ -6,7 +6,7 @@
     private float height;
     private float width;
     private string backgroundColor;
-    private string collapseStatus;
+    private string collapseStatus = "collapse";
     bool touchEnterHasHappened = false;
     double xDown;
     double yDown;
@@ -28,11 +28,11 @@
             {
                 if (Math.Abs(xDiff) <= Math.Abs(yDiff))
                 {
-                    
+                    //begin element transition up
                 }
                 else
                 {
-                    //hide element
+                    //begin element transition down
                 }
             }
         }
