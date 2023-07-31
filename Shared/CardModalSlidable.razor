@@ -1,12 +1,10 @@
-﻿<div @ontouchenter="HandleTouchEnter" @ontouchmove="HandleTouchMove" class="@collapseStatus" id="collapsable" style="background-color: @backgroundColor; height: @height; width:@width">
+﻿<div @ontouchenter="HandleTouchEnter" @ontouchmove="HandleTouchMove" class="@collapseStatus" id="collapsable" style="background-color: @backgroundColor;">
    
 </div>
 
 @code {
-    private float height;
-    private float width;
-    private string backgroundColor;
-    private string collapseStatus = "collapse";
+    private string backgroundColor = "white";
+    private string collapseStatus = "collapsed";
     bool touchEnterHasHappened = false;
     double xDown;
     double yDown;
@@ -24,15 +22,16 @@
         {
             double xDiff = xDown - e.TargetTouches[0].ClientX;
             double yDiff = yDown - e.TargetTouches[0].ClientY;
+            //Add threshold to ensure that a swipe isnt accidentally registered
             if (yDiff > 0)
             {
                 if (Math.Abs(xDiff) <= Math.Abs(yDiff))
                 {
-                    //begin element transition up
+                    collapseStatus = "expand";
                 }
                 else
                 {
-                    //begin element transition down
+                    collapseStatus = "collapsed";
                 }
             }
         }
