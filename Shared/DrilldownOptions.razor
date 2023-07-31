@@ -1,0 +1,50 @@
+﻿@using Newtonsoft.Json;
+
+<ul class="list-group-flush">
+    @{
+        void ExtractSettings(JsonTextReader reader)
+        {
+            while(reader.Read())
+            {
+                if (reader.Value != null)
+                {
+                    string name = (string)reader.Value;
+                    <li>
+                        @if (reader.TokenType == JsonToken.PropertyName)
+                        {
+                            <label for="@name"></label>
+                        }
+                        @if (reader.TokenType == JsonToken.Integer)
+                        {
+                            int val = (int)reader.Value;
+                            <input type="number" for="@name" value="@val" />
+                        }
+                        else if (reader.TokenType == JsonToken.Float)
+                        {
+                            float val = (float)reader.Value;
+                            <input type="number" for="@name" value="@val" />
+                        }
+                        else if(reader.TokenType == JsonToken.Boolean)
+                        {
+                            bool val = (bool)reader.Value;
+                            <h3>Will make this a slider :)</h3>
+                            <select for="@name">
+                                <option>True</option>
+                                <option>False</option>
+                            </select>
+                        }
+                    </li>
+                }
+                else
+                {
+                    ExtractSettings(reader);
+                }
+            }
+        }
+        ExtractSettings(new JsonTextReader(new StringReader(jsonSettings)));
+    }
+</ul>
+
+@code {
+    private string jsonSettings;
+}

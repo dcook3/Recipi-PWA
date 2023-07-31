@@ -1,0 +1,11 @@
+{
+  "edit_profile": "https://recipiapp.com/profile/edit",
+  "notification": {
+    "Enable Push Notifications": true,
+    "Communication Settings": {
+      "Show New Message Notifications": true,
+      "Maximum Push Notifications": 5
+    }
+  },
+  "report_bug": "https://recipiapp.com/reports/bug"
+}
