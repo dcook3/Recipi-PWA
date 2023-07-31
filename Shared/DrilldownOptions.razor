@@ -1,4 +1,10 @@
 ﻿@using Newtonsoft.Json;
+@using Newtonsoft.Json.Linq;
+@inject IndexedDbAccessor IndexedDbAccessor
+
+<div id="header" class="bg-primary">
+    <i @onclick="SubmitHandler" class="fa-solid fa-caret-left "></i>
+</div>
 
 <ul class="list-group-flush">
     @{
@@ -12,7 +18,7 @@
                     <li>
                         @if (reader.TokenType == JsonToken.PropertyName)
                         {
-                            <label for="@name"></label>
+                            <label for="@name">@name</label>
                         }
                         @if (reader.TokenType == JsonToken.Integer)
                         {
@@ -27,11 +33,14 @@
                         else if(reader.TokenType == JsonToken.Boolean)
                         {
                             bool val = (bool)reader.Value;
-                            <h3>Will make this a slider :)</h3>
-                            <select for="@name">
-                                <option>True</option>
-                                <option>False</option>
-                            </select>
+                            if (val)
+                            {
+                                <input class="form-check-input" type="checkbox" role="switch">
+                            }
+                            else
+                            {
+                                <input class="form-check-input" type="checkbox" role="switch" checked>
+                            }
                         }
                     </li>
                 }
@@ -41,10 +50,17 @@
                 }
             }
         }
-        ExtractSettings(new JsonTextReader(new StringReader(jsonSettings)));
-    }
+        ExtractSettings(new JsonTextReader(new StringReader(jsonString)));
+}
 </ul>
 
 @code {
-    private string jsonSettings;
+    private string jsonString;
+    private JObject json = new();
+
+    private async void SubmitHandler()
+    {
+        string str = json.ToString();
+        await IndexedDbAccessor.SetValueAsync("settings",  str);
+    }
 }

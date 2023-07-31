@@ -1,4 +1,5 @@
 {
+  "id": 0,
   "edit_profile": "https://recipiapp.com/profile/edit",
   "notification": {
     "Enable Push Notifications": true,
