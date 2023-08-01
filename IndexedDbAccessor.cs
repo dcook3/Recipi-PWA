@@ -1,6 +1,6 @@
 ﻿using Microsoft.JSInterop;
 
-public class IndexedDbAccessor : IAsyncDisposable
+public class IndexedDbAccessor : IIndexedDbAccessor
 {
     private Lazy<IJSObjectReference> _accessorJsRef = new();
     private readonly IJSRuntime _jsRuntime;

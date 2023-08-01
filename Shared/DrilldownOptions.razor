@@ -3,7 +3,14 @@
 @inject IndexedDbAccessor IndexedDbAccessor
 
 <div id="header" class="bg-primary">
-    <i @onclick="SubmitHandler" class="fa-solid fa-caret-left "></i>
+    @if (isInnerProperty)
+    {
+        <a href="./profile" class="text-decoration-none"><i class="fa-solid fa-caret-left "></i></a>
+    }
+    else
+    {
+        <i @onclick="SubmitHandler" class="fa-solid fa-caret-left "></i>
+    }
 </div>
 
 <ul class="list-group-flush">
@@ -15,6 +22,7 @@
                 if (reader.Value != null)
                 {
                     string name = (string)reader.Value;
+                    propertyOrder.Push(name);
                     <li>
                         @if (reader.TokenType == JsonToken.PropertyName)
                         {
@@ -46,17 +54,23 @@
                 }
                 else
                 {
+                    isInnerProperty = true;
                     ExtractSettings(reader);
                 }
             }
         }
         ExtractSettings(new JsonTextReader(new StringReader(jsonString)));
-}
+        isInnerProperty = false;
+    }
 </ul>
 
 @code {
-    private string jsonString;
+    [Parameter]
+    public string jsonString { get; set; } = File.ReadAllText(@"./js/setting.json");
     private JObject json = new();
+    bool isInnerProperty = false;
+    Stack<string> propertyOrder = new();
+    string lastProperty;
 
     private async void SubmitHandler()
     {

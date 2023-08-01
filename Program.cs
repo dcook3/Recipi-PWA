@@ -10,7 +10,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 
 
-builder.Services.AddScoped<IndexedDbAccessor>();
+builder.Services.AddScoped<IIndexedDbAccessor, IndexedDbAccessor>();
 
 var host = builder.Build();
 using var scope = host.Services.CreateScope();

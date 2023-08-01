@@ -1,8 +1,12 @@
 ﻿<div class="d-flex flex-column flex-wrap fixed-bottom">
-    <CardModalSlidable />
+    <CardModalSlidable BackgroundColor="#c85c7c">
+        <h3>@PostTitle</h3>
+    </CardModalSlidable>
+    
     <Toolbar />
 </div>
 
 @code {
-
+    [Parameter]
+    public string PostTitle { get; set; } = "Title Placeholder";
 }
