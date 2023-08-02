@@ -1,11 +1,12 @@
 ﻿@using Newtonsoft.Json;
 @using Newtonsoft.Json.Linq;
+@typeparam TItem;
 @inject IndexedDbAccessor IndexedDbAccessor
 
 <div id="header" class="bg-primary">
     @if (isInnerProperty)
     {
-        <a href="./profile" class="text-decoration-none"><i class="fa-solid fa-caret-left "></i></a>
+        //Load an inner property as settings and change state/reload
     }
     else
     {
@@ -14,67 +15,115 @@
 </div>
 
 <ul class="list-group-flush">
-    @{
-        void ExtractSettings(JsonTextReader reader)
+   
+    @foreach(KeyValuePair<string, TItem> kv in jsonDeserialized.AsEnumerable())
+    {
+        if(kv.Value is int)
         {
-            while(reader.Read())
-            {
-                if (reader.Value != null)
+            int? val = kv.Value as int?;
+            <li class="list-group-item d-flex">
+                <label class="form-label" for="@kv.Key">@kv.Key</label>
+                <input class="form-control" type="number" value="@val" />
+            </li>
+        }
+        else if(kv.Value is bool)
+        {
+            bool? val = kv.Value as bool?;
+            <li class="list-group-item d-flex">
+                <label class="form-label" for="@kv.Key">@kv.Key</label>
+                @if (val == true)
                 {
-                    string name = (string)reader.Value;
-                    propertyOrder.Push(name);
-                    <li>
-                        @if (reader.TokenType == JsonToken.PropertyName)
-                        {
-                            <label for="@name">@name</label>
-                        }
-                        @if (reader.TokenType == JsonToken.Integer)
-                        {
-                            int val = (int)reader.Value;
-                            <input type="number" for="@name" value="@val" />
-                        }
-                        else if (reader.TokenType == JsonToken.Float)
-                        {
-                            float val = (float)reader.Value;
-                            <input type="number" for="@name" value="@val" />
-                        }
-                        else if(reader.TokenType == JsonToken.Boolean)
-                        {
-                            bool val = (bool)reader.Value;
-                            if (val)
-                            {
-                                <input class="form-check-input" type="checkbox" role="switch">
-                            }
-                            else
-                            {
-                                <input class="form-check-input" type="checkbox" role="switch" checked>
-                            }
-                        }
-                    </li>
+                    <input class="form-check-input" type="checkbox" role="switch" checked />
                 }
                 else
                 {
-                    isInnerProperty = true;
-                    ExtractSettings(reader);
+                    <input class="form-check-input" type="checkbox" role="switch" />
                 }
-            }
+            </li>
         }
-        ExtractSettings(new JsonTextReader(new StringReader(jsonString)));
-        isInnerProperty = false;
+        else if(kv.Value is string)
+        {
+            string? val = kv.Value as string;
+            <li class="list-group-item d-flex">
+                <label class="form-label" for="@kv.Key">@kv.Key</label>
+                <input class="form-check-input" type="text" value="@val" />
+            </li>
+        }
+        else
+        {
+            //submit button with value attached as data prop for posting new menu to page and reload. can also change state.
+        }
+
     }
+    
 </ul>
 
 @code {
     [Parameter]
     public string jsonString { get; set; } = File.ReadAllText(@"./js/setting.json");
-    private JObject json = new();
+    Dictionary<string, TItem> jsonDeserialized = new();
     bool isInnerProperty = false;
-    Stack<string> propertyOrder = new();
-    string lastProperty;
 
     private async void SubmitHandler()
     {
-        string str = json.ToString();
-        await IndexedDbAccessor.SetValueAsync("settings",  str);
+        await IndexedDbAccessor.SetValueAsync("settings",  jsonString);
+    }
+
+    protected async override void OnInitialized()
+    {
+        int placeholderID = 1;
+        string str = await IndexedDbAccessor.GetValueAsync<string>("settings", placeholderID);
+
+        if(str != null)
+        {
+            jsonString = str;
+            JsonTextReader reader = new JsonTextReader(new StringReader(jsonString));
+            jsonDeserialized = DeserializeSettings(ref reader);
+        }
+        else
+        {
+            Console.WriteLine("An error occured in retrieving your settings.");
+        }
+    }
+
+    private Dictionary<string, TItem> DeserializeSettings(ref JsonTextReader reader)
+    {
+        string currentProperty = "not found";
+        Dictionary<string, TItem> deserialized = new();
+
+        while (reader.Read() && reader.TokenType != JsonToken.EndObject)
+        {
+            if (reader.Value != null) //Has a value
+            {
+                if (reader.TokenType == JsonToken.PropertyName)
+                {
+                    currentProperty = reader.Value.ToString();
+                }
+                else
+                {
+                    if (!String.IsNullOrEmpty(currentProperty))
+                    {
+                        deserialized[currentProperty] = (TItem)reader.Value;
+                        currentProperty = "";
+                    }
+                    else
+                    {
+                        Console.WriteLine("An error occured while reading settings, please report any potentially missing settings.");
+                    }
+                }
+            }
+            else //Is an object or array
+            {
+                if (reader.TokenType == JsonToken.StartObject)
+                {
+                    deserialized[currentProperty] = (TItem)(DeserializeSettings(ref reader) as object);
+                }
+                else
+                {
+                    Console.WriteLine("An error occured while reading settings, please report any potentially missing settings.");
+                }
+            }
+        }
+        return deserialized;
     }
 }
