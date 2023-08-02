@@ -1,0 +1,103 @@
+﻿@using Recipi_PWA.Models;
+@using System.Text.Json;
+@page "/Profile/{userId}"
+@inject StateContainer state;
+@inject IUserService userService;
+
+@if (status == "error")
+{
+    <div>eMessage</div>
+}
+else{
+    @if(status == "loading"){
+        <div>Loading</div>
+    }
+    else
+    {
+        <ProfileHeader self=@self user="@user"></ProfileHeader>
+        <h3>content</h3>
+    }
+}
+
+@code {
+    private bool self;
+    private string status;
+    private string eMessage;
+    [Parameter]
+    public string userId { get; set; }
+
+    private IUserProfile? user { get; set; } = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = "loading";
+        Console.WriteLine(userId);
+        if (!String.IsNullOrEmpty(userId))
+        {
+            self = userId == "me";
+
+            if (self)
+            {
+                if (state.LoggedIn)
+                {
+                    if (!userService.TokenSet())
+                    {
+                        userService.SetToken(await state.GetToken());
+                    }
+                    var response = await userService.GetUserById(userId);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var you = await response.Content.ReadFromJsonAsync<You>();
+                        if (you != null)
+                        {
+                            await state.SetYou(you);
+                            Console.WriteLine(JsonSerializer.Serialize(you));
+                            user = you;
+                            status = "ready";
+                        }
+                        else
+                        {
+                            status = "error";
+                            eMessage = "Error occurred: " + response.Content.ToString();
+                        }
+
+                    }
+                    else
+                    {
+                        status = "error";
+                        eMessage = response.Content.ToString();
+                    }
+                }
+                else
+                {
+                    //navigate to login
+                    Console.WriteLine("Navigate to login");
+                }
+            }
+            else
+            {
+                var response = await userService.GetUserById(userId);
+                if (response.IsSuccessStatusCode)
+                {
+                    var userRes = await response.Content.ReadFromJsonAsync<UserProfile>();
+                    if (userRes != null)
+                    {
+                        user = userRes;
+                    }
+                    else
+                    {
+                        status = "error";
+                        eMessage = response.Content.ToString();
+                    }
+                }
+                else
+                {
+                    status = "error";
+                    eMessage = response.Content.ToString();
+                }
+            }
+        }
+    }
+
+
+}

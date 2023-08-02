@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33723.286
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Foodi-Application-NET-7.0", "Foodi-Application-NET-7.0.csproj", "{D5B2BD5D-F897-4F24-BB67-15513691066C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Recipi-PWA", "Recipi-PWA.csproj", "{D5B2BD5D-F897-4F24-BB67-15513691066C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,42 @@
+﻿@using Recipi_PWA.Models;
+<div class="d-flex align-items-center justify-content-evenly flex-row container-fluid">
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
+        <span>@stats.followers</span>
+        <span>Followers</span>
+    </NavLink>
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
+        <span>@stats.following</span>
+        <span>Following</span>
+    </NavLink>
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
+        <span>@stats.posts</span>
+        <span>Posts</span>
+    </NavLink>
+    @if(self){
+        <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
+            <span>@stats.friends</span>
+            <span>Friends</span>
+        </NavLink>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public bool self { get; set; }
+    [Parameter]
+    public UserStats stats { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if(stats == null)
+        {
+            stats = new()
+            {
+                followers = 0,
+                following = 0,
+                friends = 0,
+                posts = 0
+            };
+        }
+    }
+}

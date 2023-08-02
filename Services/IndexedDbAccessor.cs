@@ -1,6 +1,7 @@
 ﻿using Microsoft.JSInterop;
+using Newtonsoft.Json;
 
-public class IndexedDbAccessor : IAsyncDisposable
+public class IndexedDbAccessor : IIndexedDbAccessor
 {
     private Lazy<IJSObjectReference> _accessorJsRef = new();
     private readonly IJSRuntime _jsRuntime;
@@ -38,6 +39,7 @@ public class IndexedDbAccessor : IAsyncDisposable
         var result = await _accessorJsRef.Value.InvokeAsync<T>("get", collectionName, id);
 
         return result;
+
     }
 
     public async Task SetValueAsync<T>(string collectionName, T value)

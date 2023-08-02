@@ -1,0 +1,66 @@
+﻿@page "/Login"
+@using System.Text.RegularExpressions;
+@using Recipi_PWA.Models;
+@layout EmptyLayout
+@inject IUserService userService;
+@inject IIndexedDbAccessor IndexedDbAccessor;
+@inject NavigationManager NavigationManager;
+@inject StateContainer state;
+<h3>Login</h3>
+
+
+<InputText @bind-Value="credential"></InputText>
+<InputText @bind-Value="password"></InputText>
+
+@if (status == "ready")
+{
+    <button @onclick="LoginReqest">Login</button>
+}
+else if(status == "loading")
+{
+    <div>loading</div>
+}
+else if(status == "error")
+{
+    <div>@eMessage</div>
+}
+@code{
+    private string credential = "";
+    private string password = "";
+
+    private string status = "ready";
+    private string eMessage;
+
+    public async void LoginReqest()
+    {
+        status = "loading";
+        HttpResponseMessage response = await userService.Login(new(){ Credential =  credential, Password = password});
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Success");
+            var token = await response.Content.ReadAsStringAsync();
+            if (!String.IsNullOrEmpty(token))
+            {
+                userService.SetToken(token);
+                await state.SetToken(token);
+
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                Console.WriteLine(response);
+                status = "error";
+                eMessage = "An Error has occurred";
+            }
+        }
+        else
+        {
+            Console.WriteLine(response);
+            status = "error";
+            eMessage = "An Error has occurred";
+        }
+    }
+
+    
+
+}
