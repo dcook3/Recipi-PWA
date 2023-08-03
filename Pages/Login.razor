@@ -1,29 +1,43 @@
 ﻿@page "/Login"
 @using System.Text.RegularExpressions;
 @using Recipi_PWA.Models;
+@using System.Net;
 @layout EmptyLayout
 @inject IUserService userService;
 @inject IIndexedDbAccessor IndexedDbAccessor;
 @inject NavigationManager NavigationManager;
 @inject StateContainer state;
-<h3>Login</h3>
+<div class="bg-primary" style="height: 100vh; width: 100vw; padding-top: 20vh;">
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-between" style="height: 65%">
+        <div style="height: 10%" class="d-flex flex-column align-items-center justify-content-center">
+            <h1 class="text-light">Recipi</h1>
+            <p class="text-light">Welcome Back!</p>
+        </div>
+        <form class="d-flex flex-column justify-content-between align-items-center"style="height: 40%;">
+            <div class="form-group">
+                <label for="cred" class="text-light fs-8">Username or Email</label>
+                <InputText class="form-control" @bind-Value="credential" DisplayName="Username or Email" id="cred"></InputText>
+            </div>
+            <div class ="form-group">
+                <label for="pass" class="text-light fs-8">Password</label>
+                <InputText class="form-control" type="password" @bind-Value="password" DisplayName="Password" id="pass"></InputText>
+            </div>
 
 
-<InputText @bind-Value="credential"></InputText>
-<InputText @bind-Value="password"></InputText>
+            <Button onclick="LoginReqest" status="@status"> 
+                Login
+            </Button>
+        </form>
 
-@if (status == "ready")
-{
-    <button @onclick="LoginReqest">Login</button>
-}
-else if(status == "loading")
-{
-    <div>loading</div>
-}
-else if(status == "error")
-{
-    <div>@eMessage</div>
-}
+        <div class="text-danger">
+        @if (status == "error")
+        {
+            @eMessage
+        }
+        </div>
+
+    </div>
+</div>
 @code{
     private string credential = "";
     private string password = "";
@@ -34,6 +48,7 @@ else if(status == "error")
     public async void LoginReqest()
     {
         status = "loading";
+        StateHasChanged();
         HttpResponseMessage response = await userService.Login(new(){ Credential =  credential, Password = password});
         if (response.IsSuccessStatusCode)
         {
@@ -50,15 +65,28 @@ else if(status == "error")
             {
                 Console.WriteLine(response);
                 status = "error";
-                eMessage = "An Error has occurred";
+                eMessage = "An Unkown Error has occurred";
             }
         }
         else
         {
+
             Console.WriteLine(response);
             status = "error";
-            eMessage = "An Error has occurred";
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                eMessage = "Username and Password are incorrect";
+            }
+            else if (!String.IsNullOrEmpty(eMessage))
+            {
+                eMessage = await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                eMessage = "An Unkown Error has Occured";
+            }
         }
+        StateHasChanged();
     }
 
     

@@ -36,6 +36,13 @@ namespace Recipi_PWA.Models
             NotifyStateChanged();
         }
 
+        public async Task Logout()
+        {
+            await jsr.InvokeVoidAsync("localStorage.removeItem", "token");
+            await jsr.InvokeVoidAsync("localStorage.removeItem", "you");
+            _token = "";
+            _you = null;
+        }
 
         private string _token;
         public string Token
@@ -64,6 +71,8 @@ namespace Recipi_PWA.Models
         {
             get => _you ?? null;
         }
+
+        
 
 
                 

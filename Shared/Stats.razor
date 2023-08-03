@@ -1,21 +1,21 @@
 ﻿@using Recipi_PWA.Models;
 <div class="d-flex align-items-center justify-content-evenly flex-row container-fluid">
-    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
-        <span>@stats.followers</span>
-        <span>Followers</span>
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+        <span style="font-size: 20px">@stats.followers</span>
+        <span style="font-size: 12px">Followers</span>
     </NavLink>
-    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
-        <span>@stats.following</span>
-        <span>Following</span>
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+        <span style="font-size: 20px">@stats.following</span>
+        <span style="font-size: 12px">Following</span>
     </NavLink>
-    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
-        <span>@stats.posts</span>
-        <span>Posts</span>
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+        <span style="font-size: 20px">@stats.posts</span>
+        <span style="font-size: 12px">Posts</span>
     </NavLink>
     @if(self){
-        <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary">
-            <span>@stats.friends</span>
-            <span>Friends</span>
+        <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+            <span style="font-size: 20px">@stats.friends</span>
+            <span style="font-size: 12px">Friends</span>
         </NavLink>
     }
 </div>

@@ -1,5 +1,6 @@
 ﻿@using Recipi_PWA.Models;
 @using System.Text.Json;
+@using Recipi_PWA.Shared.Profile
 @page "/Profile/{userId}"
 @inject StateContainer state;
 @inject IUserService userService;
@@ -15,7 +16,7 @@ else{
     else
     {
         <ProfileHeader self=@self user="@user"></ProfileHeader>
-        <h3>content</h3>
+        <ProfileBody></ProfileBody>
     }
 }
 

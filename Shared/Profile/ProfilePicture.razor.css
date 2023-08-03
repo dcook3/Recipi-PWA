@@ -1,0 +1,6 @@
+﻿image-icon {
+    background-size: 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-text-stroke: 1px #FAB6D3;
+}

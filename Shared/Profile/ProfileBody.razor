@@ -1,0 +1,39 @@
+﻿@using Recipi_PWA.Models;
+
+@if(cookbook){
+    <div class="d-flex flex-row container-fluid p-0">
+        <div class="bg-warning text-light p-1" style="width: 50%; text-align: center;">
+            Cookbook
+        </div>
+        <div class="bg-primary text-light p-1" style="width: 50%; text-align: center;" onclick="@ToggleBody">
+            Posts
+        </div>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-row container-fluid p-0">
+        <div class="bg-primary text-light p-1" style="width: 50%; text-align: center;" onclick="@ToggleBody">
+            Cookbook
+        </div>
+        <div class="bg-warning text-light p-1" style="width: 50%; text-align: center;">
+            Posts
+        </div>
+    </div>
+}
+@code {
+    private bool cookbook = true;
+
+    private List<CookbookRecipe> recipes = new();
+
+    protected override void OnInitialized()
+    {
+        
+    }
+
+    private void ToggleBody()
+    {
+        cookbook = !cookbook;
+
+    }
+}

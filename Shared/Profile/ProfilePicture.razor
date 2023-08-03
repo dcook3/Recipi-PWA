@@ -1,0 +1,43 @@
+﻿@inject NavigationManager NavigationManager;
+
+
+@if(size > 6)
+{
+    var sizeString = size + "px";
+    <i class="fa-solid flex-shrink-1 image-icon" style="background-image: url(@GetValidPicture()); font-size: @sizeString;"></i>
+}
+else{
+    <i class="fa-solid flex-shrink-1 image-icon fs-@size" style="background-image: url(@GetValidPicture())"></i>
+}
+
+@code {
+    [Parameter]
+    public string? profilePictureUrl { get; set; }
+    [Parameter]
+    public string? userId { get; set; }
+    [Parameter]
+    public int size { get; set; } = 2;
+
+
+
+
+    private void goToProfile()
+    {
+        if(userId != null){
+            NavigationManager.NavigateTo($"/Profile/${userId}", false);
+        }
+    }
+
+    private string GetValidPicture()
+    {
+        if (this.profilePictureUrl != "" && profilePictureUrl != null)
+        {
+            return profilePictureUrl;
+        }
+        else
+        {
+            return "https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg";
+        }
+
+    }
+}

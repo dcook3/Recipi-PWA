@@ -19,6 +19,12 @@ namespace Recipi_PWA
             client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
             tokenSet = true;
         }
+        public void Logout()
+        {
+            tokenSet = false;
+            if (client.DefaultRequestHeaders.Any(h => h.Key == "Authorization"))
+                client.DefaultRequestHeaders.Remove("Authorization");
+        }
         public bool TokenSet()
         {
             return tokenSet;

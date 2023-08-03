@@ -1,4 +1,5 @@
 ﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Shared.Profile
 @inject IIndexedDbAccessor IndexedDbAccessor;
 @inject StateContainer state;
 <nav class="nav bg-secondary fixed-bottom">
@@ -26,14 +27,15 @@
         <div class="nav-item col-2 px-3 flex-fill">
         
                 @if(state.LoggedIn){
-                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Profile/me" Match="NavLinkMatch.All">
-                        <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
-                        <span class="resizable">Profile</span>
+                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" href="./Profile/me" Match="NavLinkMatch.All">
+                    
+                    <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
+                    <span class="resizable">Profile</span>
                     </NavLink>
                 }
                 else
                 {
-                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Login" Match="NavLinkMatch.All">
+                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" href="./Login" Match="NavLinkMatch.All">
                         <i class="fa-solid fs-2 fa-user flex-shrink-1"></i> <span class="resizable">Login</span>
                     </NavLink>
                 }
