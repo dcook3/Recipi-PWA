@@ -1,11 +1,11 @@
-﻿@using Newtonsoft.Json;
-@using Newtonsoft.Json.Linq;
-@using Microsoft.JSInterop;
+﻿@using Microsoft.JSInterop;
+@using System.Text.Json;
 @using System.Net.Http;
-@using Foodi_Application_NET_7.Models;
+@using Recipi_PWA.Models;
 
 @inject IIndexedDbAccessor IndexedDbAccessor
 @inject HttpClient Http
+@inject StateContainer StateContainer
 
 <TopViewport>
     @if (!isRoot)
@@ -29,7 +29,7 @@
         </li>
         <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between m-3">
             <label>@settings.anonymousUsername.label</label>
-            <input @bind-value="@settings.anonymousUsername.value" type="checkbox" role="switch" class="form-check-input" id="anonymousName" />
+            <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" />
         </li>
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a @onclick="NotificationHandler" href="profile/settings#">Notifications Settings</a>
@@ -38,22 +38,23 @@
     else
     {
         @foreach(SettingOption opti in selectedInner)
-        {   <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+        {
+            <li class="list-group-item d-flex align-items-center justify-content-between m-3">
                 @if(opti.type == "string")
                 {
                     <label for="@opti.label">@opti.label</label>
-                    <input type="text" name="@opti.label" @bind-value="@opti.value" />
+                    <input type="text" name="@opti.label" />
                 }
                 else if(opti.type == "number")
                 {
                     <label for="@opti.label">@opti.label</label>
-                    <input class="form-input" type="number" name="@opti.label" @bind-value="@opti.value" />
+                    <input class="form-input" type="number" name="@opti.label" />
                 }
                 else
                 { 
                     <div class="form-check form-switch d-flex justify-content-between">
                         <label for="@opti.label">@opti.label</label>
-                        <input class="form-check-input" type="checkbox" role="switch" name="@opti.label" @bind-value="@opti.value" />
+                        <input class="form-check-input" type="checkbox" role="switch" name="@opti.label" />
                     </div>
                 }
             </li>
@@ -72,20 +73,13 @@
 
     protected async override void OnInitialized()
     {
-        settings = new();
-        //try {
-        //    jsonString = await IndexedDbAccessor.GetValueAsync<string>("settings", 2);
-        //}
-        //catch (Exception e) //Specify into when indexeddb record is not found
-        //{
-        //    settings = new();
-        //    await IndexedDbAccessor.SetValueAsync("settings", JsonConvert.SerializeObject(settings));
-        //}
+        settings = JsonSerializer.Deserialize<Setting>(jsonString);
     }
 
     private async void SubmitHandler()
     {
-        await IndexedDbAccessor.SetValueAsync("settings", JsonConvert.SerializeObject(settings));
+
+        await StateContainer.SetSetting(settings);
     }
 
     private void NotificationHandler()

@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Foodi_Application_NET_7.Models
+namespace Recipi_PWA.Models
 {
     public class SettingOption
     {

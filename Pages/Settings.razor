@@ -8,6 +8,6 @@
     protected async override void OnInitialized()
     {
         base.OnInitialized();
-        //json = await IndexedDbAccessor.GetValueAsync<string>("settings", 0);
+        json = await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false);
     }
 }

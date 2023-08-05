@@ -3,6 +3,7 @@ using Microsoft.JSInterop;
 using Recipi_API.Models;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Recipi_PWA.Models
 {
@@ -14,7 +15,6 @@ namespace Recipi_PWA.Models
         {
             jsr = _jsr;
         }
-        
 
         public bool Loaded = false;
         
@@ -22,6 +22,7 @@ namespace Recipi_PWA.Models
         {
             _token = (await jsr.InvokeAsync<string?>("localStorage.getItem", "token").ConfigureAwait(false)) ?? String.Empty;
             _you = JsonSerializer.Deserialize<You>(await jsr.InvokeAsync<string?>("localStorage.getItem", "you").ConfigureAwait(false) ?? "{}");
+            _setting = JsonSerializer.Deserialize<Setting>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
             Loaded = true;
         }
 
@@ -29,6 +30,19 @@ namespace Recipi_PWA.Models
         {
             return await jsr.InvokeAsync<string>("localStorage.getItem", "token").ConfigureAwait(false);
         }
+
+        public async Task<string> GetSetting()
+        {
+            return await jsr.InvokeAsync<string>("localStorage.getItem", "settings").ConfigureAwait(false);
+        }
+
+        public async Task SetSetting(Setting setting)
+        {
+            await jsr.InvokeVoidAsync("localStorage.setItem", "settings", JsonSerializer.Serialize(setting)).ConfigureAwait(false);
+            _setting = setting;
+            NotifyStateChanged();
+        }
+
         public async Task SetToken(string token)
         {
             await jsr.InvokeVoidAsync("localStorage.setItem", "token", token).ConfigureAwait(false);
@@ -49,6 +63,9 @@ namespace Recipi_PWA.Models
         {
             get => _token ?? string.Empty;
         }
+
+        private Setting _setting;
+        
 
 
         public bool LoggedIn => !String.IsNullOrEmpty(_token);

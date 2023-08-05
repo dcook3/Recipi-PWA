@@ -1,6 +1,6 @@
-﻿using Foodi_Application_NET_7._0.Pages;
+﻿using Recipi_PWA.Pages;
 
-namespace Foodi_Application_NET_7.Models
+namespace Recipi_PWA.Models
 {
     [Serializable]
     public class Setting
