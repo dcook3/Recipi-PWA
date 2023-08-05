@@ -10,7 +10,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 
 
-builder.Services.AddScoped<IIndexedDbAccessor, IndexedDbAccessor>();
+builder.Services.AddSingleton<IIndexedDbAccessor, IndexedDbAccessor>();
 
 var host = builder.Build();
 using var scope = host.Services.CreateScope();
@@ -18,6 +18,7 @@ await using var indexedDB = scope.ServiceProvider.GetService<IndexedDbAccessor>(
 
 if (indexedDB is not null)
 {
+    Console.WriteLine("C# initiating indexeddb init.");
     await indexedDB.InitializeAsync();
 }
 

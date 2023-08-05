@@ -1,129 +1,124 @@
 ﻿@using Newtonsoft.Json;
 @using Newtonsoft.Json.Linq;
-@typeparam TItem;
-@inject IndexedDbAccessor IndexedDbAccessor
+@using Microsoft.JSInterop;
+@using System.Net.Http;
+@using Foodi_Application_NET_7.Models;
 
-<div id="header" class="bg-primary">
-    @if (isInnerProperty)
+@inject IIndexedDbAccessor IndexedDbAccessor
+@inject HttpClient Http
+
+<TopViewport>
+    @if (!isRoot)
     {
-        //Load an inner property as settings and change state/reload
+        <a @onclick="LoadLastSetting"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
     }
     else
     {
-        <i @onclick="SubmitHandler" class="fa-solid fa-caret-left "></i>
+        <a @onclick="SubmitHandler"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
     }
-</div>
+</TopViewport>
 
-<ul class="list-group-flush">
-   
-    @foreach(KeyValuePair<string, TItem> kv in jsonDeserialized.AsEnumerable())
+<ul class="list-group list-group-flush">
+    @if (isRoot)
     {
-        if(kv.Value is int)
-        {
-            int? val = kv.Value as int?;
-            <li class="list-group-item d-flex">
-                <label class="form-label" for="@kv.Key">@kv.Key</label>
-                <input class="form-control" type="number" value="@val" />
-            </li>
-        }
-        else if(kv.Value is bool)
-        {
-            bool? val = kv.Value as bool?;
-            <li class="list-group-item d-flex">
-                <label class="form-label" for="@kv.Key">@kv.Key</label>
-                @if (val == true)
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a href="@settings.changeProfile.label"> Change profile</a>
+        </li>
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a href="@settings.changePassword.label">Change password</a>
+        </li>
+        <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between m-3">
+            <label>@settings.anonymousUsername.label</label>
+            <input @bind-value="@settings.anonymousUsername.value" type="checkbox" role="switch" class="form-check-input" id="anonymousName" />
+        </li>
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a @onclick="NotificationHandler" href="profile/settings#">Notifications Settings</a>
+        </li>
+    }
+    else
+    {
+        @foreach(SettingOption opti in selectedInner)
+        {   <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+                @if(opti.type == "string")
                 {
-                    <input class="form-check-input" type="checkbox" role="switch" checked />
+                    <label for="@opti.label">@opti.label</label>
+                    <input type="text" name="@opti.label" @bind-value="@opti.value" />
+                }
+                else if(opti.type == "number")
+                {
+                    <label for="@opti.label">@opti.label</label>
+                    <input class="form-input" type="number" name="@opti.label" @bind-value="@opti.value" />
                 }
                 else
-                {
-                    <input class="form-check-input" type="checkbox" role="switch" />
+                { 
+                    <div class="form-check form-switch d-flex justify-content-between">
+                        <label for="@opti.label">@opti.label</label>
+                        <input class="form-check-input" type="checkbox" role="switch" name="@opti.label" @bind-value="@opti.value" />
+                    </div>
                 }
             </li>
         }
-        else if(kv.Value is string)
-        {
-            string? val = kv.Value as string;
-            <li class="list-group-item d-flex">
-                <label class="form-label" for="@kv.Key">@kv.Key</label>
-                <input class="form-check-input" type="text" value="@val" />
-            </li>
-        }
-        else
-        {
-            //submit button with value attached as data prop for posting new menu to page and reload. can also change state.
-        }
-
     }
-    
 </ul>
 
 @code {
     [Parameter]
-    public string jsonString { get; set; } = File.ReadAllText(@"./js/setting.json");
-    Dictionary<string, TItem> jsonDeserialized = new();
-    bool isInnerProperty = false;
-
-    private async void SubmitHandler()
-    {
-        await IndexedDbAccessor.SetValueAsync("settings",  jsonString);
-    }
+    public string jsonString { get; set; }
+    public Setting settings;
+    public Stack<string> selectedInners = new();
+    public List<SettingOption> selectedInner;
+    public bool isRoot = true;
+    public string thisSetting = "root";
 
     protected async override void OnInitialized()
     {
-        int placeholderID = 1;
-        string str = await IndexedDbAccessor.GetValueAsync<string>("settings", placeholderID);
+        settings = new();
+        //try {
+        //    jsonString = await IndexedDbAccessor.GetValueAsync<string>("settings", 2);
+        //}
+        //catch (Exception e) //Specify into when indexeddb record is not found
+        //{
+        //    settings = new();
+        //    await IndexedDbAccessor.SetValueAsync("settings", JsonConvert.SerializeObject(settings));
+        //}
+    }
 
-        if(str != null)
+    private async void SubmitHandler()
+    {
+        await IndexedDbAccessor.SetValueAsync("settings", JsonConvert.SerializeObject(settings));
+    }
+
+    private void NotificationHandler()
+    {
+        thisSetting = "notification";
+        selectedInner = settings.notifications;
+        isRoot = false;
+        _ = InvokeAsync(() =>
         {
-            jsonString = str;
-            JsonTextReader reader = new JsonTextReader(new StringReader(jsonString));
-            jsonDeserialized = DeserializeSettings(ref reader);
+            selectedInners.Push(thisSetting);
+            StateHasChanged();
+        });
+    }
+
+    private void LoadLastSetting()
+    {
+        if (selectedInners.TryPop(out string toLoad))
+        {
+            //add any other sub settings as options to link their components
+            if(toLoad == "notifications")
+            {
+                thisSetting = "notifications";
+                selectedInner = settings.notifications;
+                isRoot = false;
+            }
         }
         else
         {
-            Console.WriteLine("An error occured in retrieving your settings.");
+            isRoot = true;
         }
-    }
-
-    private Dictionary<string, TItem> DeserializeSettings(ref JsonTextReader reader)
-    {
-        string currentProperty = "not found";
-        Dictionary<string, TItem> deserialized = new();
-
-        while (reader.Read() && reader.TokenType != JsonToken.EndObject)
+        _ = InvokeAsync(() =>
         {
-            if (reader.Value != null) //Has a value
-            {
-                if (reader.TokenType == JsonToken.PropertyName)
-                {
-                    currentProperty = reader.Value.ToString();
-                }
-                else
-                {
-                    if (!String.IsNullOrEmpty(currentProperty))
-                    {
-                        deserialized[currentProperty] = (TItem)reader.Value;
-                        currentProperty = "";
-                    }
-                    else
-                    {
-                        Console.WriteLine("An error occured while reading settings, please report any potentially missing settings.");
-                    }
-                }
-            }
-            else //Is an object or array
-            {
-                if (reader.TokenType == JsonToken.StartObject)
-                {
-                    deserialized[currentProperty] = (TItem)(DeserializeSettings(ref reader) as object);
-                }
-                else
-                {
-                    Console.WriteLine("An error occured while reading settings, please report any potentially missing settings.");
-                }
-            }
-        }
-        return deserialized;
+            StateHasChanged();
+        });
     }
 }
