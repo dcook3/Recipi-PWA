@@ -1,4 +1,5 @@
 ﻿using Microsoft.JSInterop;
+using Newtonsoft.Json;
 
 public class IndexedDbAccessor : IIndexedDbAccessor
 {
@@ -38,6 +39,7 @@ public class IndexedDbAccessor : IIndexedDbAccessor
         var result = await _accessorJsRef.Value.InvokeAsync<T>("get", collectionName, id);
 
         return result;
+
     }
 
     public async Task SetValueAsync<T>(string collectionName, T value)

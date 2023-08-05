@@ -1,0 +1,188 @@
+﻿@using Recipi_PWA.Models;
+@inject IUserService userService;
+@inject StateContainer state;
+@inject NavigationManager NavigationManager;
+
+@if (self)
+{
+    <div class="d-flex flex-column align-items-center justify-content-center bg-secondary" style="width: 100%; height: 25%">
+
+        <div class="d-flex flex-column align-items-center justify-content-center p-1" style="width: 50%">
+            <ProfilePicture size="75"></ProfilePicture>
+            <span class="text-bg-secondary">@user.Username</span>
+        </div>
+        <Stats stats="@user.userStats" userId="@user.UserId" self></Stats>
+    </div>
+}
+else
+{
+    <div class="d-flex flex-row align-items-center justify-content-between bg-secondary" style="width: 100%; height: 20%">
+
+        <div class="d-flex flex-column align-items-center justify-content-center px-3" style="width: 33vw
+">
+            <ProfilePicture size="75"></ProfilePicture>
+            <span class="text-bg-secondary">@user.Username</span>
+        </div>
+        <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-evenly" style="height: 90%;">
+            <Stats stats="@user.userStats" userId="@user.UserId" postsClick="@PostClick"></Stats>
+            <div class="d-flex flex-row align-items-center justify-content-evenly container-fluid" style="font-size: 10px;">
+                @if (user.YourRelationships.Contains("friend"))
+                {
+                    <Button status="@friendStatus" onclick="@RemoveFriend">Remove Friend</Button>
+                }
+                else
+                {
+                    if (user.YourRelationships.Contains("friendRequesting"))
+                    {
+                        <Button status="@friendStatus" disabled bgColor="bg-dark-subtle">Request Sent</Button>
+                    }
+                    else if (user.YourRelationships.Contains("friendRequested"))
+                    {
+                        <Button status="@friendStatus" onclick="@AcceptFriendRequest">Accept Friend</Button>
+                    }
+                    else
+                    {
+                        <Button status="@friendStatus" onclick="@SendFriendRequest">Add Friend</Button>    
+                    }
+                }
+
+                @if (user.YourRelationships.Contains("following"))
+                {
+                    <Button status="@followStatus" onclick="@ToggleFollow">Unfollow</Button>
+                }
+                else
+                {
+                    <Button status="@followStatus" onclick="@ToggleFollow">Follow</Button>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool self { get; set; }
+    [Parameter]
+    public IUserProfile user { get; set; }
+    [Parameter]
+    public Action? postClick { get; set; }
+
+    private string friendStatus = "ready";
+    private string followStatus = "ready";
+
+    private bool loginCheck()
+    {
+        if (state.LoggedIn)
+        {
+            return true;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Login");
+            return false;
+        }
+    }
+
+    private void PostClick()
+    {
+        postClick?.Invoke();
+    }
+
+    async void SendFriendRequest()
+    {
+        if(loginCheck()){
+            friendStatus= "loading";
+            StateHasChanged();
+            var response = await userService.SendFriendRequest(user.UserId);
+            if (response.IsSuccessStatusCode)
+            {
+                user.YourRelationships.Add("friendRequesting");
+                friendStatus = "ready";
+            }
+            else
+            {
+                friendStatus = "error";
+                Console.WriteLine(response.Content.ToString());
+            }
+            StateHasChanged();
+        }
+    }
+
+    async void AcceptFriendRequest()
+    {
+        if (loginCheck())
+        {
+            friendStatus = "loading";
+            StateHasChanged();
+            var response = await userService.AcceptFriendRequest(user.UserId);
+            if (response.IsSuccessStatusCode)
+            {
+                user.YourRelationships.Remove("friendRequested");
+                user.YourRelationships.Add("friend");
+                user.userStats.friends++;
+                friendStatus = "ready";
+            }
+            else
+            {
+                friendStatus = "error";
+                Console.WriteLine(response.Content.ToString());
+            }
+            StateHasChanged();
+        }
+    }
+
+    async void RemoveFriend()
+    {
+        if (loginCheck())
+        {
+            friendStatus = "loading";
+            StateHasChanged();
+            var response = await userService.RemoveFriend(user.UserId);
+            if (response.IsSuccessStatusCode)
+            {
+                user.YourRelationships.Remove("friend");
+                user.userStats.friends--;
+                friendStatus = "ready";
+            }
+            else
+            {
+                friendStatus = "error";
+                Console.WriteLine(response.Content.ToString());
+            }
+            StateHasChanged();
+        }
+    }
+
+    async void ToggleFollow()
+    {
+        if (loginCheck())
+        {
+            followStatus = "loading";
+            StateHasChanged();
+            var response = await userService.FollowUser(user.UserId);
+            if (response.IsSuccessStatusCode)
+            {
+                if (user.YourRelationships.Contains("following"))
+                {
+
+                    user.YourRelationships.Remove("following");
+                    user.userStats.followers--;
+                }
+                else
+                {
+                    user.YourRelationships.Add("following");
+                    user.userStats.followers++;
+                }
+                followStatus = "ready";
+            }
+            else
+            {
+                followStatus = "error";
+                Console.WriteLine(response.Content.ToString());
+            }
+            StateHasChanged();
+        }
+    }
+
+
+}

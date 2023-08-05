@@ -1,0 +1,9 @@
+﻿<div class="spinner-border @colorClass" role="status" style="width: @(size+"rem");height: @(size+"rem");">
+    <span class="visually-hidden">Loading...</span>
+</div>
+@code {
+    [Parameter]
+    public string colorClass { get; set; } = "text-primary";
+    [Parameter]
+    public string size { get; set; } = "";
+}

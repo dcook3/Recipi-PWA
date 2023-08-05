@@ -1,12 +1,57 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using Recipi_PWA.Models;
+<!--
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     <NotFound>
         <PageTitle>Not found</PageTitle>
+
         <LayoutView Layout="@typeof(MainLayout)">
             <p role="alert">Sorry, there's nothing at this address.</p>
         </LayoutView>
     </NotFound>
 </Router>
+-->
+@if (BootComplete)
+{
+    <style>
+        @@import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+        *{
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+}
+@inject StateContainer state;
+
+@code
+{
+    
+    // boot code. By hiding everything nothing starts until bootcomplete is set to true
+    // that is done after the successful exit from OnInitializedAsync
+    // App.Boot has to be async becuase it does 'IO'
+
+    bool BootComplete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!state.Loaded)
+        {
+            await state.LoadLocalStorage();
+        }
+        BootComplete = true;
+    }
+}

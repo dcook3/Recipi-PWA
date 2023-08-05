@@ -1,27 +1,49 @@
-﻿<nav class="nav d-flex justify-content-evenly align-items-center bg-secondary">
-    <div class="nav-item col-2 px-3">
-        <NavLink class="nav-link px-3 text-info d-flex flex-column align-items-center justify-content-center" href="./Browse" Match="NavLinkMatch.All">
-            <i class="fa-solid fs-2 fa-popcorn flex-shrink-1"></i> <span class="resizable">Browse</span>
-        </NavLink>
-    </div>
-    <div class="nav-item col-2 px-3">
-        <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Following" Match="NavLinkMatch.All">
-            <i class="fa-solid fs-2 fa-users flex-shrink-1"></i> <span class="resizable">Following</span>
-        </NavLink>
-    </div>
-    <div class="nav-item col-2 px-3">
-        <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Post" Match="NavLinkMatch.All">
-            <i class="fa-solid fs-2 fa-square-plus flex-shrink-1"></i> <span class="resizable">Post</span>
-        </NavLink>
-    </div>
-    <div class="nav-item col-2 px-3">
-        <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Messages" Match="NavLinkMatch.All">
-            <i class="fa-solid fs-2 fa-message flex-shrink-1"></i> <span class="resizable">Messages</span>
-        </NavLink>
-    </div>
-    <div class="nav-item col-2 px-3">
-        <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Profile" Match="NavLinkMatch.All">
-            <i class="fa-solid fs-2 fa-user flex-shrink-1"></i> <span class="resizable">Profile</span>
-        </NavLink>
+﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Shared.Profile
+@inject IIndexedDbAccessor IndexedDbAccessor;
+@inject StateContainer state;
+@inject NavigationManager NavigationManager;
+<nav class="nav bg-secondary fixed-bottom">
+    <div class="d-flex justify-content-evenly align-items-center container-fluid" style ="height: 90%">
+        <div class="nav-item col-2 px-3 flex-fill">
+            <NavLink class="nav-link px-3 text-info d-flex flex-column align-items-center justify-content-center" href="./" Match="NavLinkMatch.All">
+                <i class="fa-solid fs-2 fa-popcorn flex-shrink-1"></i> <span class="resizable">Browse</span>
+            </NavLink>
+        </div>
+        <div class="nav-item col-2 px-3 flex-fill">
+            <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Following" Match="NavLinkMatch.All">
+                <i class="fa-solid fs-2 fa-users flex-shrink-1"></i> <span class="resizable">Following</span>
+            </NavLink>
+        </div>
+        <div class="nav-item col-2 px-3 flex-fill">
+            <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Post" Match="NavLinkMatch.All">
+                <i class="fa-solid fs-2 fa-square-plus flex-shrink-1"></i> <span class="resizable">Post</span>
+            </NavLink>
+        </div>
+        <div class="nav-item col-2 px-3 flex-fill">
+            <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Messages" Match="NavLinkMatch.All">
+                <i class="fa-solid fs-2 fa-message flex-shrink-1"></i> <span class="resizable">Messages</span>
+            </NavLink>
+        </div>
+        <div class="nav-item col-2 px-3 flex-fill">
+        
+                @if(state.LoggedIn){
+                <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
+                    
+                    <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
+                    <span class="resizable">Profile</span>
+                    </NavLink>
+                }
+                else
+                {
+                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" href="./Login" Match="NavLinkMatch.All">
+                        <i class="fa-solid fs-2 fa-user flex-shrink-1"></i> <span class="resizable">Login</span>
+                    </NavLink>
+                }
+        </div>
     </div>
 </nav>
+
+@code{
+    
+}
