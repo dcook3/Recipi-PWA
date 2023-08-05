@@ -16,6 +16,8 @@ public class You : IUserProfile
 
     public UserStats userStats { get; set; }
 
+    public List<string> YourRelationships { get; set; } = new();
+
     public string Email { get; set; } = null!;
 
     public byte Verified { get; set; }

@@ -4,19 +4,19 @@
 @page "/Profile/{userId}"
 @inject StateContainer state;
 @inject IUserService userService;
-
+@inject NavigationManager NavigationManager;
 @if (status == "error")
 {
-    <div>eMessage</div>
+    <div>Error @eMessage</div>
 }
 else{
     @if(status == "loading"){
-        <div>Loading</div>
+        <LoadingSpinner></LoadingSpinner>
     }
     else
     {
         <ProfileHeader self=@self user="@user"></ProfileHeader>
-        <ProfileBody></ProfileBody>
+        <ProfileBody self=@self userId="@user.UserId"></ProfileBody>
     }
 }
 
@@ -29,22 +29,26 @@ else{
 
     private IUserProfile? user { get; set; } = null;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
         status = "loading";
         Console.WriteLine(userId);
         if (!String.IsNullOrEmpty(userId))
         {
+            Console.WriteLine("'"+userId + "' '" + state.You?.UserId + "'");
+
+            if (userId == state.You?.UserId.ToString())
+            {
+                NavigationManager.NavigateTo("/Profile/me");
+                userId = "me";
+            }
+
             self = userId == "me";
 
             if (self)
             {
                 if (state.LoggedIn)
                 {
-                    if (!userService.TokenSet())
-                    {
-                        userService.SetToken(await state.GetToken());
-                    }
                     var response = await userService.GetUserById(userId);
                     if (response.IsSuccessStatusCode)
                     {
@@ -77,6 +81,8 @@ else{
             }
             else
             {
+
+
                 var response = await userService.GetUserById(userId);
                 if (response.IsSuccessStatusCode)
                 {
@@ -84,6 +90,7 @@ else{
                     if (userRes != null)
                     {
                         user = userRes;
+                        status = "ready";
                     }
                     else
                     {
@@ -96,6 +103,7 @@ else{
                     status = "error";
                     eMessage = response.Content.ToString();
                 }
+                
             }
         }
     }

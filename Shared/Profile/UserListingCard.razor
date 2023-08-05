@@ -1,0 +1,80 @@
+﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Shared.Profile;
+@inject NavigationManager NavigationManager;
+@inject IUserService userService;
+@inject StateContainer state;
+
+<div class="px-4 py-3 container-fluid d-flex flex-row align-items-center justify-content-between">
+    <div class="d-flex flex-row align-items-center justify-content-start" onclick="@OnBodyClick">
+        <div class="mx-1">
+        <ProfilePicture size="1"></ProfilePicture>
+        </div>
+        <div class="mx-1" style="line-height: none;">
+            @listingData.Username
+        </div>
+    </div>
+    <div class="d-flex flex-row align-items-center justify-content-around">
+        
+        @if (friendRequest)
+        {
+            
+            <div class="m-1">
+                <Button shape="circle" status ="@aStatus" onclick="@AcceptFR"><i class="fs-3 fas fa-check"></i></Button>
+            </div>
+            <div class="m-1">
+                <Button shape="circle" bgColor="bg-primary" status ="@dStatus" onclick="@DenyFR"><i class="fs-3 fas fa-x"></i></Button>
+            </div>
+           
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public UserListingData listingData { get; set; }
+    [Parameter]
+    public bool friendRequest { get; set; } = false;
+    [Parameter]
+    public Action? onRequestUpdate { get; set; }
+
+    private string aStatus = "ready";
+    private string dStatus = "ready";
+
+    private void OnBodyClick()
+    {
+        NavigationManager.NavigateTo($"./Profile/{listingData.UserId}");
+    }
+
+    private async void AcceptFR()
+    {
+        aStatus = "loading";
+        StateHasChanged();
+        var response = await userService.AcceptFriendRequest(listingData.UserId);
+        if (response.IsSuccessStatusCode)
+        {
+            onRequestUpdate?.Invoke();
+        }
+        else
+        {
+            aStatus = "error";
+            Console.WriteLine(response.Content.ToString());
+        }
+    }
+
+    private async void DenyFR()
+    {
+        dStatus = "loading";
+        StateHasChanged();
+        var response = await userService.DenyFriendRequest(listingData.UserId);
+        if (response.IsSuccessStatusCode)
+        {
+            onRequestUpdate?.Invoke();
+        }
+        else
+        {
+            dStatus = "error";
+            Console.WriteLine(response.Content.ToString());
+        }
+    }
+
+}

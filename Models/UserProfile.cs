@@ -12,6 +12,9 @@ namespace Recipi_PWA.Models
 
         public string? Biography { get; set; }
 
+        public List<string> YourRelationships { get; set; } = new();
+
         public UserStats userStats { get; set; }
     }
 }
+    

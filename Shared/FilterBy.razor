@@ -1,0 +1,57 @@
+﻿<div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onclick="@ToggleSelected">
+        @if(options[selectedIndex] == "Default" || String.IsNullOrEmpty(options?[selectedIndex]))
+        {
+            <span>Filter By</span>
+        }
+        else
+        {
+            <span style="font-size: 14px">Filter By: @options[selectedIndex]</span>
+
+        }
+    </button>
+    @if(selected)
+    {
+        <div class="dropdown-menu show" aria-labelledby="dropdownMenuButton">
+    
+            @for(var i = 0; i < options.Length; i++)
+            {
+                @if(i == selectedIndex)
+                {
+                    int currentIndex = i;
+                    <a class="dropdown-item active" onclick="@(() => ItemSelected(currentIndex))">@options[i]</a>
+                }
+                else
+                {
+                    int currentIndex = i;
+                    <a class="dropdown-item" onclick="@(() => ItemSelected(currentIndex))">@options[i]</a>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Action<int> FilterUpdated { get; set; }
+    [Parameter]
+    public string[] options { get; set; }
+    [Parameter]
+    public int selectedIndex { get; set; }
+
+    private bool selected { get; set; } = false;
+
+    private void ToggleSelected()
+    {
+        selected = !selected;
+        StateHasChanged();
+    }
+
+    private void ItemSelected(int i)
+    {
+        Console.WriteLine("item selected " + i);
+        ToggleSelected();
+        selectedIndex = i;
+        FilterUpdated?.Invoke(i);
+    }
+}

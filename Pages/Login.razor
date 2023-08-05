@@ -56,7 +56,6 @@
             var token = await response.Content.ReadAsStringAsync();
             if (!String.IsNullOrEmpty(token))
             {
-                userService.SetToken(token);
                 await state.SetToken(token);
 
                 NavigationManager.NavigateTo("/");

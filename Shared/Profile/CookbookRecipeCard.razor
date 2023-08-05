@@ -1,0 +1,20 @@
+﻿@using Recipi_PWA.Models;
+
+<NavLink class="d-flex align-items-center justify-content-between py-2 px-3 m-1 bg-primary rounded-3 text-light" style="text-decoration: none; height: 60px; width: 95%;">
+    <div class="d-flex align-items-center justify-content-between">
+        <span>@recipe.RecipeTitle </span>
+        @if (includeDate)
+        {
+            <span class="text-white text-opacity-75" style="font-size: 12px;">&nbsp;&nbsp;&nbsp;@recipe.CreatedDatetime.ToString("MM-dd-yy")</span>
+        }
+    </div>
+    <div><i class="fa-solid fa-angle-right"></i></div>
+</NavLink>
+
+@code {
+    [Parameter]
+    public CookbookRecipe recipe { get; set; }
+
+    [Parameter]
+    public bool includeDate { get; set; }
+}

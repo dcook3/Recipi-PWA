@@ -1,33 +1,35 @@
 ﻿using Recipi_API.Models;
+using Recipi_PWA.Models;
 
 namespace Recipi_PWA
 {
     public abstract class DefaultHttpService : IDefaultHttpService
     {
         protected readonly HttpClient client;
+        protected readonly StateContainer state;
         private bool tokenSet;
-        public DefaultHttpService(HttpClient httpClient)
+        public DefaultHttpService(HttpClient httpClient, StateContainer _state)
         {
+            this.state = _state;
             this.client = httpClient;
-            tokenSet = false;
+            if (state.LoggedIn)
+            {
+                SetToken();
+            }
+            state.OnChange += SetToken;
         }
-        public void SetToken(string token)
+        public void SetToken()
         {
             if (client.DefaultRequestHeaders.Any(h => h.Key == "Authorization"))
                 client.DefaultRequestHeaders.Remove("Authorization");
 
-            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + token);
+            client.DefaultRequestHeaders.Add("Authorization", "Bearer " + state.Token);
             tokenSet = true;
         }
         public void Logout()
         {
-            tokenSet = false;
             if (client.DefaultRequestHeaders.Any(h => h.Key == "Authorization"))
                 client.DefaultRequestHeaders.Remove("Authorization");
-        }
-        public bool TokenSet()
-        {
-            return tokenSet;
         }
     }
 }

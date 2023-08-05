@@ -2,7 +2,6 @@
 {
     public interface IDefaultHttpService
     {
-        void SetToken(string token);
-        bool TokenSet();
+        void SetToken();
     }
 }

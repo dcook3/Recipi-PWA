@@ -2,6 +2,7 @@
 @using Recipi_PWA.Shared.Profile
 @inject IIndexedDbAccessor IndexedDbAccessor;
 @inject StateContainer state;
+@inject NavigationManager NavigationManager;
 <nav class="nav bg-secondary fixed-bottom">
     <div class="d-flex justify-content-evenly align-items-center container-fluid" style ="height: 90%">
         <div class="nav-item col-2 px-3 flex-fill">
@@ -27,7 +28,7 @@
         <div class="nav-item col-2 px-3 flex-fill">
         
                 @if(state.LoggedIn){
-                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" href="./Profile/me" Match="NavLinkMatch.All">
+                <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
                     
                     <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
                     <span class="resizable">Profile</span>

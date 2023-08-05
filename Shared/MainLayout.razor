@@ -6,7 +6,7 @@
 @inject StateContainer state;
 @inject HttpClient httpClient;
 
-<div class="container-fluid px-0" style="height: 100vh;">
+<div class="container-fluid d-flex align-items-center flex-column px-0" style="height: 100vh;">
      @Body
      <Toolbar />
 </div>
@@ -19,10 +19,6 @@
         {
             if (state.LoggedIn)
             {
-                if (!userService.TokenSet())
-                {
-                    userService.SetToken(await state.GetToken());
-                }
                 var response = await userService.GetUserById("me");
 
                 if (response.IsSuccessStatusCode)

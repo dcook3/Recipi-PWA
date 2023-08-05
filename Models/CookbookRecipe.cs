@@ -10,6 +10,6 @@
 
         public int UserId { get; set; }
 
-        public string CreatedDatetime { get; set; }
+        public DateTime CreatedDatetime { get; set; }
     }
 }

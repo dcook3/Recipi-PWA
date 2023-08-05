@@ -1,22 +1,35 @@
 ﻿@using Recipi_PWA.Models;
-<div class="d-flex align-items-center justify-content-evenly flex-row container-fluid">
-    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+<div class="d-flex align-items-center justify-content-center flex-row container-fluid">
+    <NavLink href="@followersUrl" class="d-flex align-items-center justify-content-center flex-column text-bg-secondary stat"style="text-decoration: none;">
         <span style="font-size: 20px">@stats.followers</span>
         <span style="font-size: 12px">Followers</span>
     </NavLink>
-    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+    <NavLink href="@followingUrl" class="d-flex align-items-center justify-content-center flex-column text-bg-secondary stat" style="text-decoration: none;">
         <span style="font-size: 20px">@stats.following</span>
         <span style="font-size: 12px">Following</span>
     </NavLink>
-    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+    <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary stat" style="text-decoration: none;" onclick="@PostClick">
         <span style="font-size: 20px">@stats.posts</span>
         <span style="font-size: 12px">Posts</span>
     </NavLink>
     @if(self){
-        <NavLink class="d-flex align-items-center justify-content-center flex-column text-bg-secondary" style="text-decoration: none;">
+        <NavLink href="@friendsUrl" class="d-flex align-items-center justify-content-center flex-column text-bg-secondary stat" style="text-decoration: none;">
             <span style="font-size: 20px">@stats.friends</span>
             <span style="font-size: 12px">Friends</span>
         </NavLink>
+        <style>
+            .stat{
+                width: 24%;
+            }
+        </style>
+    }
+    else
+    {
+        <style>
+            .stat{
+                width: 32%;
+            }
+        </style>
     }
 </div>
 
@@ -25,18 +38,34 @@
     public bool self { get; set; }
     [Parameter]
     public UserStats stats { get; set; }
+    [Parameter]
+    public int userId { get; set; }
+    [Parameter]
+    public Action? postsClick { get; set; }
+
+    private string followersUrl;
+    private string followingUrl;
+    private string friendsUrl;
 
     protected override void OnInitialized()
     {
+        followersUrl = $"./Profile/{userId}/Followers";
+        followingUrl = $"./Profile/{userId}/Following";
+        friendsUrl = $"./Profile/{userId}/Friend";
         if(stats == null)
-        {
-            stats = new()
             {
-                followers = 0,
-                following = 0,
-                friends = 0,
-                posts = 0
-            };
-        }
+                stats = new()
+                {
+                    followers = 0,
+                    following = 0,
+                    friends = 0,
+                    posts = 0
+                };
+            }
+    }
+
+    private void PostClick()
+    {
+        postsClick?.Invoke();
     }
 }

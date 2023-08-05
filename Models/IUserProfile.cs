@@ -7,5 +7,6 @@
         UserStats userStats { get; set; }
         int UserId { get; set; }
         string Username { get; set; }
+        public List<string> YourRelationships { get; set; }
     }
 }
