@@ -1,9 +1,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY Foodi-Application-NET-7.0.csproj .
-RUN dotnet restore Foodi-Application-NET-7.0.csproj
+RUN dotnet restore Recipi-PWA.csproj
 COPY . .
-RUN dotnet build Foodi-Application-NET-7.0.csproj -c Release -o /app/build
+RUN dotnet build Recipi-PWA.csproj -c Release -o /app/build
 
 FROM build AS publish
 RUN dotnet publish Foodi-Application-NET-7.0.csproj -c Release -o /app/publish
