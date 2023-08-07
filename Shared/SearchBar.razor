@@ -1,0 +1,10 @@
+﻿<div class="fixed-top">
+    <img src="./placeholder_searchbar.png"  alt="searchbar placeholder image" class="img-fluid" />
+    @ChildContent
+</div>
+
+@code {
+    //presumably search function code...
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+}

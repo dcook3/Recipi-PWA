@@ -1,0 +1,129 @@
+﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Services;
+@inject IRecipeService recipeService;
+@inject StateContainer state;
+@if(cookbook){
+    <div class="d-flex flex-row container-fluid p-0">
+        <div class="bg-primary text-light p-1" style="width: 50%; text-align: center;">
+            Cookbook
+        </div>
+        <div class="bg-warning text-light p-1" style="width: 50%; text-align: center;" onclick="@ToggleBody">
+            Posts
+        </div>
+    </div>
+    <div class="d-flex flex-row align-items-center justify-content-between container-fluid p-1" >
+        <FilterBy options="@filterOptions" selectedIndex="@selectedIndex" FilterUpdated="FilterUpdated"></FilterBy>
+        <div class="d-flex flex-row align-items-center justify-content-around">
+            @if(self){
+                <div class="m-1">
+                    <Button shape="circle"><i class="fs-2 fa fa-pen-to-square"></i></Button>
+                </div>
+                <div class="m-1">
+                    <Button shape="circle"><i class="fs-2 fas fa-plus" style="width: 1em;"></i></Button>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="d-flex flex-column align-items-center justify-content-start container-fluid">
+        @if(status == "ready")
+        {           
+            @foreach (var recipe in recipes)
+            {
+                <CookbookRecipeCard recipe="@recipe" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+            }
+        }
+        @if (status == "loading")
+        {
+            <LoadingSpinner></LoadingSpinner>
+        }
+        else if(status == "error")
+        {
+            <div class="text-danger">
+                    @eMessage
+            </div>
+        }
+
+    </div>
+
+}
+else
+{
+    <div class="d-flex flex-row container-fluid p-0">
+        <div class="bg-warning text-light p-1" style="width: 50%; text-align: center;" onclick="@ToggleBody">
+            Cookbook
+        </div>
+        <div class="bg-primary text-light p-1" style="width: 50%; text-align: center;">
+            Posts
+        </div>
+    </div>
+
+    <UserPosts userId="@userId"></UserPosts>
+}
+
+@code {
+    [Parameter]
+    public bool self { get; set; } = false;
+    [Parameter]
+    public int userId { get; set; } = 0;
+
+    private bool cookbook = true;
+
+    private List<CookbookRecipe> recipes = new();
+
+    private string status = "loading";
+
+    private string eMessage = "";
+
+    private string[] filterOptions = { "Default", "Popular", "Author", "Date Created: Newest First", "Date Created: Oldest First" };
+
+    private int selectedIndex = 0;
+
+    protected async override Task OnInitializedAsync()
+    {
+        await GetRecipes();
+    }
+
+    private async void FilterUpdated(int newIndex)
+    {
+        if(selectedIndex != newIndex)
+        {
+            selectedIndex = newIndex;
+            status = "loading";
+            StateHasChanged();
+            await GetRecipes();
+        }
+    }
+
+    private async Task GetRecipes()
+    {
+        HttpResponseMessage response = await recipeService.GetCookbook(userId, filterOptions[selectedIndex]);
+
+
+        if (response.IsSuccessStatusCode)
+        {
+            recipes = await response.Content.ReadFromJsonAsync<List<CookbookRecipe>>();
+
+            if (recipes == null)
+            {
+                status = "error";
+                eMessage = "Error Loading Recipes";
+            }
+            else
+            {
+                status = "ready";
+            }
+        }
+        else
+        {
+            status = "error";
+            eMessage = "Error Loading Recipes";
+        }
+        StateHasChanged();
+    }
+
+    private void ToggleBody()
+    {
+        cookbook = !cookbook;
+
+    }
+}

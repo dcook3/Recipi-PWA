@@ -1,0 +1,53 @@
+﻿<div @ontouchenter="HandleTouchEnter" @ontouchmove="HandleTouchMove" class="position-relative @collapseStatus" id="collapsable" style="background-color:@BackgroundColor;">
+    @ChildContent
+    @if (showRecipe)
+    {
+        <RecipeContainer></RecipeContainer>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string BackgroundColor { get; set; } = "white";
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    bool showRecipe = false;
+    public string collapseStatus = "collapsed";
+    bool touchEnterHasHappened = false;
+    double xDown;
+    double yDown;
+
+    public void HandleTouchEnter(TouchEventArgs e)
+    {
+        xDown = e.TargetTouches[0].ClientX;
+        yDown = e.TargetTouches[0].ClientY;
+        touchEnterHasHappened = true;
+    }
+
+    public void HandleTouchMove(TouchEventArgs e)
+    {
+        if (touchEnterHasHappened)
+        {
+            double xDiff = xDown - e.TargetTouches[0].ClientX;
+            double yDiff = yDown - e.TargetTouches[0].ClientY;
+
+            if(Math.Sqrt(Math.Pow(xDiff,2) + Math.Pow(yDiff,2)) > 10) //calculate distance between two start and end touch to detect a swipe
+            {
+                if (yDiff > 0)
+                {
+                    if (Math.Abs(xDiff) <= Math.Abs(yDiff))
+                    {
+                        collapseStatus = "expand";
+                        showRecipe = true;
+                    }
+                    else
+                    {
+                        collapseStatus = "collapsed";
+                        showRecipe = false;
+                    }
+                }
+            }
+        }
+    }
+}

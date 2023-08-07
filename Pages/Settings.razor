@@ -1,0 +1,14 @@
+﻿@page "/profile/settings"
+@using Recipi_PWA.Models;
+@inject StateContainer State
+
+<DrilldownOptions jsonString="@json" />
+
+@code {
+    string json = "";
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        json = await State.GetSetting();
+    }
+}

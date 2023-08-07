@@ -1,0 +1,39 @@
+﻿@page "/Register"
+@using System.Text.RegularExpressions;
+<h3>Register</h3>
+
+<InputText @bind-Value="password" @onchange="(validPassword != null) ? CheckPassword : null" ></InputText>
+<button @onclick="Submit">Submit</button>
+@if (validPassword != null)
+{
+    if ((bool)validPassword)
+    {
+        //We can make a
+        <p>Valid</p>
+    }
+    else
+    {
+        <p>Not Valid</p>
+    }
+}
+
+@code {
+    private string password = "";
+
+    private Regex hasNumber = new Regex(@"[0-9]+");
+    private Regex hasUpperChar = new Regex(@"[A-Z]+");
+    private Regex hasMinimum8Chars = new Regex(@".{8,}");
+    private bool? validPassword;
+
+    public void Submit()
+    {
+        CheckPassword();
+    }
+
+    public void CheckPassword()
+    {
+        validPassword = hasNumber.IsMatch(password) &&
+                        hasUpperChar.IsMatch(password) &&
+                        hasMinimum8Chars.IsMatch(password);
+    }
+}

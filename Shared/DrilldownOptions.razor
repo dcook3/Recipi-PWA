@@ -1,0 +1,148 @@
+﻿@using Microsoft.JSInterop;
+@using System.Text.Json;
+@using System.Net.Http;
+@using Recipi_PWA.Models;
+
+@inject HttpClient Http
+@inject StateContainer StateContainer
+
+<TopViewport>
+    @if (!isRoot)
+    {
+        <a @onclick="LoadLastSetting"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
+    }
+    else
+    {
+        <a @onclick="SubmitHandler"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
+    }
+</TopViewport>
+
+<ul class="list-group list-group-flush">
+    @if (isRoot)
+    {
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a href="@settings.changeProfile.label"> Change profile</a>
+        </li>
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a href="@settings.changePassword.label">Change password</a>
+        </li>
+        <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between m-3">
+            <label>@settings.anonymousUsername.label</label>
+            <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" @bind-value="anonymousName" />
+        </li>
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a @onclick="NotificationHandler" href="profile/settings#" >Notifications Settings</a>
+        </li>
+    }
+    else
+    {
+        @foreach(SettingOption opti in selectedInner)
+        {
+            <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+                @if(opti.type == "string")
+                {
+                    <label for="@opti.label">@opti.label</label>
+                    <input type="text" name="@opti.label" />
+                }
+                else if(opti.type == "number")
+                {
+                    <label for="@opti.label">@opti.label</label>
+                    <input class="form-input" type="number" name="@opti.label" />
+                }
+                else
+                {
+                    <div class="form-check form-switch d-flex justify-content-between">
+                        <label for="@opti.label">@opti.label</label>
+                        <input class="form-check-input" type="checkbox" role="switch" name="@opti.label" />
+                    </div>
+                }
+            </li>
+
+            innerVals.Add(new KeyValuePair<string, KeyValuePair<string, string>>(thisSetting, new KeyValuePair<string, string>(opti.label, opti.value)));
+        }
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public string jsonString { get; set; }
+    public Setting settings;
+    public Stack<string> selectedInners = new();
+    public List<SettingOption> selectedInner;
+    public bool isRoot = true;
+    public string thisSetting = "root";
+
+    private bool anonymousName { get; set; } = false;
+    private List<KeyValuePair<string, KeyValuePair<string, string>>> innerVals = new();
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (string.IsNullOrEmpty(jsonString))
+        {
+            settings = new Setting();
+            await StateContainer.SetSetting(settings);
+            jsonString = JsonSerializer.Serialize(settings);
+        }
+        else
+        {
+            settings = JsonSerializer.Deserialize<Setting>(jsonString);
+        }
+
+    }
+
+    private async void SubmitHandler()
+    {
+        settings.anonymousUsername.value = anonymousName.ToString();
+
+        foreach (KeyValuePair<string, KeyValuePair<string, string>> kv in innerVals)
+        {
+            if(kv.Key == "notification")
+            {
+                if(kv.Value.Key == "Push Notifications")
+                {
+                    settings.notifications[0].value = kv.Value.Value;
+                }
+                else if (kv.Value.Key == "New Offer Notifications")
+                {
+                    settings.notifications[1].value = kv.Value.Value;
+                }
+            }
+        }
+
+        await StateContainer.SetSetting(settings);
+    }
+
+    private void NotificationHandler()
+    {
+        thisSetting = "notification";
+        selectedInner = settings.notifications;
+        isRoot = false;
+        _ = InvokeAsync(() =>
+        {
+            selectedInners.Push(thisSetting);
+            StateHasChanged();
+        });
+    }
+
+    private void LoadLastSetting()
+    {
+        if (selectedInners.TryPop(out string toLoad))
+        {
+            //add any other sub settings as options to link their components
+            if (toLoad == "notifications")
+            {
+                thisSetting = "notifications";
+                selectedInner = settings.notifications;
+                isRoot = false;
+            }
+        }
+        else
+        {
+            isRoot = true;
+        }
+        _ = InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+}

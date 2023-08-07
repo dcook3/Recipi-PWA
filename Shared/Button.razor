@@ -1,0 +1,51 @@
+﻿
+<div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@shapeStyle cursor: pointer;" @onclick="Click">
+    @if (status == "loading")
+    {
+        <LoadingSpinner colorClass="text-light"></LoadingSpinner>
+    }
+    else
+    {
+        <div class="text-light">@ChildContent</div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public Action? onclick { get; set; }
+    [Parameter]
+    public string status { get; set; } = "ready";
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    [Parameter]
+    public string shape { get; set; } = "rect";
+    [Parameter]
+    public string bgColor {get; set;} = "bg-warning";
+    [Parameter]
+    public bool disabled { get; set; } = false;
+
+    private string shapeClass = "";
+    private string shapeStyle = "";
+
+    protected override void OnInitialized()
+    {
+        if(shape == "rect")
+        {
+            shapeClass = "rounded-1";
+            shapeStyle = "width: 100px;";
+        }
+        if(shape == "circle")
+        {
+            shapeStyle = "";
+            shapeClass = "rounded-circle";
+        }
+    }
+
+    private void Click()
+    {
+        if(status != "loading" || disabled){
+            onclick?.Invoke();  
+        }
+    }
+}

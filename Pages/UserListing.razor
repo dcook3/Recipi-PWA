@@ -1,0 +1,120 @@
+﻿@page "/Profile/{userId:int}/{relationshipType}"
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Shared.Profile;
+@inject IUserService userService;
+@inject StateContainer state;
+@inject NavigationManager NavigationManager;
+<div class="bg-secondary py-4 px-3 d-flex flex-row align-items-center justify-content-between text-light container-fluid">
+    <NavLink href="@backUrl"><i class="fa fa-angle-left text-light"></i></NavLink>
+    @if(relationshipType == "Friend")
+    {
+        <div>Friends</div>
+    }
+    else
+    {
+        <div>@relationshipType</div>
+    }
+
+    
+    <div></div>
+</div>
+@if (status == "error")
+{
+    <div class="container-fluid d-flex align-items-center justify-content-start">
+        <div>@eMessage</div>
+    </div>
+}
+else{
+    @if(status == "loading"){
+        <LoadingSpinner></LoadingSpinner>
+    }
+    else
+    {
+        for(int i = 0; i < frIndex; i++)
+        {
+            Console.WriteLine(listData.ElementAt(i).Username);
+            <UserListingCard listingData="@listData.ElementAt(i)" onRequestUpdate="@FRUpdate" friendRequest></UserListingCard>
+        }
+        for (int i = frIndex; i < listData.Count(); i++)
+        {
+            <UserListingCard listingData="@listData.ElementAt(i)"></UserListingCard>
+        }
+    }
+}
+
+@code {
+    [Parameter]
+    public int userId { get; set; }
+    [Parameter]
+    public string relationshipType { get; set; }
+
+    private string backUrl;
+
+    private List<UserListingData> listData;
+
+    private int frIndex = 0;
+
+    private string status = "loading";
+    private string eMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        backUrl = $"./Profile/{userId}";
+        await GetListData();
+    }
+
+    async void FRUpdate(){
+        await GetListData();
+        StateHasChanged();
+    }
+
+    async Task GetListData()
+    {
+
+        listData = new();
+
+        HttpResponseMessage frResponse;
+        HttpResponseMessage fResponse;
+        if (relationshipType == "Friend")
+        {
+            if (!state.LoggedIn)
+            {
+                NavigationManager.NavigateTo("/Login");
+            }
+
+            frResponse = await userService.GetFriendRequests();
+            fResponse = await userService.GetFriends();
+
+            if (fResponse.IsSuccessStatusCode && frResponse.IsSuccessStatusCode)
+            {
+
+
+                listData.AddRange(await frResponse.Content.ReadFromJsonAsync<List<UserListingData>>());
+                frIndex = listData.Count();
+                Console.WriteLine("Fr Index " + frIndex);
+                listData.AddRange(await fResponse.Content.ReadFromJsonAsync<List<UserListingData>>());
+                status = "ready";
+            }
+            else
+            {
+                status = "error";
+                eMessage = "An Error has occurred";
+            }
+        }
+        else
+        {
+            fResponse = await userService.GetRelationship(userId, relationshipType);
+
+            if (fResponse.IsSuccessStatusCode)
+            {
+                listData = await fResponse.Content.ReadFromJsonAsync<List<UserListingData>>();
+                status = "ready";
+            }
+            else
+            {
+                status = "error";
+                eMessage = "An Error has occurred";
+            }
+        }
+    }
+}
