@@ -1,13 +1,14 @@
 ﻿@page "/profile/settings"
-@inject IIndexedDbAccessor IndexedDbAccessor
+@using Recipi_PWA.Models;
+@inject StateContainer State
 
 <DrilldownOptions jsonString="@json" />
 
 @code {
     string json = "";
-    protected async override void OnInitialized()
+    protected async override Task OnInitializedAsync()
     {
         base.OnInitialized();
-        json = await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false);
+        json = await State.GetSetting();
     }
 }
