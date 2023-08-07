@@ -34,7 +34,9 @@
         }
         @if (status == "loading")
         {
-            <LoadingSpinner></LoadingSpinner>
+            <div class="mt-1">
+                <LoadingSpinner></LoadingSpinner>
+            </div>
         }
         else if(status == "error")
         {

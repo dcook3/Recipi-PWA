@@ -11,13 +11,17 @@
 }
 else{
     @if(status == "loading"){
-        <LoadingSpinner></LoadingSpinner>
+        <div class="d-flex flex-column align-items-center justify-content-center bg-secondary" style="width: 100%; height: 20%">
+            <LoadingSpinner colorClass="text-light"></LoadingSpinner>
+        </div>
+        
     }
     else
     {
         <ProfileHeader self=@self user="@user"></ProfileHeader>
-        <ProfileBody self=@self userId="@user.UserId"></ProfileBody>
     }
+
+    <ProfileBody self=@self userId="@user.UserId"></ProfileBody>
 }
 
 @code {
