@@ -1,12 +1,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY Foodi-Application-NET-7.0.csproj .
+COPY Recipi-PWA.csproj .
 RUN dotnet restore Recipi-PWA.csproj
 COPY . .
 RUN dotnet build Recipi-PWA.csproj -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish Foodi-Application-NET-7.0.csproj -c Release -o /app/publish
+RUN dotnet publish Recipi-PWA.csproj -c Release -o /app/publish
 
 FROM nginx:alpine AS final
 EXPOSE 8080
