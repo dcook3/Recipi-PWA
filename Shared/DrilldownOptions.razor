@@ -10,26 +10,62 @@
 <TopViewport>
     @if (!isRoot)
     {
-        <a @onclick="LoadLastSetting"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
+        <a class="ms-3" @onclick="LoadLastSetting"><i class="fs-5 fa-solid text-white fa-caret-left"></i></a>
+        <h3 class="text-white text-center mt-1 d-inline-block">@thisSetting</h3>
     }
     else
     {
-        <a @onclick="OuterSubmitHandler"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
+        <h3 class="text-white text-center mt-1 align-middle">Settings</h3>
     }
 </TopViewport>
-
-<ul class="list-group list-group-flush fs-4">
+@{
+    void GenerateInnerListItems(InnerSettingsGroup innerSettings)
+    {
+        if (innerSettings != null && innerSettings.boolSettings.Count > 0)
+            for(int i = 0; i < innerSettings.boolSettings.Count; i++)
+            {
+                var ii = i;
+                <li class="list-group-item">
+                    <div class="form-check form-switch d-flex align-items-center justify-content-between m-3">
+                        <label for="@innerSettings.boolSettings[i].label">@innerSettings.boolSettings[i].label</label>
+                        <input type="checkbox" role="switch" class="form-check-input" id="@innerSettings.boolSettings[i].label" @bind="innerSettings.boolSettings[ii].value"></input>
+                    </div>
+                </li>
+            }
+        else if (innerSettings != null && innerSettings.stringSettings.Count > 0)
+        {
+            for (int i = 0; i < innerSettings.stringSettings.Count; i++)
+            {
+                <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+                    <label for="@innerSettings.stringSettings[i].label">@innerSettings.stringSettings[i].label</label>
+                    <InputText class="form-control" id="@innerSettings.stringSettings[i].label" @bind-Value="innerSettings.stringSettings[i].value"></InputText>
+                </li>
+            }
+        }
+        else if (innerSettings != null && innerSettings.numberSettings.Count > 0)
+        {
+            for (int i = 0; i < innerSettings.numberSettings.Count; i++)
+            {
+                <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+                    <label for="@innerSettings.numberSettings[i].label">@innerSettings.numberSettings[i].label</label>
+                    <InputNumber class="form-control" id="@innerSettings.numberSettings[i].label" @bind-Value="innerSettings.numberSettings[i].value"></InputNumber>
+                </li>
+            }
+        }
+    }
+}
+<ul class="list-group list-group-flush" style="width: 100%;">
     @if (isRoot)
     {
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
-            <a href="@settings.changeProfile.label"> Change profile</a>
+            <a href="@settings.ChangeProfile.label"> Change profile</a>
         </li>
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
-            <a href="@settings.changePassword.label">Change password</a>
+            <a href="@settings.ChangePassword.label">Change password</a>
         </li>
         <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between mx-3">
-            <label>@settings.anonymousUsername.label</label>
-            <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" @bind-value="anonymousName" />
+            <label>@settings.AnonymousUsername.label</label>
+            <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" @bind="settings.AnonymousUsername.value" />
         </li>
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a @onclick="NotificationHandler" href="profile/settings#" >Notifications Settings</a>
@@ -37,118 +73,40 @@
     }
     else
     {
-        @foreach (var opti in selectedInner)
+        if(thisSetting == "Notifications")
         {
-            <li class="list-group-item d-flex align-items-center justify-content-between m-3">
-                @if (opti is StringSetting)
-                {
-                    StringSetting setting = new(opti.label, opti.value);
-                    <label for="@opti.label">@opti.label</label>
-                    <InputText class="form-control" @bind-Value="setting.value"></InputText>
-                }
-                else if (opti is NumberSetting)
-                {
-                    NumberSetting setting = opti as NumberSetting;
-                    <label for="@opti.label">@opti.label</label>
-                    <InputNumber class="form-control" @bind-Value="setting.value"></InputNumber>
-                }
-                else
-                {
-                    BoolSetting setting = opti as BoolSetting;
-                    <div class="form-check form-switch d-flex justify-content-between">
-                        <label for="@opti.label">@opti.label</label>
-                        <InputCheckbox class="form-switch" @bind-Value="setting.value"></InputCheckbox>
-                    </div>
-                }
-            </li>
+            GenerateInnerListItems(settings.Notifications);
         }
+        //add on if there exist more root inner settings
     }
 </ul>
 
 @code {
-    [Parameter]
-    public string jsonString { get; set; }
-    public Setting settings;
+    [CascadingParameter]
+    public UserSettings settings { get; set; }
     public Stack<string> selectedInners = new();
-    public List<SettingOption> selectedInner;
     public bool isRoot = true;
     public string thisSetting = "root";
 
+    //Root settings go here
     private bool anonymousName { get; set; } = false;
-    private Dictionary<string, string> innerVals = new();
-    private bool isFirstInitialization = true;
 
-    protected async override Task OnInitializedAsync()
+    private async void NotificationHandler()
     {
-        if (isFirstInitialization)
-        {
-            if (string.IsNullOrEmpty(jsonString))
-            {
-                settings = new Setting();
-                await StateContainer.SaveSetting();
-                jsonString = JsonSerializer.Serialize(settings);
-            }
-            else
-            {
-                settings = JsonSerializer.Deserialize<Setting>(jsonString);
-            }
-        }
-        else
-        {
-            isFirstInitialization = false;
-        }
-
-    }
-
-    private async void OuterSubmitHandler()
-    {
-        //Handle root settings here
-        settings.anonymousUsername.value = anonymousName;
-
+        thisSetting = "Notifications";
+        isRoot = false;
+        selectedInners.Push(thisSetting);
         await StateContainer.SaveSetting();
     }
 
-    private void NotificationHandler()
+    private async void LoadLastSetting()
     {
-        thisSetting = "notification";
-        selectedInner = settings.notifications;
-        isRoot = false;
-        _ = InvokeAsync(() =>
-        {
-            selectedInners.Push(thisSetting);
-            StateHasChanged();
-        });
-    }
-
-    private void LoadLastSetting()
-    {
-        if(thisSetting == "notifications")
-        {
-            for (int i = 0; i < selectedInner.Count; i++)
-            {
-                if (selectedInner[i] is StringSetting)
-                {
-                    settings.notifications[i] = selectedInner[i] as StringSetting;
-                }
-                else if (selectedInner[i] is NumberSetting)
-                {
-                    settings.notifications[i] = selectedInner[i] as NumberSetting;
-                }
-                else if (selectedInner[i] is BoolSetting)
-                {
-                    settings.notifications[i] = selectedInner[i] as BoolSetting;
-                }
-            }
-        }
-        //add onto this when more inner settings are available
-
         if (selectedInners.TryPop(out string toLoad))
         {
             //add any other sub settings as options to link their components
-            if (toLoad == "notifications")
+            if (toLoad == "Notifications")
             {
-                thisSetting = "notifications";
-                selectedInner = settings.notifications;
+                thisSetting = "Notifications";
                 isRoot = false;
             }
         }
@@ -157,9 +115,6 @@
             isRoot = true;
             thisSetting = "root";
         }
-        _ = InvokeAsync(() =>
-        {
-            StateHasChanged();
-        });
+        await StateContainer.SaveSetting();
     }
 }

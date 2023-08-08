@@ -2,13 +2,7 @@
 @using Recipi_PWA.Models;
 @inject StateContainer State
 
-<DrilldownOptions jsonString="@json" />
+<DrilldownOptions />
 
 @code {
-    string json = "";
-    protected async override Task OnInitializedAsync()
-    {
-        base.OnInitialized();
-        json = await State.GetSetting();
-    }
 }

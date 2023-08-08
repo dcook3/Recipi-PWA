@@ -24,7 +24,7 @@ namespace Recipi_PWA.Models
         {
             _token = (await jsr.InvokeAsync<string?>("localStorage.getItem", "token").ConfigureAwait(false)) ?? String.Empty;
             _you = JsonSerializer.Deserialize<You>(await jsr.InvokeAsync<string?>("localStorage.getItem", "you").ConfigureAwait(false) ?? "{}");
-            _settings = JsonSerializer.Deserialize<Setting>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
+            //_settings = JsonSerializer.Deserialize<UserSettings>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
             Loaded = true;
         }
 
@@ -32,8 +32,6 @@ namespace Recipi_PWA.Models
         {
             return await jsr.InvokeAsync<string>("localStorage.getItem", "token").ConfigureAwait(false);
         }
-
-        
 
         public async Task SetToken(string token)
         {
@@ -77,16 +75,17 @@ namespace Recipi_PWA.Models
             get => _you ?? null;
         }
 
-        private const string KeyName = "state";
-        private Setting _settings;
+        private const string KeyName = "settings";
+        private UserSettings _settings;
         private bool _initialized;
 
         public event EventHandler Changed;
 
         public bool AutoSave { get; set; } = true;
 
-        public async ValueTask<Setting> GetSetting()
+        public async ValueTask<UserSettings> GetSetting()
         {
+            Console.WriteLine("Getting settings");
             if (_settings != null)
                 return _settings;
 
@@ -97,17 +96,31 @@ namespace Recipi_PWA.Models
                 await jsr.InvokeVoidAsync("BlazorRegisterStorageEvent", reference);
                 _initialized = true;
             }
-
+            
             // Read the JSON string that contains the data from the local storage
-            Setting result;
-            var str = await jsr.InvokeAsync<string>("BlazorGetLocalStorage", KeyName);
+            UserSettings result;
+
+            UserSettings defaultSettings = new();
+            defaultSettings = new UserSettings();
+            defaultSettings.AnonymousUsername = new("Use Anonymous Username", false);
+            defaultSettings.ChangeProfile = new("Change Profile", "https://recipiapp.com/profile/edit");
+            defaultSettings.ChangePassword = new("Change Password", "https://recipiapp.com/login/change-password");
+            defaultSettings.Notifications = new();
+            defaultSettings.Notifications.boolSettings = new()
+            {
+                new BoolSetting("Offers Notifications", true),
+                new BoolSetting("Messages Notifications", true),
+                new BoolSetting("Friend Request Notifications", true)
+            };
+
+            var str = await jsr.InvokeAsync<string>("localStorage.getItem", KeyName);
             if (str != null)
             {
-                result = System.Text.Json.JsonSerializer.Deserialize<Setting>(str) ?? new Setting();
+                result = JsonSerializer.Deserialize<UserSettings>(str) ?? defaultSettings;
             }
             else
             {
-                result = new Setting();
+                result = defaultSettings;
             }
 
             // Register the OnPropertyChanged event, so it automatically persists the settings as soon as a value is changed
@@ -118,6 +131,7 @@ namespace Recipi_PWA.Models
 
         private async void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
+            Console.WriteLine("On property changed");
             if (AutoSave)
             {
                 await SaveSetting();
@@ -128,6 +142,7 @@ namespace Recipi_PWA.Models
         [JSInvokable]
         public void OnStorageUpdated(string key)
         {
+            Console.WriteLine($"On storage changed key: {key}");
             if (key == KeyName)
             {
                 // Reset the settings. The next call to Get will reload the data
@@ -138,8 +153,9 @@ namespace Recipi_PWA.Models
 
         public async Task SaveSetting()
         {
+            Console.WriteLine("Saving settings");
             var json = JsonSerializer.Serialize(_settings);
-            await jsr.InvokeVoidAsync("localStorage.setItem", "settings", JsonSerializer.Serialize(_settings)).ConfigureAwait(false);
+            await jsr.InvokeVoidAsync("localStorage.setItem", KeyName, json).ConfigureAwait(false);
             NotifyStateChanged();
         }
                 
