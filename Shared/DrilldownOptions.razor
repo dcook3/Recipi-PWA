@@ -2,6 +2,7 @@
 @using System.Text.Json;
 @using System.Net.Http;
 @using Recipi_PWA.Models;
+@using Recipi_PWA.Models.Settings;
 
 @inject HttpClient Http
 @inject StateContainer StateContainer
@@ -17,7 +18,7 @@
     }
 </TopViewport>
 
-<ul class="list-group list-group-flush">
+<ul class="list-group list-group-flush fs-4">
     @if (isRoot)
     {
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
@@ -26,7 +27,7 @@
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a href="@settings.changePassword.label">Change password</a>
         </li>
-        <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between m-3">
+        <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between mx-3">
             <label>@settings.anonymousUsername.label</label>
             <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" @bind-value="anonymousName" />
         </li>
@@ -36,29 +37,30 @@
     }
     else
     {
-        @foreach(SettingOption opti in selectedInner)
+        @foreach (var opti in selectedInner)
         {
             <li class="list-group-item d-flex align-items-center justify-content-between m-3">
-                @if(opti.type == "string")
+                @if (opti is StringSetting)
                 {
+                    StringSetting setting = new(opti.label, opti.value);
                     <label for="@opti.label">@opti.label</label>
-                    <input type="text" name="@opti.label" />
+                    <InputText class="form-control" @bind-Value="setting.value"></InputText>
                 }
-                else if(opti.type == "number")
+                else if (opti is NumberSetting)
                 {
+                    NumberSetting setting = opti as NumberSetting;
                     <label for="@opti.label">@opti.label</label>
-                    <input class="form-input" type="number" name="@opti.label" />
+                    <InputNumber class="form-control" @bind-Value="setting.value"></InputNumber>
                 }
                 else
                 {
+                    BoolSetting setting = opti as BoolSetting;
                     <div class="form-check form-switch d-flex justify-content-between">
                         <label for="@opti.label">@opti.label</label>
-                        <input class="form-check-input" type="checkbox" role="switch" name="@opti.label" />
+                        <InputCheckbox class="form-switch" @bind-Value="setting.value"></InputCheckbox>
                     </div>
                 }
             </li>
-
-            innerVals.Add(new KeyValuePair<string, KeyValuePair<string, string>>(thisSetting, new KeyValuePair<string, string>(opti.label, opti.value)));
         }
     }
 </ul>
@@ -73,29 +75,37 @@
     public string thisSetting = "root";
 
     private bool anonymousName { get; set; } = false;
-    private List<KeyValuePair<string, KeyValuePair<string, string>>> innerVals = new();
+    private Dictionary<string, string> innerVals = new();
+    private bool isFirstInitialization = true;
 
     protected async override Task OnInitializedAsync()
     {
-        if (string.IsNullOrEmpty(jsonString))
+        if (isFirstInitialization)
         {
-            settings = new Setting();
-            await StateContainer.SetSetting(settings);
-            jsonString = JsonSerializer.Serialize(settings);
+            if (string.IsNullOrEmpty(jsonString))
+            {
+                settings = new Setting();
+                await StateContainer.SaveSetting();
+                jsonString = JsonSerializer.Serialize(settings);
+            }
+            else
+            {
+                settings = JsonSerializer.Deserialize<Setting>(jsonString);
+            }
         }
         else
         {
-            settings = JsonSerializer.Deserialize<Setting>(jsonString);
+            isFirstInitialization = false;
         }
 
     }
 
     private async void OuterSubmitHandler()
     {
-        //Handle root settings
-        settings.anonymousUsername.value = anonymousName.ToString();
+        //Handle root settings here
+        settings.anonymousUsername.value = anonymousName;
 
-        await StateContainer.SetSetting(settings);
+        await StateContainer.SaveSetting();
     }
 
     private void NotificationHandler()
@@ -112,20 +122,25 @@
 
     private void LoadLastSetting()
     {
-        foreach (KeyValuePair<string, KeyValuePair<string, string>> kv in innerVals)
+        if(thisSetting == "notifications")
         {
-            if (kv.Key == "notification")
+            for (int i = 0; i < selectedInner.Count; i++)
             {
-                if (kv.Value.Key == "Push Notifications")
+                if (selectedInner[i] is StringSetting)
                 {
-                    settings.notifications[0].value = kv.Value.Value;
+                    settings.notifications[i] = selectedInner[i] as StringSetting;
                 }
-                else if (kv.Value.Key == "New Offer Notifications")
+                else if (selectedInner[i] is NumberSetting)
                 {
-                    settings.notifications[1].value = kv.Value.Value;
+                    settings.notifications[i] = selectedInner[i] as NumberSetting;
+                }
+                else if (selectedInner[i] is BoolSetting)
+                {
+                    settings.notifications[i] = selectedInner[i] as BoolSetting;
                 }
             }
         }
+        //add onto this when more inner settings are available
 
         if (selectedInners.TryPop(out string toLoad))
         {
@@ -140,6 +155,7 @@
         else
         {
             isRoot = true;
+            thisSetting = "root";
         }
         _ = InvokeAsync(() =>
         {
