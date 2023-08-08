@@ -13,7 +13,7 @@
     }
     else
     {
-        <a @onclick="SubmitHandler"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
+        <a @onclick="OuterSubmitHandler"><i class="fs-1 text-center fa-solid text-white fa-caret-left "></i></a>
     }
 </TopViewport>
 
@@ -90,24 +90,10 @@
 
     }
 
-    private async void SubmitHandler()
+    private async void OuterSubmitHandler()
     {
+        //Handle root settings
         settings.anonymousUsername.value = anonymousName.ToString();
-
-        foreach (KeyValuePair<string, KeyValuePair<string, string>> kv in innerVals)
-        {
-            if(kv.Key == "notification")
-            {
-                if(kv.Value.Key == "Push Notifications")
-                {
-                    settings.notifications[0].value = kv.Value.Value;
-                }
-                else if (kv.Value.Key == "New Offer Notifications")
-                {
-                    settings.notifications[1].value = kv.Value.Value;
-                }
-            }
-        }
 
         await StateContainer.SetSetting(settings);
     }
@@ -126,6 +112,21 @@
 
     private void LoadLastSetting()
     {
+        foreach (KeyValuePair<string, KeyValuePair<string, string>> kv in innerVals)
+        {
+            if (kv.Key == "notification")
+            {
+                if (kv.Value.Key == "Push Notifications")
+                {
+                    settings.notifications[0].value = kv.Value.Value;
+                }
+                else if (kv.Value.Key == "New Offer Notifications")
+                {
+                    settings.notifications[1].value = kv.Value.Value;
+                }
+            }
+        }
+
         if (selectedInners.TryPop(out string toLoad))
         {
             //add any other sub settings as options to link their components
