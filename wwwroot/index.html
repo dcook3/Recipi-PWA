@@ -32,6 +32,25 @@
     <script src="_framework/blazor.webassembly.js"></script>
     <script>navigator.serviceWorker.register('service-worker.js');</script>
     <script src="css/font-awesome/all.min.js"></script>
+    <script>
+        window.BlazorRegisterStorageEvent = function BlazorRegisterStorageEvent(component) {
+            window.addEventListener("storage", async e => {
+                await component.invokeMethodAsync("OnStorageUpdated", e.key);
+            });
+        }
+
+        const OnLoad = async (e) => {
+            if (navigator.storage && navigator.storage.persist) {
+                const isPersisted = await navigator.storage.persist();
+                console.log(`Persisted storage granted: ${isPersisted}`);
+            }
+        }
+
+        document.querySelector("#app").addEventListener("onload", OnLoad);
+
+    </script>
 </body>
+
+
 
 </html>
