@@ -17,6 +17,8 @@ namespace Recipi_PWA
         // }
 
         public async Task<HttpResponseMessage> Login(UserLogin login) => await client.PostAsJsonAsync("/api/Users/Login", login);
+
+        public async Task<HttpResponseMessage> Register(UserRegistration registration) => await client.PostAsJsonAsync("/api/Users/Register", registration);
         
         public async Task<HttpResponseMessage> GetUserById(string userId) => await client.GetAsync($"/api/Users/{userId}");
 
@@ -31,5 +33,6 @@ namespace Recipi_PWA
         public async Task<HttpResponseMessage> AcceptFriendRequest(int userId) => await client.PostAsync($"/api/Users/Friend/Accept/{userId}", null);
         public async Task<HttpResponseMessage> DenyFriendRequest(int userId) => await client.DeleteAsync($"/api/Users/Friend/Deny/{userId}");
         public async Task<HttpResponseMessage> RemoveFriend(int userId) => await client.DeleteAsync($"/api/Users/Friend/Remove/{userId}");
+
     }
 }

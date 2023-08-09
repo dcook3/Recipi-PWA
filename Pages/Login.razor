@@ -48,23 +48,12 @@
     {
         status = "loading";
         StateHasChanged();
-        HttpResponseMessage response = await userService.Login(new(){ Credential =  credential, Password = password});
+        HttpResponseMessage response = await userService.Login(new() { Credential = credential, Password = password });
         if (response.IsSuccessStatusCode)
         {
-            Console.WriteLine("Success");
-            var token = await response.Content.ReadAsStringAsync();
-            if (!String.IsNullOrEmpty(token))
-            {
-                await state.SetToken(token);
+            await state.SetToken(await response.Content.ReadAsStringAsync());
 
-                NavigationManager.NavigateTo("/");
-            }
-            else
-            {
-                Console.WriteLine(response);
-                status = "error";
-                eMessage = "An Unkown Error has occurred";
-            }
+            NavigationManager.NavigateTo("/");
         }
         else
         {
