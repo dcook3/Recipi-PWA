@@ -34,7 +34,7 @@
 
             <div class="form-group">
                 <label for="biography" class="text-light fs-8">Biography</label>
-                <input type="file" @bind-value="profileUrl" @oninput="OnFileUpload" capture/>
+                <input type="file" @bind-value="profileUrl" @oninput="OnFileUpload" accept="image/*" capture="camera"/>
             </div>
             
             <Button onclick="@Submit" status="@status">
