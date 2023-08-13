@@ -10,5 +10,9 @@ namespace Recipi_PWA.Services
 
         public async Task<HttpResponseMessage> GetCookbook(string sortBy) => await client.GetAsync($"/api/Recipes/cookbook?sortBy={UrlEncode(sortBy)}");
         public async Task<HttpResponseMessage> GetCookbook(int userId, string sortBy) => await client.GetAsync($"/api/Recipes/cookbook/User/{userId}?sortBy={UrlEncode(sortBy)}");
+
+        public async Task<HttpResponseMessage> GetRecipe(int recipeId) => await client.GetAsync($"/api/Recipes/{recipeId}");
+
+        public async Task<HttpResponseMessage> SetRecipe(Recipe recipe) { await client.PostAsync($"/api/Recipes", { })};
     }
 }
