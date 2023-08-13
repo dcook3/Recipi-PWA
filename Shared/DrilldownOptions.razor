@@ -34,9 +34,9 @@
             }
         else if (innerSettings != null && innerSettings.stringSettings.Count > 0)
         {
-            var ii = i;
             for (int i = 0; i < innerSettings.stringSettings.Count; i++)
             {
+                var ii = i;
                 <li class="list-group-item d-flex align-items-center justify-content-between m-3">
                     <label for="@innerSettings.stringSettings[i].label">@innerSettings.stringSettings[i].label</label>
                     <InputText class="form-control" id="@innerSettings.stringSettings[i].label" @bind-Value="innerSettings.stringSettings[ii].value"></InputText>
