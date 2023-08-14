@@ -1,21 +1,25 @@
 ﻿@page "/RecipeEditor/{recipeId:int}"
+
 @using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
 @using System.Text.Json;
 @inject IRecipeService recipeService;
 @inject StateContainer state;
+@inject NavigationManager navi;
 
-<div class="bg-primary">
+<div class="bg-primary container-fluid" style="height: 100%">
     <div class="d-flex justify-content-between">
-        <Button bgColor="bg-warning" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
-        <Button bgColor="bg-warning" shape="circle">+</Button>
+        <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="btn btn-warning rounded" @onclick="AddStep">+</button>
     </div>
 
-    @foreach(RecipeStep step in recipe.recipeSteps)
-    {
-        <EditableStepCard Step="step"></EditableStepCard>
-    }
-
+    <div class="d-flex flex-column align-items-center">
+        @foreach (RecipeStep step in recipe.recipeSteps)
+        {
+            <EditableStepCard Step="step"></EditableStepCard>
+        }
+    </div>
+    
     <div class="bg-secondary fixed-bottom" id="footer">
 
     </div>
@@ -50,5 +54,20 @@
     private void HandleSubmit()
     {
         //save recipe into state and load PostEditor
+    }
+
+    private void HandleRedirect()
+    {
+        //this should return you to the last visited page when a navigation tracker has been established
+        navi.NavigateTo("/CookbookViewer");
+    }
+
+    private void AddStep()
+    {
+        RecipeStep step = new();
+        step.stepDescription = "New Step";
+        step.stepOrder = recipe.recipeSteps[recipe.recipeSteps.Count - 1].stepOrder + 1;
+        recipe.recipeSteps.Add(step);
+        StateHasChanged();
     }
 }
