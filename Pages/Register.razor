@@ -2,7 +2,10 @@
 @using System.Text.RegularExpressions;
 @using Recipi_PWA.Models;
 @using System.Net;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared.Profile;
 @inject IUserService userService;
+@inject IMediaUploadService mediaUploadService;
 @inject NavigationManager NavigationManager;
 @inject StateContainer state;
 
@@ -24,7 +27,7 @@
 
             <div class="form-group">
                 <label for="pass" class="text-light fs-8">Password</label>
-                <InputText class = "form-control" type="password" @bind-Value="@password" @oninput="CheckPassword"  DisplayName="pass" id="pass"></InputText>
+                <InputText class = "form-control" type="password" @bind-Value="password" @oninput="CheckPassword"  DisplayName="pass" id="pass"></InputText>
             </div>
 
             <div class="form-group">
@@ -33,8 +36,9 @@
             </div>
 
             <div class="form-group">
-                <label for="biography" class="text-light fs-8">Biography</label>
-                <input type="file" @bind-value="profileUrl" @oninput="OnFileUpload" accept="image/*" capture="camera"/>
+                <label for="pfp" class="text-light fs-8">Profile Picture</label>
+                
+                <InputFile class="form-control" OnChange="@LoadFile" accept="image/*" capture id="pfp"/>
             </div>
             
             <Button onclick="@Submit" status="@status">
@@ -47,8 +51,8 @@
 
                     @if (!validPassword) {
                         <PasswordValidationMessage valid="@hasNumber.IsMatch(password)">Password Must Contain a Number</PasswordValidationMessage>
-                        <PasswordValidationMessage valid="@hasNumber.IsMatch(password)">Password Must Contain 1 Upper Case Character</PasswordValidationMessage>
-                        <PasswordValidationMessage valid="@hasNumber.IsMatch(password)">Password Must Have Atleast 8 Characters</PasswordValidationMessage>
+                        <PasswordValidationMessage valid="@hasUpperChar.IsMatch(password)">Password Must Contain 1 Upper Case Character</PasswordValidationMessage>
+                        <PasswordValidationMessage valid="@hasMinimum8Chars.IsMatch(password)">Password Must Have Atleast 8 Characters</PasswordValidationMessage>
                     }
 
                     @if (status == "error")
@@ -72,8 +76,6 @@
 
     private string password = "";
 
-    private string profileUrl = "";
-
     private Regex hasNumber = new Regex(@"[0-9]+");
     private Regex hasUpperChar = new Regex(@"[A-Z]+");
     private Regex hasMinimum8Chars = new Regex(@".{8,}");
@@ -83,11 +85,8 @@
     private string status = "ready";
     private string eMessage = "";
 
+    private IBrowserFile loadedFile;
 
-    private void OnFileUpload()
-    {
-        Console.WriteLine(profileUrl);
-    }
 
     protected override void OnInitialized()
     {
@@ -97,16 +96,47 @@
         }
     }
 
+    private void LoadFile(InputFileChangeEventArgs e)
+    {
+        loadedFile = e.File;
+        Console.WriteLine(loadedFile.ToString());
+        Console.WriteLine(e.File.Name);
+    }
+
     public async void Submit()
     {
         status = "loading";
         StateHasChanged();
         if (validPassword)
         {
-            ur.Password = BCrypt.Net.BCrypt.HashPassword(password);
+            ur.Password = password; //BCrypt.Net.BCrypt.HashPassword(
 
-            ur.ProfilePicture = "";
+            ur.ProfilePicture = "https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg";
 
+
+            var pfpSuccess = true;
+            if (loadedFile != null)
+            {
+                pfpSuccess = false;
+                var urlRequest = await mediaUploadService.GetPresignedUrl();
+                if (urlRequest.IsSuccessStatusCode)
+                {
+                    var url = await urlRequest.Content.ReadAsStringAsync();
+                    var mediaUploadRequest = await mediaUploadService.UploadToS3(url, loadedFile);
+                    if (mediaUploadRequest.IsSuccessStatusCode)
+                    {
+                        ur.ProfilePicture = Regex.Match(url, "^.*?(?=\\?)").Value;
+                        pfpSuccess = true;
+                    }
+                }
+                else
+                {
+                    status = "error";
+                    eMessage = "Profile Picture Upload Failed";
+                }
+            }
+
+            
             var response = await userService.Register(ur);
             if (response.IsSuccessStatusCode)
             {
@@ -118,6 +148,30 @@
                 status = "error";
                 eMessage = await response.Content.ReadAsStringAsync();
             }
+
+            if (loadedFile != null)
+            {
+                pfpSuccess = false;
+                var urlRequest = await mediaUploadService.GetPresignedUrl();
+                if (urlRequest.IsSuccessStatusCode)
+                {
+                    var url = await urlRequest.Content.ReadAsStringAsync();
+                    var mediaUploadRequest = await mediaUploadService.UploadToS3(url, loadedFile);
+                    if (mediaUploadRequest.IsSuccessStatusCode)
+                    {
+                        ur.ProfilePicture = Regex.Match(url, "^.*?(?=\\?)").Value;
+                        pfpSuccess = true;
+                    }
+                }
+                else
+                {
+                    status = "error";
+                    eMessage = "Profile Picture Upload Failed";
+                }
+            }
+
+            NavigationManager.NavigateTo("/");
+            
         }
         else
         {
@@ -126,8 +180,9 @@
         StateHasChanged();
     }
 
-    public void CheckPassword()
+    public void CheckPassword(ChangeEventArgs e)
     {
+        password = e.Value.ToString();
         validPassword = hasNumber.IsMatch(password) &&
                         hasUpperChar.IsMatch(password) &&
                         hasMinimum8Chars.IsMatch(password);
@@ -142,8 +197,6 @@
         if (response.IsSuccessStatusCode)
         {
             await state.SetToken(await response.Content.ReadAsStringAsync());
-
-            NavigationManager.NavigateTo("/");
         }
         else
         {

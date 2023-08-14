@@ -29,7 +29,7 @@
                 @if(state.LoggedIn){
                 <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
                     
-                    <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
+                    <ProfilePicture userId="me" profilePictureUrl="@state.You.ProfilePicture"></ProfilePicture>
                     <span class="resizable">Profile</span>
                     </NavLink>
                 }
