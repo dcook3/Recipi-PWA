@@ -1,0 +1,49 @@
+﻿@using Recipi_PWA.Models
+
+<div class="bg-warning border-0 rounded p-2 my-1" style="width: 65%">
+    @if (IsEditing)
+    {
+        <div class="d-flex flex-column">
+            <input class="form-control mb-1" type="text" @bind-value="Step.stepDescription" name="Step.StepOrder">
+            <div class="d-flex justify-content-between">
+                <a href="/IngredientEditor">+ Insert Ingredient</a>
+                <a @onclick="ToggleEditing">✔</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between">
+            <div>
+                <i class="fa-solid fa-bars"></i>
+                <span>@Step.stepDescription</span>
+            </div>
+            <div>
+                <a @onclick="ToggleEditing" class="me-1">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+                <a @onclick="DeleteStep">
+                    <i class="fa-solid fa-trash"></i>
+                </a>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RecipeStep Step { get; set; } = new();
+
+    private bool IsEditing { get; set; } = false;
+
+    private void ToggleEditing()
+    {
+        IsEditing = !IsEditing;
+        StateHasChanged();
+    }
+
+    private void DeleteStep()
+    {
+        //Call recipestep delete
+    }
+}

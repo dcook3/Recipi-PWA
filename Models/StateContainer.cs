@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Recipi_PWA.Models;
 
 namespace Recipi_PWA.Models
 {
@@ -75,7 +76,6 @@ namespace Recipi_PWA.Models
             get => _you ?? null;
         }
 
-        private const string KeyName = "settings";
         private UserSettings _settings;
         private bool _initialized;
 
@@ -113,7 +113,7 @@ namespace Recipi_PWA.Models
                 new BoolSetting("Friend Request Notifications", true)
             };
 
-            var str = await jsr.InvokeAsync<string>("localStorage.getItem", KeyName);
+            var str = await jsr.InvokeAsync<string>("localStorage.getItem", "settings");
             if (str != null)
             {
                 result = JsonSerializer.Deserialize<UserSettings>(str) ?? defaultSettings;
@@ -142,11 +142,15 @@ namespace Recipi_PWA.Models
         [JSInvokable]
         public void OnStorageUpdated(string key)
         {
-            Console.WriteLine($"On storage changed key: {key}");
-            if (key == KeyName)
+            if (key == "settings")
             {
                 // Reset the settings. The next call to Get will reload the data
                 _settings = null;
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+            else if(key == "recipe")
+            {
+                currentRecipe = null;
                 Changed?.Invoke(this, EventArgs.Empty);
             }
         }
@@ -155,8 +159,63 @@ namespace Recipi_PWA.Models
         {
             Console.WriteLine("Saving settings");
             var json = JsonSerializer.Serialize(_settings);
-            await jsr.InvokeVoidAsync("localStorage.setItem", KeyName, json).ConfigureAwait(false);
+            await jsr.InvokeVoidAsync("localStorage.setItem", "settings", json).ConfigureAwait(false);
             NotifyStateChanged();
+        }
+
+        public Recipe currentRecipe;
+
+        public async Task<Recipe> GetRecipe()
+        {
+            if (currentRecipe != null)
+                return currentRecipe;
+
+            if (!_initialized)
+            {
+                // Create a reference to the current object, so the JS function can call the public method "OnStorageUpdated"
+                var reference = DotNetObjectReference.Create(this);
+                await jsr.InvokeVoidAsync("BlazorRegisterStorageEvent", reference);
+                _initialized = true;
+            }
+
+            // Read the JSON string that contains the data from the local storage
+            Recipe result;
+
+            Recipe placeholderRecipe = new Recipe();
+            placeholderRecipe.recipeTitle = "Recipe was not loaded properly.";
+
+            var str = await jsr.InvokeAsync<string>("sessionStorage.getItem", "recipe");
+            if (str != null)
+            {
+                result = JsonSerializer.Deserialize<Recipe>(str) ?? placeholderRecipe;
+            }
+            else
+            {
+                result = placeholderRecipe;
+            }
+
+            result.PropertyChanged += OnPropertyChanged;
+            currentRecipe = result;
+            return result;
+        }
+
+        public async Task SaveRecipe()
+        {
+            Console.WriteLine("Saving recipe");
+            var json = JsonSerializer.Serialize(currentRecipe);
+            await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
+            NotifyStateChanged();
+        }
+
+        public async Task SaveNewRecipe(Recipe recipe)
+        {
+            if (!recipe.IsStateless)
+            {
+                Console.WriteLine("Saving a new recipe");
+                var json = JsonSerializer.Serialize(recipe);
+                await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
+                NotifyStateChanged();
+            }
         }
                 
         public event Action? OnChange;

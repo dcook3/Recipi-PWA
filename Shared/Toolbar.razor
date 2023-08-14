@@ -2,6 +2,13 @@
 @using Recipi_PWA.Shared.Profile
 @inject StateContainer state;
 @inject NavigationManager NavigationManager;
+
+<Modal @ref="modal" Message="Would you like to attach a recipe to this post?">
+    <button @onclick="@CloseModal" type="button" class="btn btn-primary">No, just record a recipeless post :(</button>
+    @*<input type="file" style="opacity: 0" class="btn btn-primary" accept="video/*" capture @onchange="HandleFileChange"/>*@
+    <button @onclick="@NavigateToRecipeEditor" type="button" class="btn btn-secondary">Yes!</button>
+</Modal>
+
 <nav class="nav bg-secondary fixed-bottom">
     <div class="d-flex justify-content-evenly align-items-center container-fluid" style ="height: 90%">
         <div class="nav-item col-2 px-3 flex-fill">
@@ -15,9 +22,9 @@
             </NavLink>
         </div>
         <div class="nav-item col-2 px-3 flex-fill">
-            <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Post" Match="NavLinkMatch.All">
+            <a class="btn btn-link text-decoration-none text-white d-flex flex-column align-items-center justify-content-center" @onclick="ShowModal">
                 <i class="fa-solid fs-2 fa-square-plus flex-shrink-1"></i> <span class="resizable">Post</span>
-            </NavLink>
+            </a>
         </div>
         <div class="nav-item col-2 px-3 flex-fill">
             <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-center" href="./Messages" Match="NavLinkMatch.All">
@@ -27,10 +34,12 @@
         <div class="nav-item col-2 px-3 flex-fill">
         
                 @if(state.LoggedIn){
-                <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
-                    
-                    <ProfilePicture userId="me" profilePictureUrl="@state.You.ProfilePicture"></ProfilePicture>
-                    <span class="resizable">Profile</span>
+
+                    <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
+                        <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
+                        <span class="resizable">Profile</span>
+
+          
                     </NavLink>
                 }
                 else
@@ -44,5 +53,19 @@
 </nav>
 
 @code{
-    
+    private Modal modal;
+    private void ShowModal() => modal.Open();
+    private void CloseModal() => modal.Close();
+
+    private void NavigateToRecipeEditor()
+    {
+        NavigationManager.NavigateTo("/CookbookViewer");
+        modal.Close();
+    }
+
+    private void HandleFileChange(ChangeEventArgs args)
+    {
+        //state.AddMedia(args.Value);
+        NavigationManager.NavigateTo("/PostEditor");
+    }
 }

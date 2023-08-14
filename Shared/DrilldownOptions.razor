@@ -36,9 +36,10 @@
         {
             for (int i = 0; i < innerSettings.stringSettings.Count; i++)
             {
+                var ii = i;
                 <li class="list-group-item d-flex align-items-center justify-content-between m-3">
                     <label for="@innerSettings.stringSettings[i].label">@innerSettings.stringSettings[i].label</label>
-                    <InputText class="form-control" id="@innerSettings.stringSettings[i].label" @bind-Value="innerSettings.stringSettings[i].value"></InputText>
+                    <InputText class="form-control" id="@innerSettings.stringSettings[i].label" @bind-Value="innerSettings.stringSettings[ii].value"></InputText>
                 </li>
             }
         }
@@ -46,9 +47,10 @@
         {
             for (int i = 0; i < innerSettings.numberSettings.Count; i++)
             {
+                var ii = i;
                 <li class="list-group-item d-flex align-items-center justify-content-between m-3">
                     <label for="@innerSettings.numberSettings[i].label">@innerSettings.numberSettings[i].label</label>
-                    <InputNumber class="form-control" id="@innerSettings.numberSettings[i].label" @bind-Value="innerSettings.numberSettings[i].value"></InputNumber>
+                    <InputNumber class="form-control" id="@innerSettings.numberSettings[i].label" @bind-Value="innerSettings.numberSettings[ii].value"></InputNumber>
                 </li>
             }
         }
