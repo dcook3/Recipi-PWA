@@ -182,9 +182,9 @@ namespace Recipi_PWA.Models
             Recipe result;
 
             Recipe placeholderRecipe = new Recipe();
-            placeholderRecipe.RecipeTitle = "Recipe was not loaded properly.";
+            placeholderRecipe.recipeTitle = "Recipe was not loaded properly.";
 
-            var str = await jsr.InvokeAsync<string>("localStorage.getItem", "recipe");
+            var str = await jsr.InvokeAsync<string>("sessionStorage.getItem", "recipe");
             if (str != null)
             {
                 result = JsonSerializer.Deserialize<Recipe>(str) ?? placeholderRecipe;
@@ -197,6 +197,25 @@ namespace Recipi_PWA.Models
             result.PropertyChanged += OnPropertyChanged;
             currentRecipe = result;
             return result;
+        }
+
+        public async Task SaveRecipe()
+        {
+            Console.WriteLine("Saving recipe");
+            var json = JsonSerializer.Serialize(currentRecipe);
+            await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
+            NotifyStateChanged();
+        }
+
+        public async Task SaveNewRecipe(Recipe recipe)
+        {
+            if (!recipe.IsStateless)
+            {
+                Console.WriteLine("Saving a new recipe");
+                var json = JsonSerializer.Serialize(recipe);
+                await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
+                NotifyStateChanged();
+            }
         }
                 
         public event Action? OnChange;

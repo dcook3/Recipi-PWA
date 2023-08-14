@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Http;
@@ -7,24 +8,24 @@ namespace Recipi_PWA.Models
 {
     public class Recipe
     {
-        private int recipeId;
+        private int _recipeId;
 
-        private string recipeTitle = null!;
+        private string _recipeTitle = null!;
 
-        private string? recipeDescription;
+        private string? _recipeDescription;
 
-        private int userId;
+        private string _createdByUsername;
 
-        private DateTime createdDatetime;
+        private DateTime _createdDatetime;
 
-        private ICollection<RecipeStep> recipeSteps = new List<RecipeStep>();
+        private RecipeStep[] _recipeSteps;
 
-        public int RecipeId { get => recipeId; set { recipeId = value; RaisePropertyChanged(); } }
-        public string RecipeTitle { get => recipeTitle; set { recipeTitle = value; RaisePropertyChanged(); } }
-        public string? RecipeDescription { get => recipeDescription; set { recipeDescription = value; RaisePropertyChanged(); } }
-        public int UserId { get => userId; set { userId = value; RaisePropertyChanged(); } }
-        public DateTime CreatedDatetime { get => createdDatetime; set { createdDatetime = value; RaisePropertyChanged(); } }
-        public ICollection<RecipeStep> RecipeSteps { get => recipeSteps; set { recipeSteps = value; RaisePropertyChanged(); } }
+        public int recipeId { get => _recipeId; set { _recipeId = value; RaisePropertyChanged(); } }
+        public string recipeTitle { get => _recipeTitle; set { _recipeTitle = value; RaisePropertyChanged(); } }
+        public string? recipeDescription { get => _recipeDescription; set { _recipeDescription = value; RaisePropertyChanged(); } }
+        public string createdByUsername { get => _createdByUsername; set { _createdByUsername = value; RaisePropertyChanged(); } }
+        public DateTime createdDatetime { get => _createdDatetime; set { _createdDatetime = value; RaisePropertyChanged(); } }
+        public RecipeStep[] recipeSteps { get => _recipeSteps; set { _recipeSteps = value; RaisePropertyChanged(); } }
 
         public bool IsStateless { get; set; } = true;
 

@@ -19,7 +19,7 @@
 @if (recipes.Count > 0)
     @foreach(var recipe in recipes)
     {
-        <CookbookRecipeCard recipe="recipe" @onclick="() => HandleRecipeNav(recipe.RecipeId)"/>
+        <CookbookRecipeCard recipe="recipe" OnClick="() => HandleRecipeNav(recipe.RecipeId)"/>
     }
 
 @code {

@@ -1,9 +1,54 @@
-﻿@page "/RecipeEditor/{recipeId}"
+﻿@page "/RecipeEditor/{recipeId:int}"
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Services;
+@using System.Text.Json;
+@inject IRecipeService recipeService;
+@inject StateContainer state;
 
-<h3>RecipeEditor</h3>
-<p>ID: @recipeId</p>
+<div class="bg-primary">
+    <div class="d-flex justify-content-between">
+        <Button bgColor="bg-warning" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+        <Button bgColor="bg-warning" shape="circle">+</Button>
+    </div>
+
+    @foreach(RecipeStep step in recipe.recipeSteps)
+    {
+        <EditableStepCard Step="step"></EditableStepCard>
+    }
+
+    <div class="bg-secondary fixed-bottom" id="footer">
+
+    </div>
+</div>
 
 @code {
     [Parameter]
     public int recipeId { get; set; } = -1;
+
+    private Recipe recipe { get; set; } = new();
+
+    protected async override Task OnParametersSetAsync()
+    {
+        recipe.IsStateless = false;
+        if (recipeId > -1)
+        {
+            HttpResponseMessage response;
+            response = await recipeService.GetRecipeById(recipeId);
+            if (response.IsSuccessStatusCode)
+            {
+                string responseBody = await response.Content.ReadAsStringAsync();
+                recipe = JsonSerializer.Deserialize<Recipe>(responseBody) ?? new();
+                await state.SaveNewRecipe(recipe);
+            }
+        }
+        else
+        {
+            Console.WriteLine("Recipe ID was not passed.");
+        }
+    }
+
+    private void HandleSubmit()
+    {
+        //save recipe into state and load PostEditor
+    }
 }

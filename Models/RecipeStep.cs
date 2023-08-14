@@ -2,12 +2,9 @@
 {
     public class RecipeStep
     {
-        public int StepId { get; set; }
-
-        public string StepDescription { get; set; } = null!;
-
-        public int RecipeId { get; set; }
-
-        public short StepOrder { get; set; }
+        public int stepId { get; set; }
+        public string stepDescription { get; set; }
+        public int stepOrder { get; set; }
+        public StepIngredient[] stepIngredients { get; set; }
     }
 }
