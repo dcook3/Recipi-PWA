@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
+using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.Http;
 
 namespace Recipi_PWA.Models
 {
@@ -24,11 +26,14 @@ namespace Recipi_PWA.Models
         public DateTime CreatedDatetime { get => createdDatetime; set { createdDatetime = value; RaisePropertyChanged(); } }
         public ICollection<RecipeStep> RecipeSteps { get => recipeSteps; set { recipeSteps = value; RaisePropertyChanged(); } }
 
+        public bool IsStateless { get; set; } = true;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void RaisePropertyChanged([CallerMemberName] string propertyName = null)
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            if(!IsStateless)
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

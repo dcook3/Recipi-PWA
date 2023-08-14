@@ -10,16 +10,16 @@
 
 <TopViewport>
     <div class="row justify-content-center mt-1">
-        <a href=<!--this will be the last page from a navigation service-->" class="fs-2 col-1 me-5 text-decoration-none">‹</a> @*This will go back*@
+        <a href="this will be the last page from a navigation service" class="fs-2 col-1 me-5 text-decoration-none">‹</a> @*This will go back*@
         <h3 class="text-white col-auto ms-5 d-inline-block">Your Cookbook</h3>
         <a class="fs-2 col-2 me-5 text-decoration-none"></a>
     </div>
 </TopViewport>
 
-@if(recipes.Count > 0)
+@if (recipes.Count > 0)
     @foreach(var recipe in recipes)
     {
-        <CookbookRecipeCard recipe="recipe" />
+        <CookbookRecipeCard recipe="recipe" @onclick="() => HandleRecipeNav(recipe.RecipeId)"/>
     }
 
 @code {
@@ -32,13 +32,7 @@
             HttpResponseMessage response = await recipeService.GetCookbook("");
             if (response.IsSuccessStatusCode)
             {
-                recipes = await response.Content.ReadFromJsonAsync<List<CookbookRecipe>>();
-                Console.WriteLine(recipes.Count);
-            }
-            else
-            {
-                Console.WriteLine("Response returned an error code");
-                //show error modal
+                recipes = await response.Content.ReadFromJsonAsync<List<CookbookRecipe>>() ?? new();
             }
         }
         else
@@ -46,4 +40,6 @@
             navi.NavigateTo("/Login");
         }
     }
+
+    private void HandleRecipeNav(int recipeId) => navi.NavigateTo($"/RecipeEditor/{recipeId}");
 }

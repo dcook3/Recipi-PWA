@@ -1,0 +1,9 @@
+﻿@page "/RecipeEditor/{recipeId}"
+
+<h3>RecipeEditor</h3>
+<p>ID: @recipeId</p>
+
+@code {
+    [Parameter]
+    public int recipeId { get; set; } = -1;
+}
