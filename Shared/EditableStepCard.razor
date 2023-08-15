@@ -15,14 +15,19 @@
     {
         <div class="d-flex justify-content-between">
             <div>
-                <i class="fa-solid fa-bars"></i>
+                <a @onclick="ShiftUp" class="me-1 text-decoration-none">
+                    <i class="fa-solid fa-chevron-up"></i>
+                </a>
+                <a @onclick="ShiftDown" class="me-1 text-decoration-none">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </a>
                 <span>@Step.stepDescription</span>
             </div>
             <div>
-                <a @onclick="ToggleEditing" class="me-1">
+                <a @onclick="ToggleEditing" class="me-1 text-decoration-none">
                     <i class="fa-solid fa-pen-to-square"></i>
                 </a>
-                <a @onclick="DeleteStep">
+                <a @onclick="DeleteStep" class="text-decoration-none">
                     <i class="fa-solid fa-trash"></i>
                 </a>
             </div>
@@ -34,16 +39,20 @@
     [Parameter]
     public RecipeStep Step { get; set; } = new();
 
+    [Parameter]
+    public EventCallback DeleteStep { get; set; }
+
+    [Parameter]
+    public EventCallback ShiftUp { get; set; }
+
+    [Parameter]
+    public EventCallback ShiftDown { get; set; }
+
     private bool IsEditing { get; set; } = false;
 
     private void ToggleEditing()
     {
         IsEditing = !IsEditing;
         StateHasChanged();
-    }
-
-    private void DeleteStep()
-    {
-        //Call recipestep delete
     }
 }

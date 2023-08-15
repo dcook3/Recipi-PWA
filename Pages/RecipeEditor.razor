@@ -6,6 +6,7 @@
 @inject IRecipeService recipeService;
 @inject StateContainer state;
 @inject NavigationManager navi;
+@layout EmptyLayout
 
 <div class="bg-primary container-fluid" style="height: 100%">
     <div class="d-flex justify-content-between">
@@ -14,14 +15,35 @@
     </div>
 
     <div class="d-flex flex-column align-items-center">
-        @foreach (RecipeStep step in recipe.recipeSteps)
+        @if (status == "ready")
+            @foreach (RecipeStep step in recipe.recipeSteps)
+            {
+                string up = "up";
+                string down = "down";
+                <EditableStepCard 
+                    Step="step" 
+                    DeleteStep="() => DeleteStep(step)"
+                    ShiftUp="() => ShiftStep(step, up)"
+                    ShiftDown="() => ShiftStep(step, down)"
+                >
+                </EditableStepCard>
+            }
+        else if (status == "error")
         {
-            <EditableStepCard Step="step"></EditableStepCard>
+            <span class="text-danger">Failed loading recipe steps, please reload or try again.</span>
+        }
+        else
+        {
+            <LoadingSpinner></LoadingSpinner>
         }
     </div>
     
-    <div class="bg-secondary fixed-bottom" id="footer">
-
+    <div class="bg-secondary fixed-bottom d-flex justify-content-between" id="footer">
+        <div class="d-flex flex-column">
+            <input type="text" class="minimal-input fs-2 mb-1 text-white" @bind-value="recipe.recipeTitle"/>
+            <input type="text" class="minimal-input no-line fst-italic text-light" @bind-value="recipe.recipeDescription" />
+        </div>
+        <button @onclick="HandleSubmit" class="btn btn-warning rounded"></button>
     </div>
 </div>
 
@@ -30,6 +52,8 @@
     public int recipeId { get; set; } = -1;
 
     private Recipe recipe { get; set; } = new();
+
+    private string status = "loading";
 
     protected async override Task OnParametersSetAsync()
     {
@@ -40,20 +64,29 @@
             response = await recipeService.GetRecipeById(recipeId);
             if (response.IsSuccessStatusCode)
             {
+                status = "ready";
                 string responseBody = await response.Content.ReadAsStringAsync();
                 recipe = JsonSerializer.Deserialize<Recipe>(responseBody) ?? new();
                 await state.SaveNewRecipe(recipe);
             }
+            else
+            {
+                status = "error";
+                Console.WriteLine($"Server responded with status code {response.StatusCode}");
+            }
         }
         else
         {
+            status = "error";
             Console.WriteLine("Recipe ID was not passed.");
         }
+        StateHasChanged();
     }
 
-    private void HandleSubmit()
+    private async void HandleSubmit()
     {
-        //save recipe into state and load PostEditor
+        await state.SaveRecipe();
+        navi.NavigateTo("/StepRecord");
     }
 
     private void HandleRedirect()
@@ -68,6 +101,41 @@
         step.stepDescription = "New Step";
         step.stepOrder = recipe.recipeSteps[recipe.recipeSteps.Count - 1].stepOrder + 1;
         recipe.recipeSteps.Add(step);
+        recipe.OrganizeSteps();
+        StateHasChanged();
+    }
+
+    private void DeleteStep(RecipeStep step)
+    {
+        int stepIndex = recipe.recipeSteps.IndexOf(step);
+        recipe.recipeSteps.Remove(step);
+        for(int i = stepIndex; i < recipe.recipeSteps.Count; i++)
+        {
+            recipe.recipeSteps[i].stepOrder = recipe.recipeSteps[i].stepOrder - 1;
+        }
+        StateHasChanged();
+    }
+
+    private void ShiftStep(RecipeStep step, string direction)
+    {
+        int stepIndex = recipe.recipeSteps.IndexOf(step);
+        if (direction == "up" && stepIndex > 0)
+        {
+            int prior = recipe.recipeSteps[stepIndex - 1].stepOrder;
+            recipe.recipeSteps[stepIndex - 1].stepOrder = recipe.recipeSteps[stepIndex].stepOrder;
+            recipe.recipeSteps[stepIndex].stepOrder = prior;
+        }
+        else if (direction == "down" && stepIndex < recipe.recipeSteps.Count - 1)
+        {
+            int next = recipe.recipeSteps[stepIndex + 1].stepOrder;
+            recipe.recipeSteps[stepIndex + 1].stepOrder = recipe.recipeSteps[stepIndex].stepOrder;
+            recipe.recipeSteps[stepIndex].stepOrder = next;
+        }
+        else
+        {
+            Console.WriteLine($"Ignoring going {direction} on step {step.stepDescription}. It remains at step order {step.stepOrder}");
+        }
+        recipe.OrganizeSteps();
         StateHasChanged();
     }
 }

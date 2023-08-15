@@ -1,15 +1,21 @@
 ﻿#footer {
     height: 100px;
 }
+
+.no-line {
+    border: none !important;
+}
+
 .minimal-input {
     background: rgba(0,0,0,0);
     border: none;
-    border-bottom: black 1px solid;
+    border-bottom: white 1px solid;
 }
 
 .minimal-input:focus {
+    outline: none;
     border: none;
-    border-bottom: white 1px solid;
+    border-bottom: white 2px solid;
     box-shadow: none;
 }
 

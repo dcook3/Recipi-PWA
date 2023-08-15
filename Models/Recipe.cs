@@ -25,7 +25,34 @@ namespace Recipi_PWA.Models
         public string? recipeDescription { get => _recipeDescription; set { _recipeDescription = value; RaisePropertyChanged(); } }
         public string createdByUsername { get => _createdByUsername; set { _createdByUsername = value; RaisePropertyChanged(); } }
         public DateTime createdDatetime { get => _createdDatetime; set { _createdDatetime = value; RaisePropertyChanged(); } }
-        public List<RecipeStep> recipeSteps { get => _recipeSteps; set { _recipeSteps = value; RaisePropertyChanged(); } }
+        public List<RecipeStep> recipeSteps { 
+            get => _recipeSteps; 
+            set 
+            { 
+                _recipeSteps = value;
+                RaisePropertyChanged();
+            } 
+        }
+
+        private static void Swap<T>(List<T> list, int first, int second)
+        {
+            T temp = list[first];
+            list[first] = list[second];
+            list[second] = temp;
+        }
+
+        public void OrganizeSteps()
+        {
+            for (int i = 1; i < _recipeSteps.Count; i++)
+            {
+                int j = i;
+                while (j > 0 && _recipeSteps[j].stepOrder.CompareTo(_recipeSteps[j - 1].stepOrder) < 0)
+                {
+                    Swap(_recipeSteps, j, j - 1);
+                    j--;
+                }
+            }
+        }
 
         public bool IsStateless { get; set; } = true;
 
