@@ -32,7 +32,7 @@
                 <CookbookRecipeCard recipe="@recipe" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
             }
         }
-        @if (status == "loading")
+        else if (status == "loading")
         {
             <LoadingSpinner></LoadingSpinner>
         }

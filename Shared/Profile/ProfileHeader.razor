@@ -5,10 +5,11 @@
 
 @if (self)
 {
+    <NavLink href="./Settings" style="position:absolute; right: 5px; font-size: 30px;"><i class="fa-solid fa-gear text-light"></i></NavLink>
     <div class="d-flex flex-column align-items-center justify-content-center bg-secondary" style="width: 100%; height: 25%">
 
         <div class="d-flex flex-column align-items-center justify-content-center p-1" style="width: 50%">
-            <ProfilePicture size="75"></ProfilePicture>
+            <ProfilePicture profilePictureUrl="@user.ProfilePicture" size="75"></ProfilePicture>
             <span class="text-bg-secondary">@user.Username</span>
         </div>
         <Stats stats="@user.userStats" userId="@user.UserId" self></Stats>
@@ -20,7 +21,7 @@ else
 
         <div class="d-flex flex-column align-items-center justify-content-center px-3" style="width: 33vw
 ">
-            <ProfilePicture size="75"></ProfilePicture>
+            <ProfilePicture profilePictureUrl="@user.ProfilePicture" size="75"></ProfilePicture>
             <span class="text-bg-secondary">@user.Username</span>
         </div>
         <div class="flex-grow-1 d-flex flex-column align-items-center justify-content-evenly" style="height: 90%;">

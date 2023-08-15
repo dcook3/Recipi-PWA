@@ -22,10 +22,17 @@
                 <InputText class="form-control" type="password" @bind-Value="password" DisplayName="Password" id="pass"></InputText>
             </div>
 
+            <div class="d-flex flex-row m-1 justify-content-evenly align-items-center">
+                <Button onclick="NavigateToRegister">
+                    Register
+                </Button>
 
-            <Button onclick="LoginReqest" status="@status"> 
-                Login
-            </Button>
+                <Button onclick="LoginReqest" status="@status"> 
+                    Login
+                </Button>
+
+            
+            </div>
         </form>
 
         <div class="text-danger">
@@ -44,49 +51,32 @@
     private string status = "ready";
     private string eMessage;
 
+
+
+
     public async void LoginReqest()
     {
         status = "loading";
         StateHasChanged();
-        HttpResponseMessage response = await userService.Login(new(){ Credential =  credential, Password = password});
+        HttpResponseMessage response = await userService.Login(new() { Credential = credential, Password = password });
         if (response.IsSuccessStatusCode)
         {
-            Console.WriteLine("Success");
-            var token = await response.Content.ReadAsStringAsync();
-            if (!String.IsNullOrEmpty(token))
-            {
-                await state.SetToken(token);
+            await state.SetToken(await response.Content.ReadAsStringAsync());
 
-                NavigationManager.NavigateTo("/");
-            }
-            else
-            {
-                Console.WriteLine(response);
-                status = "error";
-                eMessage = "An Unkown Error has occurred";
-            }
+            NavigationManager.NavigateTo("/");
         }
         else
         {
-
-            Console.WriteLine(response);
             status = "error";
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                eMessage = "Username and Password are incorrect";
-            }
-            else if (!String.IsNullOrEmpty(eMessage))
-            {
-                eMessage = await response.Content.ReadAsStringAsync();
-            }
-            else
-            {
-                eMessage = "An Unkown Error has Occured";
-            }
+            eMessage = await response.Content.ReadAsStringAsync();
         }
         StateHasChanged();
     }
 
+    public void NavigateToRegister()
+    {
+        NavigationManager.NavigateTo("/Register");
+    }
     
 
 }

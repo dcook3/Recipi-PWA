@@ -1,10 +1,12 @@
 ﻿using Recipi_API.Models;
+using Recipi_PWA.Models;
 
 namespace Recipi_PWA
 {
     public interface IUserService : IDefaultHttpService
     {
         Task<HttpResponseMessage> Login(UserLogin login);
+        Task<HttpResponseMessage> Register(UserRegistration registration);
         Task<HttpResponseMessage> GetUserById(string userId);
         Task<HttpResponseMessage> GetFriends();
         Task<HttpResponseMessage> GetFriendRequests();

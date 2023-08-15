@@ -34,9 +34,12 @@
         <div class="nav-item col-2 px-3 flex-fill">
         
                 @if(state.LoggedIn){
+
                     <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
                         <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
                         <span class="resizable">Profile</span>
+
+          
                     </NavLink>
                 }
                 else
