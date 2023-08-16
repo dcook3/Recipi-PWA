@@ -1,4 +1,5 @@
-﻿@page "/Register"
+﻿@page "/Register";
+@layout EmptyLayout;
 @using System.Text.RegularExpressions;
 @using Recipi_PWA.Models;
 @using System.Net;
@@ -8,13 +9,22 @@
 @inject IMediaUploadService mediaUploadService;
 @inject NavigationManager NavigationManager;
 @inject StateContainer state;
+@inject IJSRuntime js;
 
-<div class="bg-primary" style="height: 100vh; width: 100vw; padding-top: 20vh;">
-    <div class="container-fluid d-flex flex-column align-items-center justify-content-between" style="height: 65%">
+<div class="bg-primary" style="height: 100vh; width: 100vw; padding-top: 10vh;">
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-between" style="height: 80%">
         <div style="height: 10%" class="d-flex flex-column align-items-center justify-content-center">
             <h1 class="text-light">Welcome to Recipi</h1>
         </div>
-        <form class="d-flex flex-column justify-content-between align-items-center" style="height: 40%;">
+        <form class="d-flex flex-column justify-content-evenly align-items-center" style="height: 80%;">
+            <div class="form-group">
+
+                <div onclick="@ClickFilePicker" class="rounded-circle d-flex align-items-cener justify-content-center" style="background-image: url(@previewPfp); background-size: contain; background-repeat: no-repeat; background-position:center;">
+                    <i class="fas fa-edit text-light rounded-circle" style="font-size: 1.5rem; background-color: rgba(48, 48, 48, .6); padding:30px;"></i>
+                </div>
+
+                <InputFile class="form-control" style="display: none;" OnChange="@LoadFile" accept="image/*" id="pfp" @ref="filePicker" />
+            </div>
             <div class="form-group">
                 <label for="username" class="text-light fs-8">Username</label>
                 <InputText class="form-control" type="text" @bind-Value="ur.Username" DisplayName="username" id="username"></InputText>
@@ -24,44 +34,53 @@
                 <InputText class="form-control" type="text" @bind-Value="ur.Email" DisplayName="email" id="email"></InputText>
             </div>
 
-
             <div class="form-group">
                 <label for="pass" class="text-light fs-8">Password</label>
                 <InputText class = "form-control" type="password" @bind-Value="password" @oninput="CheckPassword"  DisplayName="pass" id="pass"></InputText>
             </div>
+            @if (password != "" && !validPassword)
+            {
+                <div class="form-group d-flex flex-column align-items-baseline justify-content-center p-1 rounded-1 bg-warning" style="width: 100%; font-size: 10px;">
+
+                    @if (!validPassword)
+                    {
+                        <PasswordValidationMessage valid="@hasNumber.IsMatch(password)">Password Must Contain a Number</PasswordValidationMessage>
+                        <PasswordValidationMessage valid="@hasUpperChar.IsMatch(password)">Password Must Contain 1 Upper Case Character</PasswordValidationMessage>
+                        <PasswordValidationMessage valid="@hasMinimum8Chars.IsMatch(password)">Password Must Have Atleast 8 Characters</PasswordValidationMessage>
+                    }
+
+                </div>
+
+            }
 
             <div class="form-group">
                 <label for="biography" class="text-light fs-8">Biography</label>
                 <InputText class="form-control" type="textarea" @bind-Value="ur.Biography" DisplayName="biography" id="biography"></InputText>
             </div>
 
-            <div class="form-group">
-                <label for="pfp" class="text-light fs-8">Profile Picture</label>
-                
-                <InputFile class="form-control" OnChange="@LoadFile" accept="image/*" capture id="pfp"/>
-            </div>
+
             
-            <Button onclick="@Submit" status="@status">
-                Submit
-            </Button>
-
-            @if ((password != "" && !validPassword) || status == "error")
+            <div class="d-flex flex-row align-items-center justify-content-evenly container-fluid">
+                <Button onclick="@NavigateToLogin">
+                    Login
+                </Button>
+                <Button onclick="@Submit" status="@status">
+                    Submit
+                </Button>
+            </div>
+            @if (status == "error")
             {
-                <div class="form-group d-flex flex-column align-items-center justify-content-center p-1 rounded-1 bg-warning" style="width: 70%">
-
-                    @if (!validPassword) {
-                        <PasswordValidationMessage valid="@hasNumber.IsMatch(password)">Password Must Contain a Number</PasswordValidationMessage>
-                        <PasswordValidationMessage valid="@hasUpperChar.IsMatch(password)">Password Must Contain 1 Upper Case Character</PasswordValidationMessage>
-                        <PasswordValidationMessage valid="@hasMinimum8Chars.IsMatch(password)">Password Must Have Atleast 8 Characters</PasswordValidationMessage>
-                    }
-
-                    @if (status == "error")
-                    {
-                        @eMessage
-                    }
-
-
+                <div class="form-group d-flex flex-column align-items-center justify-content-center p-1 rounded-1 bg-warning text-danger" style="width: 70%">
+                    @sMessage
                 </div>
+
+            }
+            @if (status == "loading")
+            {
+                <div class="form-group d-flex flex-column align-items-center justify-content-center p-1 rounded-1 bg-warning text-light" style="width: 70%">
+                    @sMessage
+                </div>
+
             }
 
         </form>
@@ -83,75 +102,67 @@
     private bool validPassword = false;
 
     private string status = "ready";
-    private string eMessage = "";
+    private string sMessage = "";
+
+
+    InputFile filePicker;
 
     private IBrowserFile loadedFile;
 
+    private string previewPfp = "https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg";
 
-    protected override void OnInitialized()
-    {
-        if(state.LoggedIn)
-        {
-            //NavigationManager.NavigateTo("/");
-        }
+
+    private async void ClickFilePicker(){
+        await js.InvokeAsync<object>("triggerClick", filePicker.Element);
     }
 
-    private void LoadFile(InputFileChangeEventArgs e)
+    private async void LoadFile(InputFileChangeEventArgs e)
     {
         loadedFile = e.File;
-        Console.WriteLine(loadedFile.ToString());
-        Console.WriteLine(e.File.Name);
+        byte[] bytes = new byte[loadedFile.Size];
+        var stream = loadedFile.OpenReadStream();
+        await stream.ReadAsync(bytes);
+        previewPfp = "data:image/png;base64," + Convert.ToBase64String(bytes);
+        StateHasChanged();
     }
+
+
 
     public async void Submit()
     {
+
         status = "loading";
+        sMessage = "Encrypting Data . . .";
         StateHasChanged();
         if (validPassword)
         {
-            ur.Password = password; //BCrypt.Net.BCrypt.HashPassword(
+            await Task.Run(() => ur.Password = BCrypt.Net.BCrypt.HashPassword(password));
 
             ur.ProfilePicture = "https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg";
 
+            sMessage = "Creating User . . .";
+            StateHasChanged();
 
-            var pfpSuccess = true;
-            if (loadedFile != null)
-            {
-                pfpSuccess = false;
-                var urlRequest = await mediaUploadService.GetPresignedUrl();
-                if (urlRequest.IsSuccessStatusCode)
-                {
-                    var url = await urlRequest.Content.ReadAsStringAsync();
-                    var mediaUploadRequest = await mediaUploadService.UploadToS3(url, loadedFile);
-                    if (mediaUploadRequest.IsSuccessStatusCode)
-                    {
-                        ur.ProfilePicture = Regex.Match(url, "^.*?(?=\\?)").Value;
-                        pfpSuccess = true;
-                    }
-                }
-                else
-                {
-                    status = "error";
-                    eMessage = "Profile Picture Upload Failed";
-                }
-            }
-
-            
             var response = await userService.Register(ur);
             if (response.IsSuccessStatusCode)
             {
-                LoginReqest(ur.Username, ur.Password);
+                sMessage = "Logging in . . .";
+                StateHasChanged();
+
+                if(await LoginReqest(ur.Username, password)){
+                    sMessage = "Uploading Profile Picture . . .";
+                    StateHasChanged();
+                }
             }
             else
             {
-                Console.WriteLine(response);
                 status = "error";
-                eMessage = await response.Content.ReadAsStringAsync();
+                sMessage = await response.Content.ReadAsStringAsync();
             }
+
 
             if (loadedFile != null)
             {
-                pfpSuccess = false;
                 var urlRequest = await mediaUploadService.GetPresignedUrl();
                 if (urlRequest.IsSuccessStatusCode)
                 {
@@ -159,25 +170,42 @@
                     var mediaUploadRequest = await mediaUploadService.UploadToS3(url, loadedFile);
                     if (mediaUploadRequest.IsSuccessStatusCode)
                     {
-                        ur.ProfilePicture = Regex.Match(url, "^.*?(?=\\?)").Value;
-                        pfpSuccess = true;
+
+                        var changePfpRequest = await userService.ChangeProfilePicture(Regex.Match(url, "^.*?(?=\\?)").Value); // gets the url up until the query ?
+
                     }
-                }
-                else
-                {
-                    status = "error";
-                    eMessage = "Profile Picture Upload Failed";
                 }
             }
 
-            NavigationManager.NavigateTo("/");
-            
+            if (status != "error")
+            {
+                sMessage = "Getting Your new account . . .";
+                StateHasChanged();
+                var youResponse = await userService.GetUserById("me");
+
+                if (youResponse.IsSuccessStatusCode)
+                {
+                    await state.SetYou(await youResponse.Content.ReadFromJsonAsync<You>());
+                }
+                else
+                {
+                    status="error";
+                    sMessage = "Error Setting User Data";
+                }
+
+           
+                NavigationManager.NavigateTo("/");
+            }
+
         }
         else
         {
             status = "error";
+            sMessage = "Please Enter Valid Password";
         }
+
         StateHasChanged();
+      
     }
 
     public void CheckPassword(ChangeEventArgs e)
@@ -186,23 +214,30 @@
         validPassword = hasNumber.IsMatch(password) &&
                         hasUpperChar.IsMatch(password) &&
                         hasMinimum8Chars.IsMatch(password);
-
         StateHasChanged();
     }
 
 
-    public async void LoginReqest(string credential, string password)
+    public async Task<bool> LoginReqest(string credential, string password)
     {
+        var success = false;
         HttpResponseMessage response = await userService.Login(new() { Credential = credential, Password = password });
         if (response.IsSuccessStatusCode)
         {
             await state.SetToken(await response.Content.ReadAsStringAsync());
+            success = true;
         }
         else
         {
             status = "error";
-            eMessage = await response.Content.ReadAsStringAsync();
+            sMessage = await response.Content.ReadAsStringAsync();
         }
         StateHasChanged();
+        return success;
+    }
+
+    public void NavigateToLogin()
+    {
+        NavigationManager.NavigateTo("/Login");
     }
 }

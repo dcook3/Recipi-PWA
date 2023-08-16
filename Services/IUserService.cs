@@ -18,5 +18,6 @@ namespace Recipi_PWA
         Task<HttpResponseMessage> AcceptFriendRequest(int userId);
         Task<HttpResponseMessage> DenyFriendRequest(int userId);
         Task<HttpResponseMessage> RemoveFriend(int userId);
+        Task<HttpResponseMessage> ChangeProfilePicture(string profilePicture);
     }
 }

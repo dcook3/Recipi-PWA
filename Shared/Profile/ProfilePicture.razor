@@ -10,15 +10,15 @@
 @if(size > 6)
 {
     var sizeString = size + "px";
-    <i class="fa-solid flex-shrink-1 image-icon" style="background-image: url(@GetValidPicture()); font-size: @sizeString;"></i>
+    <i class="fa-solid flex-shrink-1 image-icon" style="background-image: url(@profilePictureUrl); font-size: @sizeString;"></i>
 }
 else{
-    <i class="fa-solid flex-shrink-1 image-icon fs-@size" style="background-image: url(@GetValidPicture())"></i>
+    <i class="fa-solid flex-shrink-1 image-icon fs-@size" style="background-image: url(@profilePictureUrl)"></i>
 }
 
 @code {
     [Parameter]
-    public string? profilePictureUrl { get; set; }
+    public string? profilePictureUrl { get; set; } 
     [Parameter]
     public string? userId { get; set; }
     [Parameter]
@@ -34,16 +34,4 @@ else{
         }
     }
 
-    private string GetValidPicture()
-    {
-        if (this.profilePictureUrl != "" && profilePictureUrl != null)
-        {
-            return profilePictureUrl;
-        }
-        else
-        {
-            return "https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg";
-        }
-
-    }
 }
