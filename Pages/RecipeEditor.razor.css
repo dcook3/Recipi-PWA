@@ -1,0 +1,18 @@
+﻿#footer {
+    height: 100px;
+}
+.minimal-input {
+    background: rgba(0,0,0,0);
+    border: none;
+    border-bottom: black 1px solid;
+}
+
+.minimal-input:focus {
+    border: none;
+    border-bottom: white 1px solid;
+    box-shadow: none;
+}
+
+body {
+    background: darkgrey
+}

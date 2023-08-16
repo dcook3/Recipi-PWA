@@ -8,7 +8,6 @@
     {
         <div class="text-light">@ChildContent</div>
     }
-
 </div>
 
 @code {
@@ -42,7 +41,7 @@
         }
     }
 
-    private void Click()
+    protected void Click()
     {
         if(status != "loading" || disabled){
             onclick?.Invoke();  
