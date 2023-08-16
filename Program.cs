@@ -18,6 +18,7 @@ builder.Services.AddHttpClient<IUserService, UserService>(client => client.BaseA
 builder.Services.AddHttpClient<IRecipeService, RecipeService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IPostService, PostService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IMediaUploadService, MediaUploadService>(client => client.BaseAddress = apiBA);
+builder.Services.AddHttpClient<IIngredientService, IngredientService>(client => client.BaseAddress = apiBA);
 
 var host = builder.Build();
 using var scope = host.Services.CreateScope();

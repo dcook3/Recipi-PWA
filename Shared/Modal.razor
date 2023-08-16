@@ -8,10 +8,10 @@
             </div>
             <div class="modal-content">
                 <div class="modal-body">
-                    <p>@Message</p>
+                    <p>@Body</p>
                 </div>
                 <div class="modal-footer">
-                    @ChildContent
+                    @ButtonGroup
                 </div>
             </div>
         </div>
@@ -25,9 +25,9 @@
 
 @code {
     [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+    public RenderFragment? ButtonGroup { get; set; }
     [Parameter]
-    public string Message { get; set; } = "Hello";
+    public RenderFragment Body { get; set; }
 
     public string ModalDisplay = "none;";
     public string ModalClass = "";

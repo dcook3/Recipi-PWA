@@ -3,10 +3,15 @@
 @inject StateContainer state;
 @inject NavigationManager NavigationManager;
 
-<Modal @ref="modal" Message="Would you like to attach a recipe to this post?">
-    <button @onclick="@CloseModal" type="button" class="btn btn-primary">No, just record a recipeless post :(</button>
-    @*<input type="file" style="opacity: 0" class="btn btn-primary" accept="video/*" capture @onchange="HandleFileChange"/>*@
-    <button @onclick="@NavigateToRecipeEditor" type="button" class="btn btn-secondary">Yes!</button>
+<Modal @ref="modal">
+    <Body>
+        Would you like to attach a recipe to this post?
+    </Body>
+    <ButtonGroup>
+        <button @onclick="@CloseModal" type="button" class="btn btn-primary">No, just record a recipeless post :(</button>
+        @*<input type="file" style="opacity: 0" class="btn btn-primary" accept="video/*" capture @onchange="HandleFileChange"/>*@
+        <button @onclick="@NavigateToRecipeEditor" type="button" class="btn btn-secondary">Yes!</button>
+    </ButtonGroup>
 </Modal>
 
 <nav class="nav bg-secondary fixed-bottom">
@@ -38,8 +43,6 @@
                     <NavLink class="nav-link text-white d-flex flex-column align-items-center justify-content-between" onclick="@(() => {NavigationManager.NavigateTo("/Profile/me"); })" Match="NavLinkMatch.All">
                         <ProfilePicture userId="me" profilePictureUrl=""></ProfilePicture>
                         <span class="resizable">Profile</span>
-
-          
                     </NavLink>
                 }
                 else

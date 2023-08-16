@@ -1,0 +1,31 @@
+﻿@using Recipi_PWA.Services
+@using Recipi_PWA.Models;
+@using System.Text.Json;
+@inject IIngredientService service
+
+@page "/IngredientSelector/{recipeId:int}"
+
+@*@foreach (Ingredient) ;*@
+
+@code {
+    [Parameter]
+    public int recipeId { get; set; } //use to get back to recipe editor
+
+    List<Ingredient> ingredients = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ingredients.Capacity = 10;
+        HttpResponseMessage response = await service.GetIngredients();
+        if (response.IsSuccessStatusCode)
+        {
+            string jsonString = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(jsonString);
+            ingredients = JsonSerializer.Deserialize<List<Ingredient>>(jsonString) ?? new();
+        }
+        else
+        {
+            Console.WriteLine("There was a problem while fetching ingredients from the server. Please reload or try again later.");
+        }
+    }
+}

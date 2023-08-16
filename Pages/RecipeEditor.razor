@@ -10,8 +10,8 @@
 
 <div class="bg-primary container-fluid" style="height: 100%">
     <div class="d-flex justify-content-between">
-        <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left"></i></button>
-        <button class="btn btn-warning rounded" @onclick="AddStep">+</button>
+        <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
+        <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
     </div>
 
     <div class="d-flex flex-column align-items-center">
@@ -21,11 +21,12 @@
                 string up = "up";
                 string down = "down";
                 <EditableStepCard 
+                    @ref="stepRef"
                     Step="step" 
                     DeleteStep="() => DeleteStep(step)"
                     ShiftUp="() => ShiftStep(step, up)"
                     ShiftDown="() => ShiftStep(step, down)"
-                >
+                    HandleInsertIngredient="HandleInsertIngredient">
                 </EditableStepCard>
             }
         else if (status == "error")
@@ -43,7 +44,7 @@
             <input type="text" class="minimal-input fs-2 mb-1 text-white" @bind-value="recipe.recipeTitle"/>
             <input type="text" class="minimal-input no-line fst-italic text-light" @bind-value="recipe.recipeDescription" />
         </div>
-        <button @onclick="HandleSubmit" class="btn btn-warning rounded"></button>
+        <button @onclick="HandleSubmit" class="btn btn-warning rounded">Done <i class="fa-solid fa-chevron-left text-white"></i></button>
     </div>
 </div>
 
@@ -54,6 +55,22 @@
     private Recipe recipe { get; set; } = new();
 
     private string status = "loading";
+
+    private bool IsEditing = false;
+
+    private EditableStepCard stepRef;
+
+    public EditableStepCard StepRef
+    {
+        get => stepRef;
+        set
+        {
+            stepRef = value;
+            steps.Add(value);
+        }
+    }
+
+    private List<EditableStepCard> steps = new();
 
     protected async override Task OnParametersSetAsync()
     {
@@ -137,5 +154,10 @@
         }
         recipe.OrganizeSteps();
         StateHasChanged();
+    }
+
+    private void HandleInsertIngredient()
+    {
+        navi.NavigateTo($"/IngredientSelector/{recipeId}");
     }
 }

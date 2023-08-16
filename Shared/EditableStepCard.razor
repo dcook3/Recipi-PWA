@@ -6,29 +6,29 @@
         <div class="d-flex flex-column">
             <input class="form-control mb-1" type="text" @bind-value="Step.stepDescription" name="Step.StepOrder">
             <div class="d-flex justify-content-between">
-                <a href="/IngredientEditor">+ Insert Ingredient</a>
-                <a @onclick="ToggleEditing">✔</a>
+                <a class="text-white" @onclick="HandleInsertIngredient">+ Insert Ingredient</a>
+                <a class="text-white" @onclick="ToggleEditing">✔</a>
             </div>
         </div>
     }
     else
     {
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between bg-warning">
             <div>
                 <a @onclick="ShiftUp" class="me-1 text-decoration-none">
-                    <i class="fa-solid fa-chevron-up"></i>
+                    <i class="fa-solid fa-chevron-up text-white"></i>
                 </a>
                 <a @onclick="ShiftDown" class="me-1 text-decoration-none">
-                    <i class="fa-solid fa-chevron-down"></i>
+                    <i class="fa-solid fa-chevron-down text-white"></i>
                 </a>
                 <span>@Step.stepDescription</span>
             </div>
             <div>
                 <a @onclick="ToggleEditing" class="me-1 text-decoration-none">
-                    <i class="fa-solid fa-pen-to-square"></i>
+                    <i class="fa-solid fa-pen-to-square text-white"></i>
                 </a>
                 <a @onclick="DeleteStep" class="text-decoration-none">
-                    <i class="fa-solid fa-trash"></i>
+                    <i class="fa-solid fa-trash text-white"></i>
                 </a>
             </div>
         </div>
@@ -48,7 +48,10 @@
     [Parameter]
     public EventCallback ShiftDown { get; set; }
 
-    private bool IsEditing { get; set; } = false;
+    [Parameter]
+    public EventCallback HandleInsertIngredient { get; set; }
+
+    public bool IsEditing { get; set; } = false;
 
     private void ToggleEditing()
     {
