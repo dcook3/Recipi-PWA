@@ -12,27 +12,26 @@
 </div>
 
 @code{
-    protected override async void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        
-        if(state.You == null)
+        if (state.You == null && state.LoggedIn)
         {
-            if (state.LoggedIn)
-            {
-                var response = await userService.GetUserById("me");
+            var response = await userService.GetUserById("me");
 
-                if (response.IsSuccessStatusCode)
-                {
-                    await state.SetYou(await response.Content.ReadFromJsonAsync<You>());
-                    Console.WriteLine(await state.GetYou());
-                }
-                else
-                {
-                    Console.WriteLine("Error");
-                }
+            if (response.IsSuccessStatusCode)
+            {
+                await state.SetYou(await response.Content.ReadFromJsonAsync<You>());
+                StateHasChanged();
             }
+            else
+            {
+                Console.WriteLine("Error");
+            }
+
+
         }
     }
+
 
     
 }
