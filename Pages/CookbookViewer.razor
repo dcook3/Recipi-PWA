@@ -59,7 +59,6 @@
         {
             string responseBody = await response.Content.ReadAsStringAsync();
             Recipe recipe = JsonSerializer.Deserialize<Recipe>(responseBody) ?? new();
-            recipe.IsStateless = false;
             await state.SaveNewRecipe(recipe);
         }
         else

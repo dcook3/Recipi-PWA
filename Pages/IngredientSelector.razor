@@ -43,7 +43,6 @@
         if (response.IsSuccessStatusCode)
         {
             string jsonString = await response.Content.ReadAsStringAsync();
-            Console.WriteLine(jsonString);
             ingredients = JsonSerializer.Deserialize<List<Ingredient>>(jsonString) ?? new();
         }
         else

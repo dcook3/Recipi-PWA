@@ -8,31 +8,17 @@ namespace Recipi_PWA.Models
 {
     public class Recipe
     {
-        private int _recipeId;
+        public int recipeId { get; set; }
 
-        private string _recipeTitle = null!;
+        public string recipeTitle  { get; set; }
 
-        private string? _recipeDescription;
+        public string? recipeDescription { get; set; }
 
-        private string _createdByUsername;
+        public string createdByUsername { get; set; }
 
-        private DateTime _createdDatetime;
+        public DateTime createdDatetime { get; set; }
 
-        private List<RecipeStep> _recipeSteps;
-
-        public int recipeId { get => _recipeId; set { _recipeId = value; RaisePropertyChanged(); } }
-        public string recipeTitle { get => _recipeTitle; set { _recipeTitle = value; RaisePropertyChanged(); } }
-        public string? recipeDescription { get => _recipeDescription; set { _recipeDescription = value; RaisePropertyChanged(); } }
-        public string createdByUsername { get => _createdByUsername; set { _createdByUsername = value; RaisePropertyChanged(); } }
-        public DateTime createdDatetime { get => _createdDatetime; set { _createdDatetime = value; RaisePropertyChanged(); } }
-        public List<RecipeStep> recipeSteps { 
-            get => _recipeSteps; 
-            set 
-            { 
-                _recipeSteps = value;
-                RaisePropertyChanged();
-            } 
-        }
+        public List<RecipeStep> recipeSteps { get; set; }
 
         private static void Swap<T>(List<T> list, int first, int second)
         {
@@ -43,25 +29,15 @@ namespace Recipi_PWA.Models
 
         public void OrganizeSteps()
         {
-            for (int i = 1; i < _recipeSteps.Count; i++)
+            for (int i = 1; i < recipeSteps.Count; i++)
             {
                 int j = i;
-                while (j > 0 && _recipeSteps[j].stepOrder.CompareTo(_recipeSteps[j - 1].stepOrder) < 0)
+                while (j > 0 && recipeSteps[j].stepOrder.CompareTo(recipeSteps[j - 1].stepOrder) < 0)
                 {
-                    Swap(_recipeSteps, j, j - 1);
+                    Swap(recipeSteps, j, j - 1);
                     j--;
                 }
             }
-        }
-
-        public bool IsStateless { get; set; } = true;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        private void RaisePropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            if(!IsStateless)
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

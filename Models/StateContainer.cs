@@ -193,8 +193,6 @@ namespace Recipi_PWA.Models
             {
                 result = placeholderRecipe;
             }
-
-            result.PropertyChanged += OnPropertyChanged;
             currentRecipe = result;
             return result;
         }
@@ -209,13 +207,10 @@ namespace Recipi_PWA.Models
 
         public async Task SaveNewRecipe(Recipe recipe)
         {
-            if (!recipe.IsStateless)
-            {
-                Console.WriteLine("Saving a new recipe");
-                var json = JsonSerializer.Serialize(recipe);
-                await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
-                NotifyStateChanged();
-            }
+            Console.WriteLine("Saving a new recipe");
+            var json = JsonSerializer.Serialize(recipe);
+            await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
+            NotifyStateChanged();
         }
                 
         public event Action? OnChange;
