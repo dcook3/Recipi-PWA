@@ -1,21 +1,44 @@
 ﻿@using Recipi_PWA.Services
 @using Recipi_PWA.Models;
 @using System.Text.Json;
+
+@inject StateContainer state
+@inject NavigationManager navi
 @inject IIngredientService service
 
 @page "/IngredientSelector/{recipeId:int}"
 
-@*@foreach (Ingredient) ;*@
+<TopViewport>
+    <div class="row justify-content-center pt-1">
+        <a @onclick="BackToRecipeEditor" class="fs-2 col-1 me-5 text-decoration-none">‹</a> @*This will go back*@
+        <h3 class="text-white col-auto ms-5 d-inline-block">Ingredients</h3>
+        <a class="fs-2 col-2 me-5 text-decoration-none"></a>
+    </div>
+</TopViewport>
+
+<p>@recipe.recipeSteps[0].stepDescription</p>
+
+@*<div class="d-flex flex-column align-items-center" style="width: 100%;">
+    @foreach (Ingredient ing in ingredients)
+    {
+
+    }
+</div>*@
 
 @code {
     [Parameter]
     public int recipeId { get; set; } //use to get back to recipe editor
 
+    [Parameter]
+    public int stepId { get; set; }
+
     List<Ingredient> ingredients = new();
+
+    private Recipe recipe;
 
     protected override async Task OnInitializedAsync()
     {
-        ingredients.Capacity = 10;
+        recipe = await state.GetRecipe();
         HttpResponseMessage response = await service.GetIngredients();
         if (response.IsSuccessStatusCode)
         {
@@ -28,4 +51,10 @@
             Console.WriteLine("There was a problem while fetching ingredients from the server. Please reload or try again later.");
         }
     }
+
+    private void BackToRecipeEditor()
+    {
+        navi.NavigateTo("/RecipeEditor/@recipeId");
+    }
+
 }

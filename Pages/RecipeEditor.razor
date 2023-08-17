@@ -6,9 +6,10 @@
 @inject IRecipeService recipeService;
 @inject StateContainer state;
 @inject NavigationManager navi;
+@inject IJSRuntime jsr
 @layout EmptyLayout
 
-<div class="bg-primary container-fluid" style="height: 100%">
+<div class="bg-primary container-fluid pt-1" style="height: 100%">
     <div class="d-flex justify-content-between">
         <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
         <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
@@ -20,8 +21,9 @@
             {
                 string up = "up";
                 string down = "down";
+                int id = step.stepId;
                 <EditableStepCard 
-                    @ref="stepRef"
+                    @ref="StepRef"
                     Step="step" 
                     DeleteStep="() => DeleteStep(step)"
                     ShiftUp="() => ShiftStep(step, up)"
@@ -42,9 +44,9 @@
     <div class="bg-secondary fixed-bottom d-flex justify-content-between" id="footer">
         <div class="d-flex flex-column">
             <input type="text" class="minimal-input fs-2 mb-1 text-white" @bind-value="recipe.recipeTitle"/>
-            <input type="text" class="minimal-input no-line fst-italic text-light" @bind-value="recipe.recipeDescription" />
+            <input type="text" class="minimal-input no-line fst-italic text-light" @bind-value="recipe.recipeDescription"/>
         </div>
-        <button @onclick="HandleSubmit" class="btn btn-warning rounded">Done <i class="fa-solid fa-chevron-left text-white"></i></button>
+        <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
@@ -53,13 +55,9 @@
     public int recipeId { get; set; } = -1;
 
     private Recipe recipe { get; set; } = new();
-
     private string status = "loading";
-
     private bool IsEditing = false;
-
     private EditableStepCard stepRef;
-
     public EditableStepCard StepRef
     {
         get => stepRef;
@@ -69,8 +67,8 @@
             steps.Add(value);
         }
     }
-
     private List<EditableStepCard> steps = new();
+    private int cursorPosition;
 
     protected async override Task OnParametersSetAsync()
     {
@@ -156,8 +154,14 @@
         StateHasChanged();
     }
 
-    private void HandleInsertIngredient()
+    private async void HandleInsertIngredient(RecipeStep step, InputText text)
     {
+        int pos = await jsr.InvokeAsync<int>("getSelectedStart", text.Element);
+        int stepIndex = recipe.recipeSteps.IndexOf(step);
+        string desc = recipe.recipeSteps[stepIndex].stepDescription;
+        string toInsert = "{" + (recipe.recipeSteps[stepIndex].stepIngredients.Length - 1) + "}";
+        recipe.recipeSteps[stepIndex].stepDescription = desc.Insert(pos, toInsert);
+        await state.SaveRecipe();
         navi.NavigateTo($"/IngredientSelector/{recipeId}");
     }
 }

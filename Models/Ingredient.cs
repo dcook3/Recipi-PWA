@@ -9,6 +9,6 @@ namespace Recipi_PWA.Models
         public int createdByUserId { get; set; }
         public string ingredientIcon { get; set; }
         public object createdByUser { get; set; }
-        public StepIngredient[] stepIngredients { get; set; }
+        public List<Ingredient> stepIngredients { get; set; }
     }
 }

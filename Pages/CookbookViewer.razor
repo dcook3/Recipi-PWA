@@ -10,18 +10,20 @@
 @layout EmptyLayout
 
 <TopViewport>
-    <div class="row justify-content-center mt-1">
+    <div class="row justify-content-center pt-1">
         <a href="this will be the last page from a navigation service" class="fs-2 col-1 me-5 text-decoration-none">‹</a> @*This will go back*@
         <h3 class="text-white col-auto ms-5 d-inline-block">Your Cookbook</h3>
         <a class="fs-2 col-2 me-5 text-decoration-none"></a>
     </div>
 </TopViewport>
 
-@if (recipes.Count > 0)
-    @foreach(var recipe in recipes)
-    {
-        <CookbookRecipeCard recipe="recipe" OnClick="() => HandleRecipeNav(recipe.RecipeId)"/>
-    }
+<div class="d-inline-flex flex-column align-items-center" style="width: 100%;">
+    @if (recipes.Count > 0)
+        @foreach (var recipe in recipes)
+        {
+            <CookbookRecipeCard recipe="recipe" OnClick="() => HandleRecipeNav(recipe.RecipeId)" />
+        }
+</div>
 
 @code {
     private List<CookbookRecipe> recipes = new();
