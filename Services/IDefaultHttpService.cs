@@ -3,5 +3,6 @@
     public interface IDefaultHttpService
     {
         void SetToken();
+        void Logout();
     }
 }

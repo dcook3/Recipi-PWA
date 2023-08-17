@@ -3,10 +3,14 @@
 @using System.Net.Http;
 @using Recipi_PWA.Models;
 @using Recipi_PWA.Models.Settings;
+@using Recipi_PWA.Services;
 
-@inject HttpClient Http
+@inject IMediaUploadService mediaUploadService;
+@inject IPostService postService;
+@inject IRecipeService recipeService;
+@inject IUserService userService;
 @inject StateContainer StateContainer
-
+@inject NavigationManager NavigationManager
 <TopViewport>
     @if (!isRoot)
     {
@@ -72,6 +76,9 @@
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a @onclick="NotificationHandler" href="profile/settings#" >Notifications Settings</a>
         </li>
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3 text-danger">
+            <a @onclick="Logout">Logout</a>
+        </li>
     }
     else
     {
@@ -118,5 +125,14 @@
             thisSetting = "root";
         }
         await StateContainer.SaveSetting();
+    }
+
+    private async void Logout(){
+        await StateContainer.Logout();
+        mediaUploadService.Logout();
+        postService.Logout();
+        recipeService.Logout();
+        userService.Logout();
+        NavigationManager.NavigateTo("/");
     }
 }

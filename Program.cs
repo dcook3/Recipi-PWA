@@ -14,6 +14,7 @@ builder.Services.AddSingleton<StateContainer>();
 
 var apiBA = new Uri("https://www.recipiapp.com");
 
+
 builder.Services.AddHttpClient<IUserService, UserService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IRecipeService, RecipeService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IPostService, PostService>(client => client.BaseAddress = apiBA);
