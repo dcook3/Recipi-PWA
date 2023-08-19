@@ -1,6 +1,6 @@
 {
-  "name": "Foodi-Application-NET-7.0",
-  "short_name": "Foodi-Application-NET-7.0",
+  "name": "Recipi-PWA",
+  "short_name": "Recipi-PWA",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#ffffff",

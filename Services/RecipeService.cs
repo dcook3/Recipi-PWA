@@ -13,6 +13,8 @@ namespace Recipi_PWA.Services
 
         public async Task<HttpResponseMessage> GetRecipeById(int recipeId) => await client.GetAsync($"/api/Recipes/{recipeId}");
 
-        public async Task<HttpResponseMessage> PostRecipe(Recipe recipe) => await client.PostAsync($"/api/Recipes", JsonContent.Create(recipe));
+        public async Task<HttpResponseMessage> PostRecipe(Recipe recipe) => await client.PostAsJsonAsync($"/api/Recipes", recipe);
+
+        public async Task<HttpResponseMessage> PutRecipe(Recipe recipe) => await client.PutAsJsonAsync($"/api/Recipes/{recipe.recipeId}", recipe);
     }
 }
