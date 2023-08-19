@@ -1,0 +1,72 @@
+﻿
+@page "/RecordMedia";
+@layout EmptyLayout;
+
+@using BlazorMedia;
+@using BlazorMedia.Models;
+@using System.Text;
+
+@inject IJSRuntime JSRuntime;
+
+<div>
+    <video id="preview" class="@previewClass" autoplay muted />
+    
+    <video @ref="preview" class="@resClass" id="result" controls="controls" onloadedmetadata="@(() => Console.WriteLine("test"))"/>
+    
+</div>
+@if (!recording)
+{
+    <Button onclick="@StartRecording">start</Button>
+}
+else
+{
+    <Button onclick="@StopRecording">Stop</Button>
+}
+<button id="ready" class="hidden" onclick="@ResultChanged"></button>
+
+
+<style>
+    .hidden{
+        display: none;
+    }
+</style>
+
+@code {
+    private bool recording = false;
+    private string recordingUrl = "";
+
+    private string resClass = "hidden";
+    private string previewClass = "";
+
+    private ElementReference preview;
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender){
+            await JSRuntime.InvokeVoidAsync("InitializeVideo");
+        }
+    }
+
+    private void ResultChanged()
+    {
+        resClass = "";
+        previewClass = "hidden";
+        StateHasChanged();
+    }
+
+    private async void StartRecording()
+    {
+        recording = true;
+        await JSRuntime.InvokeVoidAsync("StartRecording");
+        StateHasChanged();
+    }
+
+    
+    private async void StopRecording()
+    {
+        recording = false;
+        await JSRuntime.InvokeVoidAsync("StopRecording");
+        StateHasChanged();
+    }
+
+}
