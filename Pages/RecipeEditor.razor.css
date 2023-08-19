@@ -10,6 +10,7 @@
     background: rgba(0,0,0,0);
     border: none;
     border-bottom: white 1px solid;
+    width: 65%;
 }
 
 .minimal-input:focus {
@@ -17,6 +18,7 @@
     border: none;
     border-bottom: white 2px solid;
     box-shadow: none;
+    width: 65%;
 }
 
 body {

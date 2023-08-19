@@ -1,30 +1,31 @@
 ﻿@using Recipi_PWA.Models
 
 @{
-    string FormatDescription(string desc, StepIngredient[] ings)
+    string FormatDescription(string desc, List<StepIngredient> ings)
     {
-        for(int i = 0; i < ings.Length; i++)
+        for (int i = 0; i < ings.Count; i++)
         {
             string ingFormatted;
-            if(ings[i].ingredientMeasurementValue == 1)
+            if (ings[i].ingredientMeasurementValue == 1)
             {
-                ingFormatted = $"{ings[i].ingredientMeasurementValue} {ings[i].ingredientMeasurementUnit} {ings[i].ingredient.ingredientDescription}";
+                ingFormatted = $"{ings[i].ingredientMeasurementValue} {ings[i].ingredientMeasurementUnit} {ings[i].ingredient.ingredientTitle}";
             }
             else
             {
-                ingFormatted = $"{ings[i].ingredientMeasurementValue} {ings[i].ingredientMeasurementUnit}s {ings[i].ingredient.ingredientDescription}";
+                ingFormatted = $"{ings[i].ingredientMeasurementValue} {ings[i].ingredientMeasurementUnit}s {ings[i].ingredient.ingredientTitle}";
             }
-            desc.Replace($"{i}", ingFormatted);
+            string checkString = "{" + i.ToString() + "}";
+            desc = desc.Replace(checkString, ingFormatted);
         }
         return desc;
     }
 }
 
-<div class="bg-warning border-0 rounded p-2 my-1" style="width: 65%">
+<div class="bg-warning border-0 rounded p-2 my-1" style="width: 95%">
     @if (IsEditing)
     {
         <div class="d-flex flex-column">
-            <InputText class="form-control mb-1"  @bind-Value="Step.stepDescription" @ref="DescriptionInput"></InputText>
+            <InputText class="form-control mb-1" @bind-Value="Step.stepDescription" @ref="descriptionInput"></InputText>
             <div class="d-flex justify-content-between">
                 <a class="text-white" @onclick="OnInsertIngredient">+ Insert Ingredient</a>
                 <a class="text-white" @onclick="ToggleEditing">✔</a>
@@ -41,7 +42,7 @@
                 <a @onclick="ShiftDown" class="me-1 text-decoration-none text-white">
                     <i class="fa-solid fa-chevron-down"></i>
                 </a>
-                <span class="text-white">@FormatDescription(Step.stepDescription, Step.stepIngredients)</span>
+                <span class="text-white fs-5">@FormatDescription(Step.stepDescription, Step.stepIngredients)</span>
             </div>
             <div>
                 <a @onclick="ToggleEditing" class="me-1 text-decoration-none text-white">
@@ -71,13 +72,13 @@
     [Parameter]
     public Action<RecipeStep, InputText> HandleInsertIngredient { get; set; }
 
-    private InputText DescriptionInput { get; set; }
+    private InputText descriptionInput { get; set; }
 
     public bool IsEditing { get; set; } = false;
 
     private void OnInsertIngredient()
     {
-        HandleInsertIngredient(Step, DescriptionInput);
+        HandleInsertIngredient(Step, descriptionInput);
     }
 
     private void ToggleEditing()

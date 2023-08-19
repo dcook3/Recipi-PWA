@@ -1,40 +1,92 @@
 ﻿@using Recipi_PWA.Services
 @using Recipi_PWA.Models;
 @using System.Text.Json;
+@using Recipi_PWA.Shared.Profile;
 
 @inject StateContainer state
 @inject NavigationManager navi
 @inject IIngredientService service
 
-@page "/IngredientSelector/{recipeId:int}"
+@page "/IngredientSelector/{stepId:int}/{isPosting:bool}"
 
 <TopViewport>
-    <div class="row justify-content-center pt-1">
-        <a @onclick="BackToRecipeEditor" class="fs-2 col-1 me-5 text-decoration-none">‹</a> @*This will go back*@
-        <h3 class="text-white col-auto ms-5 d-inline-block">Ingredients</h3>
-        <a class="fs-2 col-2 me-5 text-decoration-none"></a>
+    <div class="row py-1">
+        <a @onclick="BackToRecipeEditor" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
+        <h3 class="text-white mb-0 col-4 d-inline-block text-center pt-1">Ingredients</h3>
+        <div class="col-4"></div>
     </div>
 </TopViewport>
 
-<p>@recipe.recipeSteps[0].stepDescription</p>
-
-@*<div class="d-flex flex-column align-items-center" style="width: 100%;">
+<div class="d-flex flex-column align-items-center" style="width: 100%;">
     @foreach (Ingredient ing in ingredients)
     {
-
+        <div class="d-flex justify-content-between align-items-center" style="width: 95%;">
+            <div class="d-flex align-items-center">
+                <ProfilePicture profilePictureUrl="https://images.immediate.co.uk/production/volatile/sites/30/2020/02/Rosemary-sprig-7d96e10.jpg" size="40"></ProfilePicture>
+                <span class="ms-1 fs-4">@ing.ingredientTitle</span>
+            </div>
+            <Button onclick="@(() => SelectIngredient(ing))" shape="circle">
+                <i class="fa-solid fa-plus"></i>
+            </Button>
+        </div>
     }
-</div>*@
+</div>
+
+<Modal @ref="modal">
+    <Title>
+        Select Measurement
+    </Title>
+    <Body>
+        <div class="row">
+            @if (!String.IsNullOrEmpty(selectedIngredient.ingredient.ingredientTitle))
+            {
+                <span>Please Select a Measurement for "@selectedIngredient.ingredient.ingredientTitle":</span>
+            }
+            else
+            {
+                <span>Please Select a Measurement for the Selected Ingredient:</span>
+            }
+        </div>
+        <div class="row">
+            <div class="col-4">
+                <input type="number" class="form-control" placeholder="Measurement..." @onchange="HandleMeasurementInputChange" name="measurement value"></input>
+            </div>
+            <div class="col-8">
+                <select class="form-select" @onchange="HandleMeasurementSelectChange" name="measurement unit">
+                    @foreach (string unit in metric)
+                    {
+                        <option value="@unit">@unit</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </Body>
+    <ButtonGroup>
+        <Button bgColor="bg-danger" onclick="@CloseModal" Width="5">
+            Go Back
+        </Button>
+        <Button onclick="@HandleStepIngredientSelection" Width="5">
+            Confirm
+        </Button>
+    </ButtonGroup>
+</Modal>
 
 @code {
-    [Parameter]
-    public int recipeId { get; set; } //use to get back to recipe editor
-
     [Parameter]
     public int stepId { get; set; }
 
     List<Ingredient> ingredients = new();
 
+    StepIngredient selectedIngredient = new();
+
+    private Modal modal;
     private Recipe recipe;
+
+    private string[] imperial = { "lb", "tsp", "tbsp", "cup", "pint", "quart", "oz", "fl oz", "gal" };
+    private string[] metric = { "g", "mg", "ml", "L", "kg" };
+
+    [Parameter]
+    public bool isPosting { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -53,7 +105,43 @@
 
     private void BackToRecipeEditor()
     {
-        navi.NavigateTo("/RecipeEditor/@recipeId");
+        navi.NavigateTo($"/RecipeEditor/{isPosting}");
     }
 
+    private async void HandleStepIngredientSelection()
+    {
+        foreach(RecipeStep step in recipe.recipeSteps)
+        {
+            if(step.stepId == stepId)
+            {
+                int index = recipe.recipeSteps.IndexOf(step);
+                //REPLACE THIS LINE SOON: Step ingredient must come from DB eventually. This is just a placeholder.
+                selectedIngredient.stepIngredientId = 1;
+                recipe.recipeSteps[index].stepIngredients.Add(selectedIngredient);
+                break;
+            }
+        }
+        await state.SaveNewRecipe(recipe);
+        navi.NavigateTo($"/RecipeEditor/{isPosting}");
+    }
+
+    private void SelectIngredient(Ingredient ing)
+    {
+        selectedIngredient.ingredient = ing;
+        StateHasChanged();
+        OpenModal();
+    }
+
+    private void HandleMeasurementSelectChange(ChangeEventArgs args)
+    {
+        selectedIngredient.ingredientMeasurementUnit = args.Value.ToString() ?? "no unit";
+    }
+
+    private void HandleMeasurementInputChange(ChangeEventArgs args)
+    {
+        selectedIngredient.ingredientMeasurementValue = float.Parse(args.Value.ToString());
+    }
+
+    private void OpenModal() => modal.Open();
+    private void CloseModal() => modal.Close();
 }

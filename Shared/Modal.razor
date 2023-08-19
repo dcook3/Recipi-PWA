@@ -1,6 +1,12 @@
 ﻿@inject NavigationManager navi
 
 <div class="modal @ModalClass" tabindex="-1" style="display:@ModalDisplay">
+    @if(Title != null)
+    {
+        <div class="modal-title">
+            @Title
+        </div>
+    }
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -28,6 +34,8 @@
     public RenderFragment? ButtonGroup { get; set; }
     [Parameter]
     public RenderFragment Body { get; set; }
+    [Parameter]
+    public RenderFragment? Title { get; set; }
 
     public string ModalDisplay = "none;";
     public string ModalClass = "";

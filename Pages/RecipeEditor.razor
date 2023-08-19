@@ -1,4 +1,4 @@
-﻿@page "/RecipeEditor"
+﻿@page "/RecipeEditor/{isPosting:bool}"
 
 @using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
@@ -16,7 +16,7 @@
     </div>
 
     <div class="d-flex flex-column align-items-center">
-        @if (status == "ready")
+        @if(isReady)
             @foreach (RecipeStep step in recipe.recipeSteps)
             {
                 string up = "up";
@@ -31,22 +31,14 @@
                     HandleInsertIngredient="HandleInsertIngredient">
                 </EditableStepCard>
             }
-        else if (status == "error")
-        {
-            <span class="text-danger">Failed loading recipe steps, please reload or try again.</span>
-        }
-        else
-        {
-            <LoadingSpinner></LoadingSpinner>
-        }
     </div>
     
-    <div class="bg-secondary fixed-bottom d-flex justify-content-between" id="footer">
-        <div class="d-flex flex-column">
-            <input type="text" class="minimal-input fs-2 mb-1 text-white" @bind-value="recipe.recipeTitle"/>
-            <input type="text" class="minimal-input no-line fst-italic text-light" @bind-value="recipe.recipeDescription"/>
+    <div class="bg-secondary fixed-bottom d-flex align-items-center justify-content-between" id="footer">
+        <div class="d-flex flex-column me-2">
+            <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipe.recipeTitle" style="width: 100%"/>
+            <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipe.recipeDescription" style="width: 100%" />
         </div>
-        <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
+        <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
@@ -54,7 +46,6 @@
     // NOTE: Never post recipe to db from this page. Only update! Posting will cause duplicate records! -Dylan
 
     private Recipe recipe { get; set; }
-    private string status = "loading";
     private bool IsEditing = false;
     private EditableStepCard stepRef;
     public EditableStepCard StepRef
@@ -68,16 +59,30 @@
     }
     private List<EditableStepCard> steps = new();
     private int cursorPosition;
+    private bool isReady = false;
+
+    //Consider converting to cascading value
+    [Parameter]
+    public bool isPosting { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
         recipe = await state.GetRecipe();
+        isReady = true;
     }
 
     private async void HandleSubmit()
     {
-        await state.SaveRecipe();
-        navi.NavigateTo("/StepRecord");
+        await state.SaveNewRecipe(recipe);
+        await recipeService.PutRecipe(recipe);
+        if(isPosting)
+        {
+            navi.NavigateTo("/StepRecord");
+        }
+        else
+        {
+            navi.NavigateTo("/me");
+        }
     }
 
     private void HandleRedirect()
@@ -88,9 +93,8 @@
 
     private void AddStep()
     {
-        RecipeStep step = new();
-        step.stepDescription = "New Step";
-        step.stepOrder = recipe.recipeSteps[recipe.recipeSteps.Count - 1].stepOrder + 1;
+        int calculatedOrder = recipe.recipeSteps[recipe.recipeSteps.Count - 1].stepOrder + 1;
+        RecipeStep step = new("New Step", calculatedOrder);
         recipe.recipeSteps.Add(step);
         recipe.OrganizeSteps();
         StateHasChanged();
@@ -135,9 +139,9 @@
         int pos = await jsr.InvokeAsync<int>("getSelectedStart", text.Element);
         int stepIndex = recipe.recipeSteps.IndexOf(step);
         string desc = recipe.recipeSteps[stepIndex].stepDescription;
-        string toInsert = "{" + (recipe.recipeSteps[stepIndex].stepIngredients.Length - 1) + "}";
+        string toInsert = "{" + (recipe.recipeSteps[stepIndex].stepIngredients.Count) + "}";
         recipe.recipeSteps[stepIndex].stepDescription = desc.Insert(pos, toInsert);
         await state.SaveRecipe();
-        navi.NavigateTo($"/IngredientSelector/{recipe.recipeId}");
+        navi.NavigateTo($"/IngredientSelector/{step.stepId}/{isPosting}");
     }
 }

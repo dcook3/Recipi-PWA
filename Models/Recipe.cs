@@ -1,22 +1,30 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
-using Microsoft.Extensions.Http;
+﻿using System.Text.Json.Serialization;
 
 namespace Recipi_PWA.Models
 {
     public class Recipe
     {
+        public Recipe()
+        {
+            recipeTitle = "Change title here";
+            recipeDescription = "Add a description...";
+            recipeSteps = new();
+        }
+
+        public Recipe(int recipeId)
+        {
+            this.recipeId = recipeId;
+            recipeTitle = "Change title here";
+            recipeDescription = "Add a description...";
+            recipeSteps = new();
+        }
+
+        [JsonIgnore]
         public int recipeId { get; set; }
 
         public string recipeTitle  { get; set; }
 
         public string? recipeDescription { get; set; }
-
-        public string createdByUsername { get; set; }
-
-        public DateTime createdDatetime { get; set; }
 
         public List<RecipeStep> recipeSteps { get; set; }
 
@@ -39,5 +47,7 @@ namespace Recipi_PWA.Models
                 }
             }
         }
+
+
     }
 }
