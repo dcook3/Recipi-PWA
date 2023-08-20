@@ -23,6 +23,8 @@
     public string bgColor {get; set;} = "bg-warning";
     [Parameter]
     public bool disabled { get; set; } = false;
+    [Parameter]
+    public int width { get; set; } = 100;
 
     private string shapeClass = "";
     private string shapeStyle = "";
@@ -32,7 +34,7 @@
         if(shape == "rect")
         {
             shapeClass = "rounded-1";
-            shapeStyle = "width: 100px;";
+            shapeStyle = $"width: {width}px;";
         }
         if(shape == "circle")
         {
