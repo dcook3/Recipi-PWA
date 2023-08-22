@@ -12,7 +12,7 @@ namespace Recipi_PWA.Models
             ingredient = new();
         }
 
-        public int stepIngredientId { get; set; }
+        public int ingredientId { get; set; }
         public string ingredientMeasurementUnit { get; set; }
         public float ingredientMeasurementValue { get; set; }
         [JsonIgnore]

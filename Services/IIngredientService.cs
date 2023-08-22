@@ -3,5 +3,6 @@
     public interface IIngredientService
     {
         Task<HttpResponseMessage> GetIngredients();
+        Task<HttpResponseMessage> SearchIngredients(string keyword);
     }
 }

@@ -7,7 +7,8 @@
 @inject NavigationManager navi
 @inject IIngredientService service
 
-@page "/IngredientSelector/{stepId:int}/{isPosting:bool}"
+@page "/IngredientSelector/{recipeId:int}/{stepIndex:int}/{isPosting:bool}"
+
 
 <TopViewport>
     <div class="row py-1">
@@ -17,80 +18,37 @@
     </div>
 </TopViewport>
 
-<div class="d-flex flex-column align-items-center" style="width: 100%;">
-    @foreach (Ingredient ing in ingredients)
-    {
-        <div class="d-flex justify-content-between align-items-center" style="width: 95%;">
-            <div class="d-flex align-items-center">
-                <ProfilePicture profilePictureUrl="https://images.immediate.co.uk/production/volatile/sites/30/2020/02/Rosemary-sprig-7d96e10.jpg" size="40"></ProfilePicture>
-                <span class="ms-1 fs-4">@ing.ingredientTitle</span>
-            </div>
-            <Button onclick="@(() => SelectIngredient(ing))" shape="circle">
-                <i class="fa-solid fa-plus"></i>
-            </Button>
-        </div>
-    }
-</div>
+<input class="form-control rounded" @bind-value="searchTerm" @onkeydown="@CheckTimeout" placeholder="Find an ingredient..." />
 
-<Modal @ref="modal">
-    <Title>
-        Select Measurement
-    </Title>
-    <Body>
-        <div class="row">
-            @if (!String.IsNullOrEmpty(selectedIngredient.ingredient.ingredientTitle))
-            {
-                <span>Please Select a Measurement for "@selectedIngredient.ingredient.ingredientTitle":</span>
-            }
-            else
-            {
-                <span>Please Select a Measurement for the Selected Ingredient:</span>
-            }
-        </div>
-        <div class="row">
-            <div class="col-4">
-                <input type="number" class="form-control" placeholder="Measurement..." @onchange="HandleMeasurementInputChange" name="measurement value"></input>
-            </div>
-            <div class="col-8">
-                <select class="form-select" @onchange="HandleMeasurementSelectChange" name="measurement unit">
-                    @foreach (string unit in metric)
-                    {
-                        <option value="@unit">@unit</option>
-                    }
-                </select>
-            </div>
-        </div>
-    </Body>
-    <ButtonGroup>
-        <Button bgColor="bg-danger" onclick="@CloseModal" Width="5">
-            Go Back
-        </Button>
-        <Button onclick="@HandleStepIngredientSelection" Width="5">
-            Confirm
-        </Button>
-    </ButtonGroup>
-</Modal>
+<CascadingValue Value="@recipeInfo">
+    <CascadingValue Value="@isPosting">
+        <CascadingValue Value="@recipeId">
+            <CascadingValue Value="@stepIndex">
+                <IngredientsList @ref="ingredientsList" ingredients="@ingredients"></IngredientsList>
+            </CascadingValue>
+        </CascadingValue>
+    </CascadingValue>
+</CascadingValue>
 
 @code {
     [Parameter]
-    public int stepId { get; set; }
-
-    List<Ingredient> ingredients = new();
-
-    StepIngredient selectedIngredient = new();
-
-    private Modal modal;
-    private Recipe recipe;
-
-    private string[] imperial = { "lb", "tsp", "tbsp", "cup", "pint", "quart", "oz", "fl oz", "gal" };
-    private string[] metric = { "g", "mg", "ml", "L", "kg" };
+    public int stepIndex { get; set; }
 
     [Parameter]
     public bool isPosting { get; set; }
 
+    [Parameter]
+    public int recipeId { get; set; }
+
+    private RecipeInformation recipeInfo;
+    private List<Ingredient> ingredients;
+    private int LastSearchLength = 0;
+    private IngredientsList ingredientsList;
+    private string searchTerm;
+
     protected override async Task OnInitializedAsync()
     {
-        recipe = await state.GetRecipe();
+        recipeInfo = await state.GetRecipe();
         HttpResponseMessage response = await service.GetIngredients();
         if (response.IsSuccessStatusCode)
         {
@@ -105,43 +63,27 @@
 
     private void BackToRecipeEditor()
     {
-        navi.NavigateTo($"/RecipeEditor/{isPosting}");
+        navi.NavigateTo($"/RecipeEditor/{recipeId}/{isPosting}");
     }
 
-    private async void HandleStepIngredientSelection()
+    private async void CheckTimeout(KeyboardEventArgs e)
     {
-        foreach(RecipeStep step in recipe.recipeSteps)
+        int charDiff = Math.Abs(LastSearchLength - searchTerm.Length);
+        if(charDiff >= 3 || LastSearchLength == 0)
         {
-            if(step.stepId == stepId)
+            Console.WriteLine("Performing an ingredient search...");
+            LastSearchLength = searchTerm.Length;
+            HttpResponseMessage response = await service.SearchIngredients(searchTerm);
+            if (response.IsSuccessStatusCode)
             {
-                int index = recipe.recipeSteps.IndexOf(step);
-                //REPLACE THIS LINE SOON: Step ingredient must come from DB eventually. This is just a placeholder.
-                selectedIngredient.stepIngredientId = 1;
-                recipe.recipeSteps[index].stepIngredients.Add(selectedIngredient);
-                break;
+                string jsonString = await response.Content.ReadAsStringAsync();
+                ingredients = JsonSerializer.Deserialize<List<Ingredient>>(jsonString) ?? new();
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("There was a problem while fetching ingredients from the server. Please reload or try again later.");
             }
         }
-        await state.SaveNewRecipe(recipe);
-        navi.NavigateTo($"/RecipeEditor/{isPosting}");
     }
-
-    private void SelectIngredient(Ingredient ing)
-    {
-        selectedIngredient.ingredient = ing;
-        StateHasChanged();
-        OpenModal();
-    }
-
-    private void HandleMeasurementSelectChange(ChangeEventArgs args)
-    {
-        selectedIngredient.ingredientMeasurementUnit = args.Value.ToString() ?? "no unit";
-    }
-
-    private void HandleMeasurementInputChange(ChangeEventArgs args)
-    {
-        selectedIngredient.ingredientMeasurementValue = float.Parse(args.Value.ToString());
-    }
-
-    private void OpenModal() => modal.Open();
-    private void CloseModal() => modal.Close();
 }

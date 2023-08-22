@@ -163,9 +163,9 @@ namespace Recipi_PWA.Models
             NotifyStateChanged();
         }
 
-        public Recipe currentRecipe;
+        public RecipeInformation currentRecipe;
 
-        public async Task<Recipe> GetRecipe()
+        public async Task<RecipeInformation> GetRecipe()
         {
             if (currentRecipe != null)
                 return currentRecipe;
@@ -177,38 +177,31 @@ namespace Recipi_PWA.Models
                 await jsr.InvokeVoidAsync("BlazorRegisterStorageEvent", reference);
                 _initialized = true;
             }
-
+            
             // Read the JSON string that contains the data from the local storage
-            Recipe result;
+            RecipeInformation placeholderInfo = new RecipeInformation();
+            placeholderInfo.recipe = new();
+            placeholderInfo.recipe.recipeTitle = "Recipe was not loaded properly.";
 
-            Recipe placeholderRecipe = new Recipe();
-            placeholderRecipe.recipeTitle = "Recipe was not loaded properly.";
-
+            RecipeInformation result;
             var str = await jsr.InvokeAsync<string>("sessionStorage.getItem", "recipe");
             if (str != null)
             {
-                result = JsonSerializer.Deserialize<Recipe>(str) ?? placeholderRecipe;
+                result = JsonSerializer.Deserialize<RecipeInformation>(str) ?? placeholderInfo;
             }
             else
             {
-                result = placeholderRecipe;
+                result = placeholderInfo;
             }
+
             currentRecipe = result;
             return result;
         }
 
-        public async Task SaveRecipe()
+        public async Task SaveRecipe(RecipeInformation recipeInfo)
         {
-            Console.WriteLine("Saving recipe");
-            var json = JsonSerializer.Serialize(currentRecipe);
-            await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
-            NotifyStateChanged();
-        }
-
-        public async Task SaveNewRecipe(Recipe recipe)
-        {
-            Console.WriteLine("Saving a new recipe");
-            var json = JsonSerializer.Serialize(recipe);
+            var json = JsonSerializer.Serialize(recipeInfo);
+            Console.WriteLine($"Saving the following recipe: \n{json}");
             await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);
             NotifyStateChanged();
         }
