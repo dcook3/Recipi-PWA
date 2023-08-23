@@ -11,17 +11,6 @@ namespace Recipi_PWA.Models
             recipeSteps = new();
         }
 
-        public Recipe(int recipeId)
-        {
-            this.recipeId = recipeId;
-            recipeTitle = "Change title here";
-            recipeDescription = "Add a description...";
-            recipeSteps = new();
-        }
-
-        [JsonIgnore]
-        public int recipeId { get; set; }
-
         public string recipeTitle  { get; set; }
 
         public string? recipeDescription { get; set; }

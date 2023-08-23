@@ -28,9 +28,9 @@
     [Parameter]
     public bool disabled { get; set; } = false;
     [Parameter]
-    public int Height { get; set; } = 2;
+    public int Height { get; set; }
     [Parameter]
-    public int Width { get; set; } = 2;
+    public int Width { get; set; }
 
     private string shapeClass = "";
     private string shapeStyle = "";
@@ -41,11 +41,15 @@
         {
             shapeClass = "rounded-1";
             shapeStyle = "width: 100px;";
+            Height = 2;
+            Width = 6;
         }
         if(shape == "circle")
         {
             shapeStyle = "";
             shapeClass = "rounded-circle";
+            Height = 2;
+            Width = 2;
         }
     }
 

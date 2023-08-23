@@ -1,5 +1,9 @@
 ﻿@using Recipi_PWA.Models
 
+@inject IJSRuntime jsr
+@inject StateContainer state
+@inject NavigationManager navi
+
 @{
     string FormatDescription(string desc, List<StepIngredient> ings)
     {
@@ -27,7 +31,7 @@
         <div class="d-flex flex-column">
             <InputText class="form-control mb-1" @bind-Value="Step.stepDescription" @ref="descriptionInput"></InputText>
             <div class="d-flex justify-content-between">
-                <a class="text-white" @onclick="OnInsertIngredient">+ Insert Ingredient</a>
+                <a class="text-white" @onclick="HandleInsertIngredient">+ Insert Ingredient</a>
                 <a class="text-white" @onclick="ToggleEditing">✔</a>
             </div>
         </div>
@@ -69,21 +73,32 @@
     [Parameter]
     public EventCallback ShiftDown { get; set; }
 
-    [Parameter]
-    public Action<RecipeStep, InputText> HandleInsertIngredient { get; set; }
+    [CascadingParameter]
+    protected RecipeInformation recipeInfo { get; set; }
+
+    [CascadingParameter]
+    protected bool isPosting { get; set; }
 
     private InputText descriptionInput { get; set; }
 
     public bool IsEditing { get; set; } = false;
 
-    private void OnInsertIngredient()
-    {
-        HandleInsertIngredient(Step, descriptionInput);
-    }
-
     private void ToggleEditing()
     {
         IsEditing = !IsEditing;
         StateHasChanged();
+    }
+
+    private async void HandleInsertIngredient()
+    {
+        int pos = await jsr.InvokeAsync<int>("getSelectedStart", descriptionInput.Element);
+        int stepIndex = recipeInfo.recipe.recipeSteps.IndexOf(Step);
+        string desc = recipeInfo.recipe.recipeSteps[stepIndex].stepDescription;
+        string toInsert = "{" + (recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Count) + "}";
+
+        recipeInfo.recipe.recipeSteps[stepIndex].stepDescription = desc.Insert(pos, toInsert);
+        await state.SaveRecipe(recipeInfo);
+
+        navi.NavigateTo($"/IngredientSelector/{recipeInfo.recipeId}/{recipeInfo.recipe.recipeSteps.IndexOf(Step)}/{isPosting}");
     }
 }

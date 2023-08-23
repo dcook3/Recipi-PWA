@@ -1,4 +1,4 @@
-﻿@page "/RecipeEditor/{isPosting:bool}"
+﻿@page "/RecipeEditor/{recipeId:int}/{isPosting:bool}"
 
 @using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
@@ -6,7 +6,6 @@
 @inject IRecipeService recipeService;
 @inject StateContainer state;
 @inject NavigationManager navi;
-@inject IJSRuntime jsr
 @layout EmptyLayout
 
 <div class="bg-primary container-fluid pt-1" style="height: 100%">
@@ -14,67 +13,85 @@
         <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
         <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
     </div>
-
-    <div class="d-flex flex-column align-items-center">
-        @if(isReady)
-            @foreach (RecipeStep step in recipe.recipeSteps)
-            {
-                string up = "up";
-                string down = "down";
-                int id = step.stepId;
-                <EditableStepCard 
-                    @ref="StepRef"
-                    Step="step" 
-                    DeleteStep="() => DeleteStep(step)"
-                    ShiftUp="() => ShiftStep(step, up)"
-                    ShiftDown="() => ShiftStep(step, down)"
-                    HandleInsertIngredient="HandleInsertIngredient">
-                </EditableStepCard>
-            }
-    </div>
+    @if (isReady)
+    {
+        <CascadingValue Value="@recipeInfo">
+            <CascadingValue Value="@isPosting">
+                <div class="d-flex flex-column align-items-center">
+                    @foreach (RecipeStep step in recipeInfo.recipe.recipeSteps)
+                    {
+                        string up = "up";
+                        string down = "down";
+                        int id = step.stepId;
+                        <EditableStepCard 
+                        Step="step" 
+                        DeleteStep="() => DeleteStep(step)"
+                        ShiftUp="() => ShiftStep(step, up)"
+                        ShiftDown="() => ShiftStep(step, down)">
+                        </EditableStepCard>
+                    }
+                </div>
+            </CascadingValue>
+        </CascadingValue>
+    }
     
     <div class="bg-secondary fixed-bottom d-flex align-items-center justify-content-between" id="footer">
         <div class="d-flex flex-column me-2">
-            <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipe.recipeTitle" style="width: 100%"/>
-            <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipe.recipeDescription" style="width: 100%" />
+            <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipeInfo.recipe.recipeTitle" style="width: 100%"/>
+            <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipeInfo.recipe.recipeDescription" style="width: 100%" />
         </div>
         <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
     </div>
 </div>
 
-@code {
-    // NOTE: Never post recipe to db from this page. Only update! Posting will cause duplicate records! -Dylan
+<Modal @ref="GoBackConfirmation">
+    <Body>
+        <h5>Going back will not save your new recipe, would you still like to go back?</h5>
+    </Body>
+    <ButtonGroup>
+        <Button Width="4" onclick="HandleModalCancel">No</Button>
+        <Button Width="4" onclick="HandleModalConfirm">Yes</Button>
+    </ButtonGroup>
+</Modal>
 
-    private Recipe recipe { get; set; }
-    private bool IsEditing = false;
-    private EditableStepCard stepRef;
-    public EditableStepCard StepRef
-    {
-        get => stepRef;
-        set
-        {
-            stepRef = value;
-            steps.Add(value);
-        }
-    }
-    private List<EditableStepCard> steps = new();
+@code {
+    private RecipeInformation recipeInfo { get; set; }
     private int cursorPosition;
     private bool isReady = false;
+    private Modal GoBackConfirmation { get; set; }
+
+    private void closeModal() => GoBackConfirmation.Close();
+    private void openModal() => GoBackConfirmation.Open();
 
     //Consider converting to cascading value
     [Parameter]
     public bool isPosting { get; set; }
 
+    [Parameter]
+    public int recipeId { get; set; }
+
     protected async override Task OnInitializedAsync()
     {
-        recipe = await state.GetRecipe();
+        recipeInfo = await state.GetRecipe();
         isReady = true;
+        StateHasChanged();
     }
 
     private async void HandleSubmit()
     {
-        await state.SaveNewRecipe(recipe);
-        await recipeService.PutRecipe(recipe);
+        if (recipeInfo.isNewRecipe)
+        {
+            HttpResponseMessage response = await recipeService.PostRecipe(recipeInfo.recipe);
+            if (!response.IsSuccessStatusCode)
+                Console.WriteLine($"Server repsonded with {response.StatusCode} when posting new recipe");
+        }
+        else
+        {
+            //Its possible this will return with a 400 error. I am leaving it as it currently is not in use. This will be in use on a recipe edit.
+            recipeInfo.recipeId = recipeId;
+            await recipeService.PutRecipe(recipeInfo.recipeId, recipeInfo.recipe);
+        }
+
         if(isPosting)
         {
             navi.NavigateTo("/StepRecord");
@@ -87,61 +104,66 @@
 
     private void HandleRedirect()
     {
+        openModal();
+    }
+
+    private async void HandleModalConfirm()
+    {
+        if(!recipeInfo.isNewRecipe)
+            await recipeService.DeleteRecipe(recipeId);
+
+        await state.SaveRecipe(new());
         //this should return you to the last visited page when a navigation tracker has been established
         navi.NavigateTo("/CookbookViewer");
     }
 
-    private void AddStep()
+    private void HandleModalCancel()
     {
-        int calculatedOrder = recipe.recipeSteps[recipe.recipeSteps.Count - 1].stepOrder + 1;
+        closeModal();
+    }
+
+    private async void AddStep()
+    {
+        int calculatedOrder = recipeInfo.recipe.recipeSteps[recipeInfo.recipe.recipeSteps.Count - 1].stepOrder + 1;
         RecipeStep step = new("New Step", calculatedOrder);
-        recipe.recipeSteps.Add(step);
-        recipe.OrganizeSteps();
+        recipeInfo.recipe.recipeSteps.Add(step);
+        recipeInfo.recipe.OrganizeSteps();
+        await state.SaveRecipe(recipeInfo);
         StateHasChanged();
     }
 
     private void DeleteStep(RecipeStep step)
     {
-        int stepIndex = recipe.recipeSteps.IndexOf(step);
-        recipe.recipeSteps.Remove(step);
-        for(int i = stepIndex; i < recipe.recipeSteps.Count; i++)
+        int stepIndex = recipeInfo.recipe.recipeSteps.IndexOf(step);
+        recipeInfo.recipe.recipeSteps.Remove(step);
+        for(int i = stepIndex; i < recipeInfo.recipe.recipeSteps.Count; i++)
         {
-            recipe.recipeSteps[i].stepOrder = recipe.recipeSteps[i].stepOrder - 1;
+            recipeInfo.recipe.recipeSteps[i].stepOrder = recipeInfo.recipe.recipeSteps[i].stepOrder - 1;
         }
         StateHasChanged();
     }
 
     private void ShiftStep(RecipeStep step, string direction)
     {
-        int stepIndex = recipe.recipeSteps.IndexOf(step);
+        int stepIndex = recipeInfo.recipe.recipeSteps.IndexOf(step);
         if (direction == "up" && stepIndex > 0)
         {
-            int prior = recipe.recipeSteps[stepIndex - 1].stepOrder;
-            recipe.recipeSteps[stepIndex - 1].stepOrder = recipe.recipeSteps[stepIndex].stepOrder;
-            recipe.recipeSteps[stepIndex].stepOrder = prior;
+            int prior = recipeInfo.recipe.recipeSteps[stepIndex - 1].stepOrder;
+            recipeInfo.recipe.recipeSteps[stepIndex - 1].stepOrder = recipeInfo.recipe.recipeSteps[stepIndex].stepOrder;
+            recipeInfo.recipe.recipeSteps[stepIndex].stepOrder = prior;
         }
-        else if (direction == "down" && stepIndex < recipe.recipeSteps.Count - 1)
+        else if (direction == "down" && stepIndex < recipeInfo.recipe.recipeSteps.Count - 1)
         {
-            int next = recipe.recipeSteps[stepIndex + 1].stepOrder;
-            recipe.recipeSteps[stepIndex + 1].stepOrder = recipe.recipeSteps[stepIndex].stepOrder;
-            recipe.recipeSteps[stepIndex].stepOrder = next;
+            int next = recipeInfo.recipe.recipeSteps[stepIndex + 1].stepOrder;
+            recipeInfo.recipe.recipeSteps[stepIndex + 1].stepOrder = recipeInfo.recipe.recipeSteps[stepIndex].stepOrder;
+            recipeInfo.recipe.recipeSteps[stepIndex].stepOrder = next;
         }
         else
         {
             Console.WriteLine($"Ignoring going {direction} on step {step.stepDescription}. It remains at step order {step.stepOrder}");
         }
-        recipe.OrganizeSteps();
+        recipeInfo.recipe.OrganizeSteps();
         StateHasChanged();
     }
 
-    private async void HandleInsertIngredient(RecipeStep step, InputText text)
-    {
-        int pos = await jsr.InvokeAsync<int>("getSelectedStart", text.Element);
-        int stepIndex = recipe.recipeSteps.IndexOf(step);
-        string desc = recipe.recipeSteps[stepIndex].stepDescription;
-        string toInsert = "{" + (recipe.recipeSteps[stepIndex].stepIngredients.Count) + "}";
-        recipe.recipeSteps[stepIndex].stepDescription = desc.Insert(pos, toInsert);
-        await state.SaveRecipe();
-        navi.NavigateTo($"/IngredientSelector/{step.stepId}/{isPosting}");
-    }
 }

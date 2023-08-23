@@ -11,12 +11,12 @@
 @inject IRecipeService recipeService;
 @inject HttpClient http
 @inject NavigationManager navi
-@inject IRecipeService recipeService
+@inject PageHistoryState history
 @layout EmptyLayout
 
 <TopViewport>
-    <div class="row py-1">
-        <a href="go back" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
+    <div class="row py-1 m-0">
+        <a href="@history.GetGoBackPage()" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
         <h3 class="text-white mb-0 col-4 d-inline-block text-center pt-1">Your Cookbook</h3>
         <div class="col-4"></div>
     </div>
@@ -39,6 +39,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        history.AddPageToHistory("/CookbookViewer");
         if (state.LoggedIn)
         {
             HttpResponseMessage response = await recipeService.GetCookbook("");
@@ -53,7 +54,7 @@
         }
     }
 
-    private async void HandleRecipeNav(int recipeId) 
+    private async void HandleRecipeNav(int recipeId)
     {
         HttpResponseMessage response;
         response = await recipeService.GetRecipeById(recipeId);
@@ -61,43 +62,26 @@
         {
             string responseBody = await response.Content.ReadAsStringAsync();
             Recipe recipe = System.Text.Json.JsonSerializer.Deserialize<Recipe>(responseBody) ?? new();
-
-            HttpResponseMessage postResponse = await recipeService.PostRecipe(recipe);
-            if (postResponse.IsSuccessStatusCode)
-            {
-                string responseContent = await response.Content.ReadAsStringAsync();
-                var data = (JObject)JsonConvert.DeserializeObject(responseContent);
-                int newId = data.SelectToken("recipeId").Value<int>();
-                recipe.recipeId = newId;
-            }
-            await state.SaveNewRecipe(recipe);
-            
+            RecipeInformation recipeInfo = new();
+            recipeInfo.recipe = recipe;
+            await state.SaveRecipe(recipeInfo);
+            navi.NavigateTo($"/RecordMedia");
         }
         else
         {
             Console.WriteLine($"Server responded with status code {response.StatusCode}");
         }
-        navi.NavigateTo($"/RecipeEditor/true");
+
     }
 
     private async void HandleEmptyRecipe()
     {
         Recipe recipe = new();
         recipe.recipeSteps.Add(new());
-        HttpResponseMessage response = await recipeService.PostRecipe(recipe);
-        if (response.IsSuccessStatusCode)
-        {
-            string responseContent = await response.Content.ReadAsStringAsync();
-            var data = (JObject)JsonConvert.DeserializeObject(responseContent);
-            int recipeId = data.SelectToken("recipeId").Value<int>();
-            recipe.recipeId = recipeId;
-            await state.SaveNewRecipe(recipe);
-            navi.NavigateTo($"/RecipeEditor/true");
-        }
-        else
-        {
-            Console.WriteLine($"Server repsonded with {response.StatusCode} when posting new recipe");
-        }
-
+        RecipeInformation recipeInfo = new();
+        recipeInfo.isNewRecipe = true;
+        recipeInfo.recipe = recipe;
+        await state.SaveRecipe(recipeInfo);
+        navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/true");
     }
 }
