@@ -14,7 +14,7 @@ namespace Recipi_PWA.Services
 
         public async Task<HttpResponseMessage> UploadToS3(string presignedUrl, IBrowserFile file)
         {
-            var streamContent = new StreamContent(file.OpenReadStream());
+            var streamContent = new StreamContent(file.OpenReadStream(maxAllowedSize: (1024 * 1024 * 10)));
             streamContent.Headers.Add("Content-Type", "image/png");
             return await new HttpClient().PutAsync(presignedUrl, streamContent);
         }

@@ -2,33 +2,108 @@
 @using Recipi_PWA.Models;
 @using System.Text.Json;
 @using Recipi_PWA.Shared.Profile;
+@using System.Text.RegularExpressions;
 
+@layout EmptyLayout
 @inject StateContainer state
 @inject NavigationManager navi
-@inject IIngredientService service
+@inject IIngredientService ingredientService
+@inject IMediaUploadService mediaService
+@inject IJSRuntime js
 
 @page "/IngredientSelector/{recipeId:int}/{stepIndex:int}/{isPosting:bool}"
 
-
 <TopViewport>
-    <div class="row py-1">
+    <div class="row py-1 m-0">
         <a @onclick="BackToRecipeEditor" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
         <h3 class="text-white mb-0 col-4 d-inline-block text-center pt-1">Ingredients</h3>
         <div class="col-4"></div>
     </div>
 </TopViewport>
 
-<input class="form-control rounded" @bind-value="searchTerm" @onkeydown="@CheckTimeout" placeholder="Find an ingredient..." />
+<div class="d-flex flex-column align-items-center">
+    <input class="form-control rounded" @bind="searchTerm" @bind:event="oninput" @bind:after="PerformSearch" placeholder="Find an ingredient..." style="width: 90%;" />
+</div>
 
 <CascadingValue Value="@recipeInfo">
     <CascadingValue Value="@isPosting">
         <CascadingValue Value="@recipeId">
             <CascadingValue Value="@stepIndex">
-                <IngredientsList @ref="ingredientsList" ingredients="@ingredients"></IngredientsList>
+                @if(isReady)
+                {
+                    @if(searchTerm.Length == 0)
+                    {
+                        <IngredientsList @ref="ingredientsList" ingredients="@ingredients"></IngredientsList>
+                    }
+                    else
+                    {
+                        if(searchedIngredients.Count != 0)
+                        {
+                            <IngredientsList @ref="ingredientsList" ingredients="@searchedIngredients"></IngredientsList>
+                        }
+                        else
+                        {
+                            <IngredientsList @ref="ingredientsList">
+                                <div class="d-flex align-items-center" style="width: 95%;">
+                                    <span>@searchTerm was not found. Would you like to add it?</span>
+                                    <Button onclick="@OpenModal">+ Add</Button>
+                                </div>
+                            </IngredientsList>
+                        }
+                    }
+                }
             </CascadingValue>
         </CascadingValue>
     </CascadingValue>
 </CascadingValue>
+
+<div class="fixed-bottom">
+    <div class="d-flex justify-content-end">
+        <Button shape="circle" onclick="HandleAddIngredientNoSearch">+</Button>
+    </div>
+</div>
+
+<Modal @ref="addIngredientDialog">
+    <Title>
+
+        @if (!string.IsNullOrEmpty(searchTerm))
+        {
+            <h4>Adding @searchTerm</h4>
+        }
+        else
+        {
+            <h4>Adding new ingredient</h4>
+        }
+    </Title>
+    <Body>
+        <div class="d-flex flex-column">
+            <span>Please select a picture of this ingredient for other users.</span>
+            <span>This is a preview of what other users will see:</span>
+            <div class="d-flex align-items-center">
+                <div onclick="@ClickFilePicker" class="rounded-circle d-flex align-items-cener justify-content-center" style="background-image: url(@previewIconUrl); background-size: contain; background-repeat: no-repeat; background-position:center;">
+                    <i class="fas fa-edit text-light rounded-circle" style="font-size: 1.5rem; background-color: rgba(48, 48, 48, .6); padding:30px;"></i>
+                </div>
+                <InputFile class="form-control" style="display: none;" OnChange="@LoadIngredientIcon" accept="image/png, image/jpeg, image/jpg" id="pfp" @ref="filePicker"></InputFile>
+                @if (!string.IsNullOrEmpty(searchTerm))
+                {
+                    <span>@searchTerm</span>
+                }
+                else
+                {
+                    <input class="form-control" @bind-value="newIngredientName" type="text" placeholder="Enter an ingredient name..." />
+                }
+            </div>
+        </div>
+    </Body>
+    <ButtonGroup>
+        <Button bgColor="bg-danger" onclick="@CloseModal" Width="5">
+            Go Back
+        </Button>
+        <Button onclick="@HandleAddIngredient" Width="5">
+            Done
+        </Button>
+    </ButtonGroup>
+</Modal>
 
 @code {
     [Parameter]
@@ -42,18 +117,33 @@
 
     private RecipeInformation recipeInfo;
     private List<Ingredient> ingredients;
+    private List<Ingredient> searchedIngredients;
     private int LastSearchLength = 0;
     private IngredientsList ingredientsList;
-    private string searchTerm;
+    private string searchTerm = "";
+
+    private Modal addIngredientDialog { get; set; }
+    private void OpenModal() => addIngredientDialog.Open();
+    private void CloseModal() => addIngredientDialog.Close();
+
+    InputFile filePicker;
+    private IBrowserFile loadedFile;
+    private string previewIconUrl = "https://upload.wikimedia.org/wikipedia/commons/0/00/Tabler-icons_file-search.svg";
+
+    bool isReady = false;
+    bool searchFound = false;
+
+    string newIngredientName = "";
 
     protected override async Task OnInitializedAsync()
     {
         recipeInfo = await state.GetRecipe();
-        HttpResponseMessage response = await service.GetIngredients();
+        HttpResponseMessage response = await ingredientService.GetIngredients();
         if (response.IsSuccessStatusCode)
         {
             string jsonString = await response.Content.ReadAsStringAsync();
             ingredients = JsonSerializer.Deserialize<List<Ingredient>>(jsonString) ?? new();
+            isReady = true;
         }
         else
         {
@@ -66,18 +156,18 @@
         navi.NavigateTo($"/RecipeEditor/{recipeId}/{isPosting}");
     }
 
-    private async void CheckTimeout(KeyboardEventArgs e)
+    private async void PerformSearch()
     {
         int charDiff = Math.Abs(LastSearchLength - searchTerm.Length);
-        if(charDiff >= 3 || LastSearchLength == 0)
+        if(charDiff >= 1)
         {
             Console.WriteLine("Performing an ingredient search...");
             LastSearchLength = searchTerm.Length;
-            HttpResponseMessage response = await service.SearchIngredients(searchTerm);
+            HttpResponseMessage response = await ingredientService.SearchIngredients(searchTerm);
             if (response.IsSuccessStatusCode)
             {
                 string jsonString = await response.Content.ReadAsStringAsync();
-                ingredients = JsonSerializer.Deserialize<List<Ingredient>>(jsonString) ?? new();
+                searchedIngredients = JsonSerializer.Deserialize<List<Ingredient>>(jsonString) ?? new();
                 StateHasChanged();
             }
             else
@@ -85,5 +175,77 @@
                 Console.WriteLine("There was a problem while fetching ingredients from the server. Please reload or try again later.");
             }
         }
+    }
+
+    private async void ClickFilePicker()
+    {
+        await js.InvokeAsync<object>("triggerClick", filePicker.Element);
+    }
+
+    private async void LoadIngredientIcon(InputFileChangeEventArgs e)
+    {
+        loadedFile = e.File;
+        byte[] bytes = new byte[loadedFile.Size];
+        var stream = loadedFile.OpenReadStream(maxAllowedSize: (1024*1024*10));
+        await stream.ReadAsync(bytes);
+        previewIconUrl = "data:image/png;base64," + Convert.ToBase64String(bytes);
+        StateHasChanged();
+    }
+
+    private async void HandleAddIngredient()
+    {
+        if (loadedFile != null && state.You?.UserId != null)
+        {
+            var urlRequest = await mediaService.GetPresignedUrl();
+            if (urlRequest.IsSuccessStatusCode)
+            {
+                var url = await urlRequest.Content.ReadAsStringAsync();
+                var mediaUploadRequest = await mediaService.UploadToS3(url, loadedFile);
+                if (mediaUploadRequest.IsSuccessStatusCode)
+                {
+                    string imageUrl = Regex.Match(url, "^.*?(?=\\?)").Value;
+                    IngredientData toUpload;
+                    if (!string.IsNullOrEmpty(searchTerm))
+                    {
+                        toUpload = new(searchTerm, "", imageUrl, state.You.UserId);
+                    }
+                    else
+                    {
+                        toUpload = new(newIngredientName, "", imageUrl, state.You.UserId);
+                    }
+
+                    HttpResponseMessage ingUploadResponse = await ingredientService.CreateIngredient(toUpload);
+
+                    if (ingUploadResponse.IsSuccessStatusCode)
+                    {
+                        CloseModal();
+                        PerformSearch();
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        Console.WriteLine("Ingredient icon successfully uploaded, but ingredient was not uploaded.");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("There was an issue uploading the ingredient icon to AWS. Aborting ingredient add.");
+                }
+            }
+            else
+            {
+                Console.WriteLine("There was an issue getting upload URL from AWS. Aborting ingredient add.");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Could not load image file data. No uploading occured.");
+        }
+    }
+
+    private void HandleAddIngredientNoSearch()
+    {
+        searchTerm = "";
+        OpenModal();
     }
 }

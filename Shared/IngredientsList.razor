@@ -8,17 +8,24 @@
 @inject IIngredientService service
 
 <div class="d-flex flex-column align-items-center" style="width: 100%;">
-    @foreach (Ingredient ing in ingredients)
+    @if(ChildContent == null)
     {
-        <div class="d-flex justify-content-between align-items-center" style="width: 95%;">
-            <div class="d-flex align-items-center">
-                <ProfilePicture profilePictureUrl="https://images.immediate.co.uk/production/volatile/sites/30/2020/02/Rosemary-sprig-7d96e10.jpg" size="40"></ProfilePicture>
-                <span class="ms-1 fs-4">@ing.ingredientTitle</span>
+        @foreach (Ingredient ing in ingredients)
+        {
+            <div class="d-flex justify-content-between align-items-center" style="width: 95%;">
+                <div class="d-flex align-items-center">
+                    <ProfilePicture profilePictureUrl="@ing.ingredientIcon" size="40"></ProfilePicture>
+                    <span class="ms-1 fs-4">@ing.ingredientTitle</span>
+                </div>
+                <Button onclick="@(() => SelectIngredient(ing))" shape="circle">
+                    <i class="fa-solid fa-plus"></i>
+                </Button>
             </div>
-            <Button onclick="@(() => SelectIngredient(ing))" shape="circle">
-                <i class="fa-solid fa-plus"></i>
-            </Button>
-        </div>
+        }
+    }
+    else
+    {
+        @ChildContent
     }
 </div>
 
@@ -27,7 +34,7 @@
         Select Measurement
     </Title>
     <Body>
-        <div class="row">
+        <div class="row m-0">
             @if (!String.IsNullOrEmpty(selectedIngredient.ingredient.ingredientTitle))
             {
                 <span>Please Select a Measurement for "@selectedIngredient.ingredient.ingredientTitle":</span>
@@ -37,7 +44,7 @@
                 <span>Please Select a Measurement for the Selected Ingredient:</span>
             }
         </div>
-        <div class="row">
+        <div class="row m-0">
             <div class="col-4">
                 <input type="number" class="form-control" placeholder="Measurement..." @onchange="HandleMeasurementInputChange" name="measurement value"></input>
             </div>
@@ -65,6 +72,9 @@
 @code {
     [Parameter]
     public List<Ingredient> ingredients { get; set; } = new();
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
 
     [CascadingParameter]
     public RecipeInformation recipeInfo { get; set; }

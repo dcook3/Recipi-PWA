@@ -91,7 +91,7 @@
             recipeInfo.recipeId = recipeId;
             await recipeService.PutRecipe(recipeInfo.recipeId, recipeInfo.recipe);
         }
-        
+
         if(isPosting)
         {
             navi.NavigateTo("/StepRecord");
@@ -107,10 +107,12 @@
         openModal();
     }
 
-    private void HandleModalConfirm()
+    private async void HandleModalConfirm()
     {
         if(!recipeInfo.isNewRecipe)
-            recipeService.DeleteRecipe(recipeId);
+            await recipeService.DeleteRecipe(recipeId);
+
+        await state.SaveRecipe(new());
         //this should return you to the last visited page when a navigation tracker has been established
         navi.NavigateTo("/CookbookViewer");
     }
