@@ -120,7 +120,7 @@
     {
         loadedFile = e.File;
         byte[] bytes = new byte[loadedFile.Size];
-        var stream = loadedFile.OpenReadStream();
+        var stream = loadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
         await stream.ReadAsync(bytes);
         previewPfp = "data:image/png;base64," + Convert.ToBase64String(bytes);
         StateHasChanged();
@@ -167,7 +167,9 @@
                 if (urlRequest.IsSuccessStatusCode)
                 {
                     var url = await urlRequest.Content.ReadAsStringAsync();
-                    var mediaUploadRequest = await mediaUploadService.UploadToS3(url, loadedFile);
+                    StreamContent sc = new (loadedFile.OpenReadStream());
+                    sc.Headers.Add("Content-Type", "image/png");
+                    var mediaUploadRequest = await mediaUploadService.UploadToS3(url, sc);
                     if (mediaUploadRequest.IsSuccessStatusCode)
                     {
 

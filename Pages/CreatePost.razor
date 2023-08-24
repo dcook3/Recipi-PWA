@@ -1,0 +1,420 @@
+﻿@page "/CreatePost/{recipeId?}";
+@layout EmptyLayout;
+
+@using System.Text;
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Services;
+@using System.Text.RegularExpressions;
+
+@inject IJSRuntime JSRuntime;
+@inject NavigationManager NavigationManager;
+@inject IMediaUploadService mediaUploadService;
+@inject IRecipeService recipeService;
+@inject IPostService postService;
+<style>
+    .hidden {
+        display: none;
+    }
+
+    .video-container {
+        float: left;
+        z-index: -999;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left:0; 
+        right:0;
+        overflow: hidden;
+    }
+
+    .video-container video {
+        /* Make video to at least 100% wide and tall */
+        min-width: 100%;
+        min-height: 100%;
+        /* Setting width & height to auto prevents the browser from stretching or squishing the video */
+        width: auto;
+        height: auto;
+        /* Center the video */
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%,-50%);
+        overflow:hidden;
+    }
+
+    .bottom-media-control-container > div {
+        width: 20%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .post-input-wrapper > input {
+        width: 100%;
+        border: none;
+        overflow-y: scroll;
+    }
+
+        .post-input-wrapper > input:focus {
+            outline: none;
+            box-shadow: none !important;
+        }
+</style>
+
+
+<div class="video-container">
+    <video id="preview" class="@previewClass" autoplay muted />
+
+    <video id="result" class="@resClass" autoplay loop />
+</div>
+<div class="d-flex flex-column" style="position:fixed; top:0; bottom:0; left:0; right:0;">
+    <div class="d-flex flex-column justify-content-between p-3 flex-grow-1" style="width:100%;">
+        <div class="d-flex flex-column justify-content-start" style="width:100%;">
+            <div class="d-flex flex-row justify-content-between" style="width:100%;">
+                <Button onclick="@Back" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+                <div>
+                    @if (recipe != null && status != "postentry")
+                    {
+                        @if (AllRecordings())
+                        {
+                            <Button onclick="@GoToPostEntry"> Next <span><i class="fa-solid fa-chevron-right"></i></span></Button>
+                        }
+                        else
+                        {
+                            <Button disabled bgColor="bg-dark-subtle"> Next <span><i class="fa-solid fa-chevron-right"></i></span></Button>
+                        }
+                    }
+                </div>
+            </div>
+            @if(status == "postentry")
+            {
+                <div class="my-3" style="width:100%;">
+                    <SeekBar videoSelector="#result"></SeekBar>
+                </div>
+                
+            }
+        </div>
+        <div class="bottom-media-control-container container-fluid d-flex justify-content-evenly align-items-center flex-row">
+
+            @if (status == "ready")
+            {
+                <div></div>
+                <div>
+                    <Button onclick="@StartRecording" shape="circle" bgColor="bg-danger"><i class="fs-1 fa-solid fa-square text-danger"></i></Button>
+                </div>
+                <div onclick="@NextCamera">
+                    <i class="fs-1 fa-solid fa-camera-rotate text-light"></i>
+                </div>
+            }
+            else if (status == "recording")
+            {
+                <div></div>
+                <div>
+                    <Button onclick="@StopRecording" shape="circle" bgColor="bg-danger"><i class="fs-1 fa-solid fa-square text-light"></i></Button>
+                </div>
+                <div></div>
+            }
+            else if (status == "recorded")
+            {
+                
+                <div>
+                    <Button onclick="@ResetRecording" shape="circle" bgColor=""><i class="fs-1 fa fa-refresh text-light"></i></Button>
+                </div>
+                <div>
+                    @if (playingStatus)
+                    {
+                        <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-pause text-light"></i></Button>
+                    }
+                    else
+                    {
+                        <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-play text-light"></i></Button>
+                    }
+
+                </div>
+            }
+            else if(status == "postentry")
+            {
+                @if (playingStatus)
+                {
+                    <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-pause text-light"></i></Button>
+                }
+                else
+                {
+                    <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-play text-light"></i></Button>
+                }
+            }
+        </div>
+    </div>
+    <div class="container-fluid d-flex flex-row align-items-center justify-content-between py-1 px-2 text-light bg-primary" style="">
+        @if(status == "postentry")
+        {
+            <div class="post-input-wrapper d-flex flex-column justify-content-evenly align-items-baseline flex-grow-1 ">
+                <InputText class="bg-primary text-light" style="border-bottom: 1px solid;" @bind-Value="postTitle" placeholder="Post Title"></InputText>
+                <InputText class="bg-primary text-light" @bind-Value="postDescription" placeholder="Post Description"></InputText>
+            </div>
+            <div class="d-flex align-items-center justify-content-center mx-2 my-1"><Button shape="circle" status="@peStatus" onclick="@Submit"><i class="fa-solid fa-check"></i></Button></div>
+        
+        }
+        else if (!recipePost)
+        {
+            <Button><span>Attach Recipe</span></Button>
+            @if (AllRecordings())
+            {
+                <Button onclick="@GoToPostEntry"> Next <span><i class="fa-solid fa-chevron-right"></i></span></Button>
+            }
+            else
+            {
+                <Button disabled bgColor="bg-dark-subtle"> Next <span><i class="fa-solid fa-chevron-right"></i></span></Button>
+            }
+        }
+        else
+        {
+            @if (!recipeLoading)
+            {
+                <div class="text-light border-bottom-1">
+                    @{
+                        var currentStep = recipe.recipeSteps.ElementAt(stepIndex);
+                    }
+                    <span>@(currentStep.stepOrder + 1)</span>. @currentStep.stepDescription
+                </div>
+                <div class="d-flex flex-row align-items-center justify-content-evenly">
+                    @{
+                        var backDisabled = stepIndex == 0;
+                    }
+                    <Button shape="circle" onclick="PreviousStep" disabled="@(stepIndex == 0)"  bgColor="@(backDisabled ? "bg-dark-subtle" : "bg-warning")"><i class="fa-solid fa-chevron-left"></i></Button>
+
+                    @{
+                        var forwardDisabled = stepIndex >= recipe.recipeSteps.Count()-1;
+                    }
+                    <Button shape="circle" onclick="NextStep" disabled="forwardDisabled" bgColor="@(forwardDisabled ? "bg-dark-subtle" : "bg-warning")"><i class="fa-solid fa-chevron-right"></i></Button>
+                </div>
+
+            }
+        }
+    </div>
+
+</div>
+@code {
+    [Parameter]
+    public string? recipeId { get; set; }
+
+    private Recipe? recipe { get; set; }
+
+    public bool recipePost = false;
+
+    public bool recipeLoading = true;
+
+    private int stepIndex = 0;
+
+    private string peStatus = "ready";
+
+    private string status = "ready";
+    private string recordingUrl = "";
+
+    private string resClass = "hidden";
+    private string previewClass = "";
+
+    private bool playingStatus = true;
+
+    private ElementReference preview;
+
+    private string postTitle = "";
+    private string postDescription = "";
+
+    private bool[] rStatus = new bool[1] {false};
+
+    protected async override Task OnInitializedAsync()
+    {
+        if (!String.IsNullOrEmpty(recipeId) && Int32.TryParse(recipeId, out int recipeIdInt))
+        {
+            recipePost = true;
+            var response = await recipeService.GetRecipeById(recipeIdInt);
+            if (response.IsSuccessStatusCode)
+            {
+                recipe = await response.Content.ReadFromJsonAsync<Recipe>();
+                recipeLoading = false;
+                rStatus = Enumerable.Repeat(false, recipe.recipeSteps.Count()).ToArray();
+            }
+        }
+        StateHasChanged();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("InitializeVideo");
+        }
+    }
+
+    private async void NextStep()
+    {
+        if (stepIndex < recipe.recipeSteps.Count - 1)
+        {
+            stepIndex++;
+            status = await JSRuntime.InvokeAsync<string>("SetStep", stepIndex);
+            playingStatus = true;
+            UpdateVideoClasses();
+            StateHasChanged();
+        }
+
+    }
+    private async void PreviousStep()
+    {
+        if (stepIndex > 0)
+        {
+            stepIndex--;
+            status = await JSRuntime.InvokeAsync<string>("SetStep", stepIndex);
+            playingStatus = true;
+            UpdateVideoClasses();
+            StateHasChanged();
+        }
+    }
+
+    private void ResetRecording()
+    {
+        status = "ready";
+        resClass = "hidden";
+        previewClass = "";
+        StateHasChanged();
+    }
+    private void UpdateVideoClasses()
+    {
+        if (status == "ready")
+        {
+            resClass = "hidden";
+            previewClass = "";
+        }
+        else if (status == "recorded" || status == "postentry")
+        {
+            resClass = "";
+            previewClass = "hidden";
+        }
+    }
+
+    private async void GoToPostEntry()
+    {
+        status = "postentry";
+        if (recipePost)
+        {
+            await JSRuntime.InvokeVoidAsync("ToPostEntry");
+        }
+        playingStatus = true;
+        StateHasChanged();
+    }
+
+    private async void TogglePlayback()
+    {
+        playingStatus = await JSRuntime.InvokeAsync<bool>("TogglePlayback");
+        StateHasChanged();
+    }
+
+
+    private void NextCamera()
+    {
+        JSRuntime.InvokeVoidAsync("NextCamera");
+    }
+
+    private async void Back()
+    {
+        if(status == "postentry")
+        {
+            status = "recorded";
+            if (recipePost)
+            {
+                await JSRuntime.InvokeVoidAsync("BackPostEntry");
+            }
+            StateHasChanged();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+
+    }
+
+    private async void Submit()
+    {
+        if(peStatus == "ready")
+        {
+            peStatus = "loading";
+            StateHasChanged();
+
+            var uploadData = await JSRuntime.InvokeAsync<UploadedRecordingResponse>("UploadRecording");
+
+            PostData post = new()
+            {
+                PostTitle = postTitle,
+                PostDescription = postDescription,
+                ThumbnailUrl = uploadData.thumbnail,
+            };
+
+            if (recipePost)
+            {
+                post.RecipeId = recipe.recipeId;
+                for (int i = 0; i < recipe.recipeSteps.Count(); i++)
+                {
+                    post.PostMediaList.Add(new PostMediaData()
+                        {
+                            StepId = recipe.recipeSteps.ElementAt(i).stepId,
+                            MediaUrl = uploadData.recordings[i],
+                            ThumbnailUrl = ""
+                        });
+                }
+            }
+            else
+            {
+                post.PostMedia = uploadData.recordings[0];
+                post.RecipeId = null;
+            }
+
+            var response = await postService.CreatePost(post);
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("yayya");
+            }
+            else
+            {
+                Console.WriteLine(await response.Content.ReadAsStringAsync());
+            }
+        }
+        
+    }
+
+    private void ResultChanged()
+    {
+        resClass = "";
+        previewClass = "hidden";
+        StateHasChanged();
+    }
+
+    private async void StartRecording()
+    {
+        status = "recording";
+        StateHasChanged();
+        await JSRuntime.InvokeAsync<string>("StartRecording", stepIndex);
+        //WAITS FOR THE RECORDING TO FINISH
+        playingStatus = true;
+        rStatus[stepIndex] = true;
+        status = "recorded";
+        ResultChanged();
+
+    }
+
+
+    private async void StopRecording()
+    {
+        await JSRuntime.InvokeVoidAsync("StopRecording");
+    }
+
+    private bool AllRecordings()
+    {
+        var result = true;
+        for(int i = 0; i < rStatus.Length; i++)
+        {
+            result = result && rStatus[i];
+        }
+        return result;
+    }
+
+}
