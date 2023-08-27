@@ -1,5 +1,9 @@
 ﻿
-<div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@shapeStyle cursor: pointer;" @onclick="Click">
+@{
+    string cssStyle = $"{shapeStyle} cursor: pointer; width: {Width}em; height: {Height}em;";
+}
+
+<div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@cssStyle" @onclick="Click">
     @if (status == "loading")
     {
         <LoadingSpinner colorClass="text-light"></LoadingSpinner>
@@ -23,6 +27,10 @@
     public string bgColor {get; set;} = "bg-warning";
     [Parameter]
     public bool disabled { get; set; } = false;
+    [Parameter]
+    public int Height { get; set; }
+    [Parameter]
+    public int Width { get; set; }
 
     private string shapeClass = "";
     private string shapeStyle = "";
@@ -32,12 +40,17 @@
         if(shape == "rect")
         {
             shapeClass = "rounded-1";
-            shapeStyle = $"width: 100px;";
+            shapeStyle = "width: 100px;";
+            Height = 2;
+            Width = 6;
+
         }
         if(shape == "circle")
         {
             shapeStyle = "";
             shapeClass = "rounded-circle";
+            Height = 2;
+            Width = 2;
         }
     }
 

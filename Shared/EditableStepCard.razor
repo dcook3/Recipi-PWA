@@ -1,28 +1,58 @@
 ﻿@using Recipi_PWA.Models
 
-<div class="bg-warning border-0 rounded p-2 my-1" style="width: 65%">
+@inject IJSRuntime jsr
+@inject StateContainer state
+@inject NavigationManager navi
+
+@{
+    string FormatDescription(string desc, List<StepIngredient> ings)
+    {
+        for (int i = 0; i < ings.Count; i++)
+        {
+            string ingFormatted;
+            if (ings[i].ingredientMeasurementValue == 1)
+            {
+                ingFormatted = $"{ings[i].ingredientMeasurementValue} {ings[i].ingredientMeasurementUnit} {ings[i].ingredient.ingredientTitle}";
+            }
+            else
+            {
+                ingFormatted = $"{ings[i].ingredientMeasurementValue} {ings[i].ingredientMeasurementUnit}s {ings[i].ingredient.ingredientTitle}";
+            }
+            string checkString = "{" + i.ToString() + "}";
+            desc = desc.Replace(checkString, ingFormatted);
+        }
+        return desc;
+    }
+}
+
+<div class="bg-warning border-0 rounded p-2 my-1" style="width: 95%">
     @if (IsEditing)
     {
         <div class="d-flex flex-column">
-            <input class="form-control mb-1" type="text" @bind-value="Step.stepDescription" name="Step.StepOrder">
+            <InputText class="form-control mb-1" @bind-Value="Step.stepDescription" @ref="descriptionInput"></InputText>
             <div class="d-flex justify-content-between">
-                <a href="/IngredientEditor">+ Insert Ingredient</a>
-                <a @onclick="ToggleEditing">✔</a>
+                <a class="text-white" @onclick="HandleInsertIngredient">+ Insert Ingredient</a>
+                <a class="text-white" @onclick="ToggleEditing">✔</a>
             </div>
         </div>
     }
     else
     {
-        <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-between bg-warning text-white">
             <div>
-                <i class="fa-solid fa-bars"></i>
-                <span>@Step.stepDescription</span>
+                <a @onclick="ShiftUp" class="me-1 text-decoration-none text-white">
+                    <i class="fa-solid fa-chevron-up"></i>
+                </a>
+                <a @onclick="ShiftDown" class="me-1 text-decoration-none text-white">
+                    <i class="fa-solid fa-chevron-down"></i>
+                </a>
+                <span class="text-white fs-5">@FormatDescription(Step.stepDescription, Step.stepIngredients)</span>
             </div>
             <div>
-                <a @onclick="ToggleEditing" class="me-1">
+                <a @onclick="ToggleEditing" class="me-1 text-decoration-none text-white">
                     <i class="fa-solid fa-pen-to-square"></i>
                 </a>
-                <a @onclick="DeleteStep">
+                <a @onclick="DeleteStep" class="text-decoration-none text-white">
                     <i class="fa-solid fa-trash"></i>
                 </a>
             </div>
@@ -34,7 +64,24 @@
     [Parameter]
     public RecipeStep Step { get; set; } = new();
 
-    private bool IsEditing { get; set; } = false;
+    [Parameter]
+    public EventCallback DeleteStep { get; set; }
+
+    [Parameter]
+    public EventCallback ShiftUp { get; set; }
+
+    [Parameter]
+    public EventCallback ShiftDown { get; set; }
+
+    [CascadingParameter]
+    protected RecipeInformation recipeInfo { get; set; }
+
+    [CascadingParameter]
+    protected bool isPosting { get; set; }
+
+    private InputText descriptionInput { get; set; }
+
+    public bool IsEditing { get; set; } = false;
 
     private void ToggleEditing()
     {
@@ -42,8 +89,16 @@
         StateHasChanged();
     }
 
-    private void DeleteStep()
+    private async void HandleInsertIngredient()
     {
-        //Call recipestep delete
+        int pos = await jsr.InvokeAsync<int>("getSelectedStart", descriptionInput.Element);
+        int stepIndex = recipeInfo.recipe.recipeSteps.IndexOf(Step);
+        string desc = recipeInfo.recipe.recipeSteps[stepIndex].stepDescription;
+        string toInsert = "{" + (recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Count) + "}";
+
+        recipeInfo.recipe.recipeSteps[stepIndex].stepDescription = desc.Insert(pos, toInsert);
+        await state.SaveRecipe(recipeInfo);
+
+        navi.NavigateTo($"/IngredientSelector/{recipeInfo.recipeId}/{recipeInfo.recipe.recipeSteps.IndexOf(Step)}/{isPosting}");
     }
 }

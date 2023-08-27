@@ -8,5 +8,7 @@ namespace Recipi_PWA.Services
         Task<HttpResponseMessage> GetCookbook(int userId, string sortBy);
         Task<HttpResponseMessage> GetRecipeById(int recipeId);
         Task<HttpResponseMessage> PostRecipe(Recipe recipe);
+        Task<HttpResponseMessage> PutRecipe(int recipeId, Recipe recipe);
+        Task<HttpResponseMessage> DeleteRecipe(int recipeId);
     }
 }

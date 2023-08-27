@@ -1,6 +1,12 @@
 ﻿@inject NavigationManager navi
 
 <div class="modal @ModalClass" tabindex="-1" style="display:@ModalDisplay">
+    @if(Title != null)
+    {
+        <div class="modal-title">
+            @Title
+        </div>
+    }
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -8,10 +14,10 @@
             </div>
             <div class="modal-content">
                 <div class="modal-body">
-                    <p>@Message</p>
+                    <p>@Body</p>
                 </div>
                 <div class="modal-footer">
-                    @ChildContent
+                    @ButtonGroup
                 </div>
             </div>
         </div>
@@ -25,9 +31,11 @@
 
 @code {
     [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+    public RenderFragment? ButtonGroup { get; set; }
     [Parameter]
-    public string Message { get; set; } = "Hello";
+    public RenderFragment Body { get; set; }
+    [Parameter]
+    public RenderFragment? Title { get; set; }
 
     public string ModalDisplay = "none;";
     public string ModalClass = "";

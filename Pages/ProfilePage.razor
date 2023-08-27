@@ -5,6 +5,8 @@
 @inject StateContainer state;
 @inject IUserService userService;
 @inject NavigationManager NavigationManager;
+@inject PageHistoryState history
+
 @if (status == "error")
 {
     <div>Error @eMessage</div>

@@ -14,7 +14,6 @@ namespace Recipi_PWA.Services
 
         public async Task<HttpResponseMessage> UploadToS3(string presignedUrl, StreamContent stream)
         {
-            
             return await new HttpClient().PutAsync(presignedUrl, stream);
         }
     }
