@@ -65,7 +65,7 @@
             RecipeInformation recipeInfo = new();
             recipeInfo.recipe = recipe;
             await state.SaveRecipe(recipeInfo);
-            navi.NavigateTo($"/RecordMedia");
+            navi.NavigateTo($"/CreatePost/{recipeId}");
         }
         else
         {

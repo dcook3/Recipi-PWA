@@ -1,6 +1,6 @@
 ﻿
 @{
-    string cssStyle = $"{shapeStyle} cursor: pointer; width: {Width}em; height: {Height}em;";
+    string cssStyle = $"cursor: pointer; width: {Width}em; height: {Height}em;";
 }
 
 <div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@cssStyle" @onclick="Click">
@@ -28,29 +28,26 @@
     [Parameter]
     public bool disabled { get; set; } = false;
     [Parameter]
-    public int Height { get; set; }
+    public double? Height { get; set; } = null;
     [Parameter]
-    public int Width { get; set; }
+    public double? Width { get; set; } = null;
 
     private string shapeClass = "";
-    private string shapeStyle = "";
 
     protected override void OnInitialized()
     {
         if(shape == "rect")
         {
             shapeClass = "rounded-1";
-            shapeStyle = "width: 100px;";
-            Height = 2;
-            Width = 6;
+            Height = Height ?? 2;
+            Width = Width ?? 6;
 
         }
         if(shape == "circle")
         {
-            shapeStyle = "";
             shapeClass = "rounded-circle";
-            Height = 2;
-            Width = 2;
+            Height = Height ?? 2;
+            Width = Width ?? 2;
         }
     }
 

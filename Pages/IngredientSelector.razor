@@ -200,7 +200,9 @@
             if (urlRequest.IsSuccessStatusCode)
             {
                 var url = await urlRequest.Content.ReadAsStringAsync();
-                var mediaUploadRequest = await mediaService.UploadToS3(url, loadedFile);
+                StreamContent sc = new(loadedFile.OpenReadStream());
+                sc.Headers.Add("Content-Type", "image/png");
+                var mediaUploadRequest = await mediaService.UploadToS3(url, sc);
                 if (mediaUploadRequest.IsSuccessStatusCode)
                 {
                     string imageUrl = Regex.Match(url, "^.*?(?=\\?)").Value;

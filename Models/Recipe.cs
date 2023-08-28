@@ -15,6 +15,10 @@ namespace Recipi_PWA.Models
 
         public string? recipeDescription { get; set; }
 
+        private string _createdByUsername { get; set; }
+
+        private DateTime _createdDatetime { get; set; }
+
         public List<RecipeStep> recipeSteps { get; set; }
 
         private static void Swap<T>(List<T> list, int first, int second)

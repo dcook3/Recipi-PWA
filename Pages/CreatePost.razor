@@ -100,7 +100,7 @@
             {
                 <div></div>
                 <div>
-                    <Button onclick="@StartRecording" shape="circle" bgColor="bg-danger"><i class="fs-1 fa-solid fa-square text-danger"></i></Button>
+                    <Button onclick="@StartRecording" shape="circle" bgColor="bg-danger" Width="3.5" Height="3.5"><i class="fs-1 fa-solid fa-square text-danger"></i></Button>
                 </div>
                 <div onclick="@NextCamera">
                     <i class="fs-1 fa-solid fa-camera-rotate text-light"></i>
@@ -110,7 +110,7 @@
             {
                 <div></div>
                 <div>
-                    <Button onclick="@StopRecording" shape="circle" bgColor="bg-danger"><i class="fs-1 fa-solid fa-square text-light"></i></Button>
+                    <Button onclick="@StopRecording" shape="circle" bgColor="bg-danger" Width="3.5" Height="3.5"><i class="fs-1 fa-solid fa-square text-light"></i></Button>
                 </div>
                 <div></div>
             }
@@ -157,7 +157,7 @@
         }
         else if (!recipePost)
         {
-            <Button><span>Attach Recipe</span></Button>
+            <Button onclick="NavigateToRecipeEditor" Width="8"><span>Attach Recipe</span></Button>
             @if (AllRecordings())
             {
                 <Button onclick="@GoToPostEntry"> Next <span><i class="fa-solid fa-chevron-right"></i></span></Button>
@@ -223,14 +223,18 @@
 
     private bool[] rStatus = new bool[1] {false};
 
+    private int recipeIdInt { get; set; }
+
     protected async override Task OnInitializedAsync()
     {
-        if (!String.IsNullOrEmpty(recipeId) && Int32.TryParse(recipeId, out int recipeIdInt))
+        if (!String.IsNullOrEmpty(recipeId) && Int32.TryParse(recipeId, out int _recipeIdInt))
         {
-            recipePost = true;
-            var response = await recipeService.GetRecipeById(recipeIdInt);
+
+            var response = await recipeService.GetRecipeById(_recipeIdInt);
             if (response.IsSuccessStatusCode)
             {
+                recipeIdInt = _recipeIdInt;
+                recipePost = true;
                 recipe = await response.Content.ReadFromJsonAsync<Recipe>();
                 recipeLoading = false;
                 rStatus = Enumerable.Repeat(false, recipe.recipeSteps.Count()).ToArray();
@@ -351,7 +355,7 @@
 
             if (recipePost)
             {
-                post.RecipeId = recipe.recipeId;
+                post.RecipeId = recipeIdInt;
                 for (int i = 0; i < recipe.recipeSteps.Count(); i++)
                 {
                     post.PostMediaList.Add(new PostMediaData()
@@ -416,5 +420,8 @@
         }
         return result;
     }
-
+    private void NavigateToRecipeEditor()
+    {
+        NavigationManager.NavigateTo("/CookbookViewer");
+    }
 }

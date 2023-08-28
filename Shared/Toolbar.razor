@@ -8,7 +8,7 @@
         Would you like to attach a recipe to this post?
     </Body>
     <ButtonGroup>
-        <button @onclick="@CloseModal" type="button" class="btn btn-primary">No, just record a recipeless post :(</button>
+        <button @onclick="@NavigateToCreatePost" type="button" class="btn btn-primary">No, just record a recipeless post :(</button>
         @*<input type="file" style="opacity: 0" class="btn btn-primary" accept="video/*" capture @onchange="HandleFileChange"/>*@
         <button @onclick="@NavigateToRecipeEditor" type="button" class="btn btn-secondary">Yes!</button>
     </ButtonGroup>
@@ -59,6 +59,12 @@
     private Modal modal;
     private void ShowModal() => modal.Open();
     private void CloseModal() => modal.Close();
+
+    private void NavigateToCreatePost()
+    {
+        NavigationManager.NavigateTo("/CreatePost");
+        modal.Close();
+    }
 
     private void NavigateToRecipeEditor()
     {
