@@ -1,0 +1,16 @@
+﻿@using Recipi_PWA.Models.PostView;
+<div style="width:100%; height: 100%; position:relative;">
+    <div class="d-flex flex-column justify-content-start align-items-center">
+        <div >
+            <span>Step X:</span> <span>Step description</span>
+        </div>
+        <!-- video bar -->
+    </div>
+    <RecipeView post="@post"></RecipeView>
+</div>
+
+@code {
+    [Parameter]
+    public Post post { get; set; }
+
+}

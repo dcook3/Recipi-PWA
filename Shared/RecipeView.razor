@@ -1,0 +1,118 @@
+﻿@using Recipi_PWA.Shared.Profile;
+@using Recipi_PWA.Models.PostView;
+@inject IJSRuntime JSRuntime;
+<div id="interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
+<div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: fixed;">
+    <div id="draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%;">
+        <div class="d-flex flex-row justify-content-center align-items-center " style="width:100vw; height: 5px; position:absolute; top:2px;">
+            <div class="bg-dark-subtle rounded" style="width:30px; height:100%;"></div>
+        </div>
+        @if(post != null)
+        {
+            <h3 class="p-2 m-0" style="user-select:none;">@post.PostTitle</h3>
+        }
+        else
+        {
+            <h3 class="p-2 m-0" style="user-select:none;">Recipe Title</h3>
+        }
+    </div>
+
+    @if (post != null)
+    {
+        
+    <div id="interaction" class="d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
+        <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture">
+
+
+        </ProfilePicture>
+        <Button shape="circle" bgColor="">
+            <i class="fa-solid fs-1 fa-heart"></i>
+        </Button>
+        <Button shape="circle" bgColor="">
+            <i class="fa-solid fs-1 fa-comment"></i>
+        </Button>
+        <Button shape="circle" bgColor="">
+            <i class="fa-solid fs-1 fa-book-medical"></i>
+        </Button>
+        <Button shape="circle" bgColor="">
+            <i class="fa-solid fs-1 fa-flag"></i>
+        </Button>
+        
+    </div>
+        <div class="px-2" style="height:90vh; width:85%; overflow-y: scroll; border-top: 1px solid white">
+            <span class="m-1">@post.PostDescription</span>
+
+            @if (post.Recipe != null)
+            {
+                List<string> ingredients = new();
+               
+                @*<span style="color: rgba(0,0,0, .3); font-size:13px; line-height: 10px; margin:0; margin-top:20px; text-decoration:underline;">Recipe</span>*@
+                <h4 class="d-flex align-items-center justify-content-start" style="margin:0; margin-top: 20px;">@post.Recipe.RecipeTitle -&nbsp;<span style="color: #ddd; font-size: 13px;"><ProfilePicture size="13" userId="@post.Recipe.User.UserId.ToString()" profilePictureUrl="@post.Recipe.User.ProfilePicture"></ProfilePicture> @post.Recipe.User.Username</span></h4>
+                <div class="container-fluid rounded" style="height:1px; background-color: white"></div>
+                <div class="m-1">
+                    <span>@post.Recipe.RecipeDescription</span>
+            
+                    @foreach (var rs in post.Recipe.RecipeSteps)
+                    {
+                        foreach (var si in rs.StepIngredients)
+                        {
+                            if (ingredients.Contains(si.Ingredient.ingredientTitle))
+                            {
+                                ingredients.Add(si.Ingredient.ingredientTitle);
+                            }
+                        }
+                    }
+                    @if(ingredients.Count > 0)
+                    {
+                        <h5>Ingredients: </h5>
+                        <ul>
+                            @foreach (var i in ingredients)
+                            {
+                                <li>
+                                    @i
+                                </li>
+                            })
+                        </ul>
+                    }
+                
+
+                    <h5 style="margin-top: 20px;">Steps: </h5>
+                    <ol>
+                        @foreach(var rs in post.Recipe.RecipeSteps)
+                        {
+                            <li>
+                                @rs.StepDescription
+                            </li>
+                        }
+                    </ol>
+                </div>
+
+            }
+        </div>
+    }
+    else
+    {
+        <div style="height:90vh; width:100%; overflow-y: scroll;">
+        </div>
+    }
+</div>
+<style>
+    #interaction > * {
+        margin:10px 0;
+    }
+</style>
+@code {
+    [Parameter]
+    public Post? post { get; set; } = null;
+
+    
+
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+            await JSRuntime.InvokeVoidAsync("InitDraggable", "draggable");
+        
+        
+           
+    }
+}
