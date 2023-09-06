@@ -12,5 +12,7 @@ namespace Recipi_PWA.Services
         public async Task<HttpResponseMessage> GetUserPosts(int userId) => await client.GetAsync($"/api/Posts/user/{userId}");
 
         public async Task<HttpResponseMessage> CreatePost(PostData postData) => await client.PostAsJsonAsync("/api/Posts", postData);
+
+        public async Task<HttpResponseMessage> GetPost(int postId) => await client.GetAsync($"/api/Posts/{postId}");
     }
 }
