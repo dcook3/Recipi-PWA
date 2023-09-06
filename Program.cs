@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Recipi_PWA.Models;
 using Recipi_PWA.Services;
+using Recipi_PWA.Models.PostView;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -21,7 +22,8 @@ builder.Services.AddHttpClient<IRecipeService, RecipeService>(client => client.B
 builder.Services.AddHttpClient<IPostService, PostService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IMediaUploadService, MediaUploadService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IIngredientService, IngredientService>(client => client.BaseAddress = apiBA);
-builder.Services.AddHttpClient<IHelperService, HelperService>(client => client.BaseAddress = apiBA);
+builder.Services.AddHttpClient<IHelperService<StepIngredient>, HelperService<StepIngredient>>(client => client.BaseAddress = apiBA);
+builder.Services.AddHttpClient<IHelperService<PostStepIngredient>, HelperService<PostStepIngredient>>(client => client.BaseAddress = apiBA);
 
 var host = builder.Build();
 using var scope = host.Services.CreateScope();
