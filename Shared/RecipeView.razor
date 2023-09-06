@@ -1,6 +1,8 @@
 ﻿@using Recipi_PWA.Shared.Profile;
 @using Recipi_PWA.Models.PostView;
+@using Recipi_PWA.Services;
 @inject IJSRuntime JSRuntime;
+@inject IHelperService<PostStepIngredient> helpers;
 <div id="interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
 <div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: fixed;">
     <div id="draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%;">
@@ -81,7 +83,7 @@
                         @foreach(var rs in post.Recipe.RecipeSteps)
                         {
                             <li>
-                                @rs.StepDescription
+                                @helpers.FormatDescription(rs.StepDescription, rs.StepIngredients)
                             </li>
                         }
                     </ol>

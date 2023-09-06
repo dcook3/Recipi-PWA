@@ -2,8 +2,8 @@
 
 namespace Recipi_PWA.Services
 {
-    public interface IHelperService
+    public interface IHelperService<T>
     {
-        string FormatDescription(string desc, List<StepIngredient> ings);
+        string FormatDescription(string desc, List<T> ings);
     }
 }
