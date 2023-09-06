@@ -94,7 +94,7 @@
 
         if(isPosting)
         {
-            navi.NavigateTo("/StepRecord");
+            navi.NavigateTo("/CreatePost");
         }
         else
         {
@@ -113,7 +113,6 @@
             await recipeService.DeleteRecipe(recipeId);
 
         await state.SaveRecipe(new());
-        //this should return you to the last visited page when a navigation tracker has been established
         navi.NavigateTo("/CookbookViewer");
     }
 
