@@ -36,9 +36,9 @@
     </Title>
     <Body>
         <div class="row m-0">
-            @if (!String.IsNullOrEmpty(selectedIngredient.ingredient.ingredientTitle))
+            @if (!String.IsNullOrEmpty(selectedIngredient.Ingredient.ingredientTitle))
             {
-                <span>Please Select a Measurement for "@selectedIngredient.ingredient.ingredientTitle":</span>
+                <span>Please Select a Measurement for "@selectedIngredient.Ingredient.ingredientTitle":</span>
             }
             else
             {
@@ -119,20 +119,20 @@
 
     private void SelectIngredient(Ingredient ing)
     {
-        selectedIngredient.ingredient = ing;
-        selectedIngredient.ingredientId = ing.ingredientId;
+        selectedIngredient.Ingredient = ing;
+        selectedIngredient.IngredientId = ing.ingredientId;
         StateHasChanged();
         OpenModal();
     }
 
     private void HandleMeasurementSelectChange(ChangeEventArgs args)
     {
-        selectedIngredient.ingredientMeasurementUnit = args.Value.ToString() ?? "no unit";
+        selectedIngredient.IngredientMeasurementUnit = args.Value.ToString() ?? "no unit";
     }
 
     private void HandleMeasurementInputChange(ChangeEventArgs args)
     {
-        selectedIngredient.ingredientMeasurementValue = float.Parse(args.Value.ToString());
+        selectedIngredient.IngredientMeasurementValue = float.Parse(args.Value.ToString());
     }
 
     private void OpenModal() => modal.Open();

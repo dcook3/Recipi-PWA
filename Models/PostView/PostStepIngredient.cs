@@ -2,7 +2,7 @@
 
 namespace Recipi_PWA.Models.PostView
 {
-    public class PostStepIngredient
+    public class PostStepIngredient : IStepIngredient
     {
         public int StepIngredientId { get; set; }
         public string IngredientMeasurementUnit { get; set; }

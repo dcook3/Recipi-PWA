@@ -22,8 +22,8 @@ builder.Services.AddHttpClient<IRecipeService, RecipeService>(client => client.B
 builder.Services.AddHttpClient<IPostService, PostService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IMediaUploadService, MediaUploadService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IIngredientService, IngredientService>(client => client.BaseAddress = apiBA);
-builder.Services.AddHttpClient<IHelperService<StepIngredient>, HelperService<StepIngredient>>(client => client.BaseAddress = apiBA);
-builder.Services.AddHttpClient<IHelperService<PostStepIngredient>, HelperService<PostStepIngredient>>(client => client.BaseAddress = apiBA);
+builder.Services.AddHttpClient<IPostInteractionService, PostInteractionService>(client => client.BaseAddress= apiBA);
+builder.Services.AddSingleton<IHelperService, HelperService>();
 
 var host = builder.Build();
 using var scope = host.Services.CreateScope();
