@@ -1,10 +1,10 @@
 ﻿@using Recipi_PWA.Shared.Profile;
 @using Recipi_PWA.Models.PostView;
 @inject IJSRuntime JSRuntime;
-<div id="interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
-<div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: fixed;">
-    <div id="draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%;">
-        <div class="d-flex flex-row justify-content-center align-items-center " style="width:100vw; height: 5px; position:absolute; top:2px;">
+<div id="@(vid)-interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
+<div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: fixed; top: calc(100% - 100px)">
+    <div id="@(vid)-draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%; position:relative;">
+        <div class="d-flex flex-row justify-content-center align-items-center " style="width:100%; height: 5px; position:absolute; top:2px;">
             <div class="bg-dark-subtle rounded" style="width:30px; height:100%;"></div>
         </div>
         @if(post != null)
@@ -20,7 +20,7 @@
     @if (post != null)
     {
         
-    <div id="interaction" class="d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
+        <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
         <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture">
 
 
@@ -56,7 +56,7 @@
                     {
                         foreach (var si in rs.StepIngredients)
                         {
-                            if (ingredients.Contains(si.Ingredient.ingredientTitle))
+                            if (!ingredients.Contains(si.Ingredient.ingredientTitle))
                             {
                                 ingredients.Add(si.Ingredient.ingredientTitle);
                             }
@@ -64,14 +64,14 @@
                     }
                     @if(ingredients.Count > 0)
                     {
-                        <h5>Ingredients: </h5>
+                        <h5 style="margin-top: 20px;">Ingredients: </h5>
                         <ul>
                             @foreach (var i in ingredients)
                             {
                                 <li>
                                     @i
                                 </li>
-                            })
+                            }
                         </ul>
                     }
                 
@@ -97,7 +97,7 @@
     }
 </div>
 <style>
-    #interaction > * {
+    .post-interaction > * {
         margin:10px 0;
     }
 </style>
@@ -105,14 +105,28 @@
     [Parameter]
     public Post? post { get; set; } = null;
 
-    
+    private string vid { get; set; } = "";
 
+    private bool reInit = false;
+
+    protected override void OnInitialized()
+    {
+        if(post != null)
+        {
+            vid = post.PostId.ToString();
+        }
+        Console.WriteLine("init");
+        reInit = true;
+    }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-            await JSRuntime.InvokeVoidAsync("InitDraggable", "draggable");
+        Console.WriteLine("hello??" + vid + " " + reInit);
+        if (firstRender || reInit)
+        {
+            reInit = false;
+            await JSRuntime.InvokeVoidAsync("InitDraggable", vid);
+        }
         
-        
-           
     }
 }

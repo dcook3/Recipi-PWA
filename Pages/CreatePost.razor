@@ -89,7 +89,7 @@
             @if(status == "postentry")
             {
                 <div class="my-3" style="width:100%;">
-                    <SeekBar videoSelector="#result"></SeekBar>
+                    <SeekBar vid="recording"></SeekBar>
                 </div>
                 
             }
@@ -227,6 +227,7 @@
 
     protected async override Task OnInitializedAsync()
     {
+        
         if (!String.IsNullOrEmpty(recipeId) && Int32.TryParse(recipeId, out int _recipeIdInt))
         {
 
@@ -236,6 +237,7 @@
                 recipeIdInt = _recipeIdInt;
                 recipePost = true;
                 recipe = await response.Content.ReadFromJsonAsync<Recipe>();
+                Console.WriteLine(recipe.recipeSteps.First().stepId);
                 recipeLoading = false;
                 rStatus = Enumerable.Repeat(false, recipe.recipeSteps.Count()).ToArray();
             }
@@ -309,7 +311,7 @@
 
     private async void TogglePlayback()
     {
-        playingStatus = await JSRuntime.InvokeAsync<bool>("TogglePlayback");
+        playingStatus = await JSRuntime.InvokeAsync<bool>("TogglePlayback", "recording");
         StateHasChanged();
     }
 
@@ -375,7 +377,8 @@
             var response = await postService.CreatePost(post);
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("yayya");
+                int postId = (await response.Content.ReadFromJsonAsync<CreatePostResponse>()).postId;
+                NavigationManager.NavigateTo($"/Post/{postId}");
             }
             else
             {

@@ -28,13 +28,16 @@
 </style>
 @code {
     [Parameter]
-    public string videoSelector { get; set; }
+    public string vid { get; set; }
+
+    [Parameter]
+    public bool skipInit { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !skipInit)
         {
-            await JSRuntime.InvokeVoidAsync("InitSeekBar", videoSelector);
+            await JSRuntime.InvokeVoidAsync("InitSeekBar", vid);
         }
     }
 }
