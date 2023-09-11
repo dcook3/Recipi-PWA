@@ -20,7 +20,7 @@ window.InitDraggable = async (id) => {
 
         var init = () => {
             var postTop = document.getElementById(id + "-post-top");
-            console.log(postTop)
+            
             if (postTop) {
                
                 maxTop = postTop.offsetHeight;

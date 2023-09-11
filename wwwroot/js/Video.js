@@ -226,7 +226,7 @@ window.TogglePlayback = (vid) => {
 }
 
 
-window.InitPost = async (vid, recordings, objectReference) => {
+window.InitPost = async (vid, recordings, objectReference, focused) => {
 
     videos[vid] = {
         video: document.getElementById(vid+"-post-video"),
@@ -237,7 +237,15 @@ window.InitPost = async (vid, recordings, objectReference) => {
     };
     videos[vid].video.src = recordings[0];
     videos[vid].video.load();
-    
+
+    if (focused) {
+        videos[vid].video.paused = false;
+        videos[vid].video.play();
+    }
+    else{
+        videos[vid].video.paused = true;
+        videos[vid].video.pause();
+    }
     videos[vid].videoIndex = 0;
 
     var videoEls = [] 
@@ -277,17 +285,17 @@ window.InitPost = async (vid, recordings, objectReference) => {
     for (var i = 0; i < videoEls.length; i++) {
         videos[vid].lengths[i] = videoEls[i].duration;
     }
-
+    window.InitSeekBar(vid);
     videos[vid].video.addEventListener("ended", () => {
         loopResult(vid)
         videos[vid].objectReference.invokeMethodAsync("SetStep", videos[vid].videoIndex)
     })
-    window.InitSeekBar(vid);
+    
 }
 
 
 window.InitSeekBar = (vid) => {
-    videos[vid].seekBar = document.querySelector("#seek-container");
+    videos[vid].seekBar = document.getElementById(vid + "-seek-container");
     var totalLength = videos[vid].lengths.reduce((a, b) => a + b, 0);
 
     for (var i = 0; i < videos[vid].urls.length; i++) {

@@ -33,39 +33,42 @@
 
 
 
-<div style="width:100%; height: 100%; position:relative;">
+<div style="width:100%; height: 100%; position:relative; overflow:hidden;">
+    @if (post != null) {
+        <div class="video-container">
 
-    <div class="video-container">
-
-        <video id="@(vid)-post-video" poster="@post.ThumbnailUrl" autoplay />
-    </div>
-
-    <div id="@(vid)-post-top" class="d-flex flex-column justify-content-start align-items-center" style="padding-top:10px">
-        @if(post.Recipe != null)
-        {
-            <div class="container-fluid px-3 py-1 d-flex flex-row justify-content-start align-items-center text-light" style="font-size: 15px;">
-                <span>Step @(stepIndex + 1): @post.Recipe.RecipeSteps.ElementAt(stepIndex).StepDescription</span>
-            </div>
-        }
-        
-        <div class="container-fluid">
-            <SeekBar vid="post" skipInit="true"></SeekBar>
+            <video id="@(vid)-post-video" poster="@post.ThumbnailUrl" autoplay />
         </div>
-        @if (playingStatus)
-        {
-            <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-pause text-light"></i></Button>
-        }
-        else
-        {
-            <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-play text-light"></i></Button>
-        }
-    </div>
-    <RecipeView post="@post"></RecipeView>
+
+        <div id="@(vid)-post-top" class="d-flex flex-column justify-content-start align-items-center" style="padding-top:10px">
+            @if(post.Recipe != null)
+            {
+                <div class="container-fluid px-3 py-1 d-flex flex-row justify-content-start align-items-center text-light" style="font-size: 15px;">
+                    <span>Step @(stepIndex + 1): @post.Recipe.RecipeSteps.ElementAt(stepIndex).StepDescription</span>
+                </div>
+            }
+        
+            <div class="container-fluid">
+                <SeekBar vid="@vid" skipInit="true"></SeekBar>
+            </div>
+            @if (playingStatus)
+            {
+                <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-pause text-light"></i></Button>
+            }
+            else
+            {
+                <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-play text-light"></i></Button>
+            }
+        </div>
+        <RecipeView post="@post"></RecipeView>
+    }
 </div>
 
 @code {
     [Parameter]
-    public Post post { get; set; }
+    public Post? post { get; set; }
+    [Parameter]
+    public bool focused { get; set;  } = true;
 
     private int stepIndex = 0; 
 
@@ -75,18 +78,24 @@
 
     private bool playingStatus = true;
 
+
+
     protected override void OnInitialized()
     {
+        playingStatus = focused;
+        @if(post != null)
+        {
 
-        vid = post.PostId.ToString();
+            vid = post.PostId.ToString();
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && post != null)
         {
             string[] recordings;
-            if(post.Recipe != null)
+            if (post.Recipe != null)
             {
 
                 recordings = new string[post.Recipe.RecipeSteps.Count()];
@@ -100,9 +109,34 @@
                 recordings = new string[1] { post.PostMedia };
             }
             _objectReference = DotNetObjectReference.Create(this);
+
+            await JSRuntime.InvokeVoidAsync("InitPost", vid, (object)recordings, _objectReference, focused);
             
-            await JSRuntime.InvokeVoidAsync("InitPost", vid, (object)recordings, _objectReference);
         }
+    }
+
+    public async void Load()
+    {
+
+        vid = post.PostId.ToString();
+        StateHasChanged();
+        string[] recordings;
+        if (post.Recipe != null)
+        {
+
+            recordings = new string[post.Recipe.RecipeSteps.Count()];
+            for (int i = 0; i < recordings.Length; i++)
+            {
+                recordings[i] = post.Recipe.RecipeSteps.ElementAt(i).PostMedia.MediaUrl;
+            }
+        }
+        else
+        {
+            recordings = new string[1] { post.PostMedia };
+        }
+        _objectReference = DotNetObjectReference.Create(this);
+
+        await JSRuntime.InvokeVoidAsync("InitPost", vid, (object)recordings, _objectReference);
     }
 
     [JSInvokable("SetStep")]
