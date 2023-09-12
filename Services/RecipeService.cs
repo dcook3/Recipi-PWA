@@ -19,5 +19,8 @@ namespace Recipi_PWA.Services
         public async Task<HttpResponseMessage> PutRecipe(int recipeId, Recipe recipe) => await client.PutAsJsonAsync($"/api/Recipes/{recipeId}", recipe);
 
         public async Task<HttpResponseMessage> DeleteRecipe(int recipeId) => await client.DeleteAsync($"/api/Recipes/{recipeId}");
+
+        //To avoid the compiler not knowing which overloaded PutAsJson method when supplied null, i supplied it with a recipe so I can build. I dont think this results in any issues -Dylan
+        public async Task<HttpResponseMessage> AddToCookbook(int recipeId) => await client.PutAsJsonAsync($"/api/Recipes/{recipeId}/cookbook", new Recipe());
     }
 }

@@ -1,0 +1,44 @@
+﻿@using Recipi_PWA.Shared.Profile
+@using Recipi_PWA.Shared
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Models.PostView;
+@using System.Text.Json;
+
+@inject StateContainer state
+@inject IUserService userService;
+
+<div>
+    <ProfilePicture profilePictureUrl="" size="2"></ProfilePicture>
+    @if(Comment.comment.Length < 50)
+    {
+        <span>@Comment</span>
+    }
+    else
+    {
+        <span>@Comment.comment.Substring(0, 47)...</span>
+    }
+</div>
+
+@code{
+    [Parameter]
+    public PostComment Comment { get; set; }
+
+    private string url;
+
+    protected async void OnInitializedAsync()
+    {
+        HttpResponseMessage response = await userService.GetUserById(Comment.userId.ToString());
+
+        if (response.IsSuccessStatusCode)
+        {
+            string content = await response.Content.ReadAsStringAsync();
+            UserProfile u = JsonSerializer.Deserialize<UserProfile>(content);
+            if (u != null)
+            {
+                url = u.ProfilePicture;
+            }
+        }
+        Console.WriteLine("A problem occured while loading comments. Please try again.");
+        url = "https://commons.wikimedia.org/wiki/Question_mark#/media/File:Question_dropshade.png";
+    }
+}

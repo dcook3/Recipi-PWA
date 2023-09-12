@@ -8,9 +8,19 @@
 @inject IJSRuntime JSRuntime;
 @inject IHelperService helpers;
 @inject IPostInteractionService interactionService;
+@inject IRecipeService recipeService;
 
 <div id="interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
 <div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: fixed;">
+    @if (showingComments)
+    {
+        <div id="comments" @onmousewheel="OnScrollOrDrag" @ondrag="OnScrollOrDrag">
+            @foreach(PostComment comment in comments)
+            {
+                <CommentView Comment="@comment"></CommentView>
+            }
+        </div>
+    }
     <div id="draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%;">
         <div class="d-flex flex-row justify-content-center align-items-center " style="width:100vw; height: 5px; position:absolute; top:2px;">
             <div class="bg-dark-subtle rounded" style="width:30px; height:100%;"></div>
@@ -47,10 +57,6 @@
                 </Button>
             }
 
-            <Button shape="circle" bgColor="">
-                <i class="fa-solid fs-1 fa-heart">@post.Likes</i>
-            </Button>
-
            @if(showingComments)
             {
                 <Button shape="circle" bgColor="bg-danger text-white" onclick="HideComments">
@@ -63,12 +69,8 @@
                     <i class="fa-solid fs-1 fa-comment">@post.Comments</i>
                 </Button>
             }
-
-            <Button shape="circle" bgColor="">
-                <i class="fa-solid fs-1 fa-comment">@post.Comments</i>
-            </Button>
         
-            <Button shape="circle" bgColor="">
+            <Button shape="circle" bgColor="" onclick="AddToCookbook">
                 <i class="fa-solid fs-1 fa-book-medical"></i>
             </Button>
             <Button shape="circle" bgColor="">
@@ -138,6 +140,7 @@
         margin:10px 0;
     }
 </style>
+
 @code {
     [Parameter]
     public Post? post { get; set; } = null;
@@ -189,9 +192,24 @@
         StateHasChanged();
     }
 
+    private async void AddToCookbook()
+    {
+        int recipeId = post.Recipe.RecipeId;
+        HttpResponseMessage response = await recipeService.AddToCookbook(recipeId);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("A problem occurred when addding to cookbook.");
+        }
+    }
+
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         await JSRuntime.InvokeVoidAsync("InitDraggable", "draggable");
+    }
+
+    private async void OnScrollOrDrag()
+    {
+        await JSRuntime.InvokeVoidAsync("setClasses", "comments");
     }
 }
