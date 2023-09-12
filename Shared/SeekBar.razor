@@ -1,9 +1,9 @@
 ﻿@inject IJSRuntime JSRuntime
-<div id="seek-container">
+<div id="@(vid)-seek-container" class="seek-container">
 
 </div>
 <style>
-    #seek-container {
+    .seek-container {
         cursor: pointer;
         height: 10px;
         margin-bottom: 10px;
@@ -16,25 +16,28 @@
         justify-content:flex-start;
         flex-direction:row;
     }
-    #seek-container > div  {
+    .seek-container > div  {
         height:100%;
             border-right: 1px solid #bbb;
     }
 
-        #seek-container > div > div {
+        .seek-container > div > div {
             width: 0%;
             height:100%;
         }
 </style>
 @code {
     [Parameter]
-    public string videoSelector { get; set; }
+    public string vid { get; set; }
+
+    [Parameter]
+    public bool skipInit { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !skipInit)
         {
-            await JSRuntime.InvokeVoidAsync("InitSeekBar", videoSelector);
+            await JSRuntime.InvokeVoidAsync("InitSeekBar", vid);
         }
     }
 }

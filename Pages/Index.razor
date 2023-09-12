@@ -1,10 +1,15 @@
 ﻿@page "/"
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Models.PostView;
+@using Recipi_PWA.Services;
+@inject IPostService postService;
 
 <PageTitle>Posts Feed</PageTitle>
 
 
 
 
+@*
 <SearchBar>
     <span>Step X: playhead would be where hr is</span>
     <hr />
@@ -17,5 +22,86 @@
     <p>Nulla quis ante eget ipsum ultricies gravida vel ac nibh. Phasellus fermentum dapibus justo, id commodo arcu tempor at. Quisque non lectus non purus mattis rutrum. Etiam aliquam, felis vitae iaculis laoreet, ante lectus mattis massa, nec vulputate libero neque eu lorem. Interdum et malesuada fames ac ante ipsum primis in faucibus. Nullam facilisis, nunc sit amet fringilla malesuada, magna massa tristique massa, vel laoreet dolor leo ac urna. Donec ac sagittis eros. Donec sollicitudin vulputate nisl, nec finibus nunc laoreet vel. Proin non malesuada urna. Integer fringilla tempor justo pellentesque faucibus. Vivamus suscipit eget nisi sit amet euismod.</p>
     <p>Quisque fringilla magna sit amet urna elementum, at consequat nisl ultrices. Suspendisse vel est id justo mollis fringilla. Nullam porttitor non felis sit amet semper. In hac habitasse platea dictumst. Suspendisse ligula arcu, auctor posuere mi finibus, blandit eleifend risus. Pellentesque ac lorem risus. Fusce ultrices diam turpis, ac tincidunt arcu condimentum et. Morbi sit amet leo at urna lacinia dignissim. Vivamus placerat leo sit amet leo sollicitudin, eget tincidunt quam rutrum. Curabitur eleifend commodo congue. Curabitur mi libero, convallis sed facilisis nec, pretium ac odio. Nullam mattis odio vel fringilla dapibus. Phasellus auctor, ligula id tempor luctus, nisl odio commodo leo, vitae tempus lacus orci vel nisl. Suspendisse varius finibus mi sed malesuada.</p>
     <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque id finibus purus. Integer ac leo leo. Quisque nisl justo, imperdiet et elit id, ultrices vehicula velit. Curabitur vitae urna nec mi ullamcorper vestibulum sed in metus. Nulla laoreet dictum nisi. Sed lacus mauris, ornare eu nisi in, mollis euismod felis. Nunc elementum ante lorem, eu pretium elit volutpat vitae. Quisque elit libero, porta quis porta non, tincidunt et leo. Morbi ullamcorper accumsan odio sit amet malesuada. Donec nec lectus vulputate, blandit erat ut, pellentesque justo. Praesent interdum nibh in malesuada luctus. Duis eu nisl a sapien imperdiet accumsan.</p>
-
+*@
 @*<BottomViewport></BottomViewport>*@
+
+
+@if(status == "loading")
+{
+    <LoadingSpinner></LoadingSpinner>
+}
+@if(status == "error")
+{
+    <div>
+        @eMessage
+    </div>
+}
+else
+{
+    <div style="width: 100%; height:100%; position:relative; overflow-y:scroll; overflow-x:hidden;">
+        <div class="d-flex flex-column" style="width:100%; height: 300%; position:absolute;">
+            @for (int i = 0; i < posts.Count(); i++)
+            {
+        
+                <div id="@i-post-wrapper" class="post-wrapper" style="width:100%; height: 33.4%; position:relative;">
+                    @posts[i]
+                </div>
+        
+            }
+        </div>
+    </div>
+}
+
+
+@code{
+    private RenderFragment[] posts = new RenderFragment[3];
+
+    private List<PostPreview> postPreviews = new List<PostPreview>();
+
+    private string status = "loading";
+
+    private string eMessage = "";
+
+    private int postIndex = 0;
+
+    protected override async void OnInitialized()
+    {
+        var response = await postService.GetReccomendedPosts();
+        if (response.IsSuccessStatusCode)
+        {
+            postPreviews = await response.Content.ReadFromJsonAsync<List<PostPreview>>();
+            Console.WriteLine("Posts: " + postPreviews.Count());
+            var post1Res = await postService.GetPost(postPreviews[0].PostId);
+            var post2Res = await postService.GetPost(postPreviews[1].PostId);
+            if(post1Res.IsSuccessStatusCode && post2Res.IsSuccessStatusCode)
+            {
+                var post1 = await post1Res.Content.ReadFromJsonAsync<Post>();
+                var post2 = await post2Res.Content.ReadFromJsonAsync<Post>();
+                posts[0] = (__builder) =>
+                {
+                    <PostView post="@post1"></PostView>
+                };
+                posts[1] = (__builder) =>
+                {
+                    <PostView post="@post2" focused="false"></PostView>
+                };
+                posts[2] = (__builder) =>
+                {
+                    <PostView focused="false"></PostView>
+                };
+                status = "ready";
+            }
+            else
+            {
+                status = "error";
+                eMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        else
+        {
+            status = "error";
+            eMessage = await response.Content.ReadAsStringAsync();
+        }
+        StateHasChanged();
+    }
+}

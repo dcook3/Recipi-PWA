@@ -62,8 +62,8 @@
         response = await recipeService.GetRecipeById(recipeId);
         if (response.IsSuccessStatusCode)
         {
-            string responseBody = await response.Content.ReadAsStringAsync();
-            Recipe recipe = System.Text.Json.JsonSerializer.Deserialize<Recipe>(responseBody) ?? new();
+            //string responseBody = await response.Content.ReadAsStringAsync();
+            Recipe recipe = await response.Content.ReadFromJsonAsync<Recipe>() ?? new();
             RecipeInformation recipeInfo = new();
             recipeInfo.recipe = recipe;
             await state.SaveRecipe(recipeInfo);

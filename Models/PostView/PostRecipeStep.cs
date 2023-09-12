@@ -8,6 +8,8 @@
 
         public int StepOrder { get; set; }
 
+        public PostStepMedia PostMedia { get; set; }
+
         public List<PostStepIngredient> StepIngredients { get; set; } = new();
     }
 }
