@@ -1,6 +1,7 @@
 ﻿@using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
 @inject IRecipeService recipeService;
+@inject NavigationManager NavigationManager;
 @inject StateContainer state;
 @if(cookbook){
     <div class="d-flex flex-row container-fluid p-0">
@@ -16,7 +17,7 @@
         <div class="d-flex flex-row align-items-center justify-content-around">
             @if(self){
                 <div class="m-1">
-                    <Button shape="circle"><i class="fs-2 fa fa-pen-to-square"></i></Button>
+                    <Button shape="circle" onclick="@ToggleEdit"><i class="fs-2 fa fa-pen-to-square"></i></Button>
                 </div>
                 <div class="m-1">
                     <Button shape="circle"><i class="fs-2 fas fa-plus" style="width: 1em;"></i></Button>
@@ -26,11 +27,24 @@
     </div>
     <div class="d-flex flex-column align-items-center justify-content-start container-fluid">
         @if(status == "ready")
-        {           
-            @foreach (var recipe in recipes)
+        {
+            if (editingCookbook)
             {
-                <CookbookRecipeCard recipe="@recipe" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                @foreach (var recipe in recipes)
+                {
+                    <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {DeleteRecipe(recipe.RecipeId);})" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                    //OnDelete="@(() => Console.WriteLine("hello"))"
+                }
             }
+            else
+            {
+                @foreach (var recipe in recipes)
+                {
+                    <CookbookRecipeCard recipe="@recipe" editing="false" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                    //OnDelete="@(() => Console.WriteLine("hello"))"
+                }
+            }
+
         }
         else if (status == "loading")
         {
@@ -78,9 +92,32 @@ else
 
     private int selectedIndex = 0;
 
+    private bool editingCookbook = false;
+
     protected async override Task OnInitializedAsync()
     {
         await GetRecipes();
+    }
+
+    private async void DeleteRecipe(int recipeId)
+    {
+        HttpResponseMessage response = await recipeService.RemoveRecipeFromCookbook(recipeId);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await GetRecipes();
+        }
+        else
+        {
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
+        }
+    }
+
+    private void ToggleEdit()
+    {
+        Console.WriteLine("hello??");
+        editingCookbook = !editingCookbook;
+        StateHasChanged();
     }
 
     private async void FilterUpdated(int newIndex)

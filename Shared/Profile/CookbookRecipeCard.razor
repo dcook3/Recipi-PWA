@@ -10,10 +10,20 @@
             <span class="text-white text-opacity-75" style="font-size: 12px;">&nbsp;&nbsp;&nbsp;@recipe.CreatedDatetime.ToString("MM-dd-yy")</span>
         }
     </div>
-    <div><i class="fa-solid fa-angle-right"></i></div>
+    <div>
+        @if (editing)
+        {
+            <Button onclick="OnDeleteClick" bgColor="" shape="circle"><i class="fa-solid fa-trash-can"></i></Button>
+        }
+        else
+        {
+            <i class="fa-solid fa-angle-right"></i>
+        }    
+    </div>
 </NavLink>
 
 @code {
+
     [Parameter]
     public CookbookRecipe recipe { get; set; }
 
@@ -22,5 +32,16 @@
 
     [Parameter]
     public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public bool editing { get; set; } = false;
+
+    [Parameter]
+    public Action? OnDelete { get; set; }
+
+    private void OnDeleteClick()
+    {
+        OnDelete.Invoke();
+    }
 
 }

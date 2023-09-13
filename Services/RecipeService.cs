@@ -12,6 +12,8 @@ namespace Recipi_PWA.Services
 
         public async Task<HttpResponseMessage> GetCookbook(int userId, string sortBy) => await client.GetAsync($"/api/Recipes/cookbook/User/{userId}?sortBy={UrlEncode(sortBy)}");
 
+        public async Task<HttpResponseMessage> RemoveRecipeFromCookbook(int recipeId) => await client.DeleteAsync($"/api/Recipes/{recipeId}/cookbook");
+
         public async Task<HttpResponseMessage> GetRecipeById(int recipeId) => await client.GetAsync($"/api/Recipes/{recipeId}");
 
         public async Task<HttpResponseMessage> PostRecipe(Recipe recipe) => await client.PostAsJsonAsync($"/api/Recipes", recipe);
