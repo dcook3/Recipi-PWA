@@ -20,6 +20,7 @@ namespace Recipi_PWA
 
         public async Task<HttpResponseMessage> Register(UserRegistration registration) => await client.PostAsJsonAsync("/api/Users/Register", registration);
 
+        public async Task<HttpResponseMessage> UpdateProfile(ProfileUpdate profileUpdate) => await client.PutAsJsonAsync("/api/Users", profileUpdate);
         public async Task<HttpResponseMessage> GetUserById(string userId) => await client.GetAsync($"/api/Users/{userId}");
 
         public async Task<HttpResponseMessage> GetFriends() => await client.GetAsync("/api/Users/Friend");

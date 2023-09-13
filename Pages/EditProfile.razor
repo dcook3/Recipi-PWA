@@ -1,0 +1,219 @@
+﻿@page "/EditProfile";
+@layout EmptyLayout;
+@using System.Text.RegularExpressions;
+@using Recipi_PWA.Models;
+@using System.Net;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared.Profile;
+@inject IUserService userService;
+@inject IMediaUploadService mediaUploadService;
+@inject NavigationManager NavigationManager;
+@inject StateContainer state;
+@inject IJSRuntime js;
+
+<div class="bg-primary" style="height: 100vh; width: 100vw; padding-top: 10vh;">
+    <div class="p-3" style="position:fixed; top:0; left: 0; ">
+        <Button onclick="@Back" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+    </div>
+    <div class="container-fluid d-flex flex-column align-items-center justify-content-between" style="height: 80%">
+        <div style="height: 10%" class="d-flex flex-column align-items-center justify-content-center">
+            <h1 class="text-light">Update Profile</h1>
+        </div>
+        <form class="d-flex flex-column justify-content-evenly align-items-center" style="height: 80%;">
+            <div class="form-group">
+
+                <div onclick="@ClickFilePicker" class="rounded-circle d-flex align-items-cener justify-content-center" style="background-image: url(@previewPfp); background-size: contain; background-repeat: no-repeat; background-position:center;">
+                    <i class="fas fa-edit text-light rounded-circle" style="font-size: 1.5rem; background-color: rgba(48, 48, 48, .6); padding:30px;"></i>
+                </div>
+
+                <InputFile class="form-control" style="display: none;" OnChange="@LoadFile" accept="image/*" id="pfp" @ref="filePicker" />
+            </div>
+            <div class="form-group">
+                <label for="username" class="text-light fs-8">Username</label>
+                <InputText class="form-control" type="text" @bind-Value="ur.Username" DisplayName="username" id="username"></InputText>
+            </div>
+            
+
+
+
+            <div class="d-flex flex-row align-items-center justify-content-evenly container-fluid">
+                <Button onclick="@Submit" status="@status">
+                    Save
+                </Button>
+            </div>
+            @if (status == "error")
+            {
+                    <div class="form-group d-flex flex-column align-items-center justify-content-center p-1 rounded-1 bg-warning text-danger" style="width: 70%">
+                    @sMessage
+                    </div>
+
+            }
+            @if (status == "loading")
+            {
+                    <div class="form-group d-flex flex-column align-items-center justify-content-center p-1 rounded-1 bg-warning text-light" style="width: 70%">
+                    @sMessage
+                    </div>
+
+            }
+
+        </form>
+
+        <div></div>
+
+    </div>
+</div>
+
+@code {
+    private ProfileUpdate ur = new();
+
+    private string password = "";
+
+    private Regex hasNumber = new Regex(@"[0-9]+");
+    private Regex hasUpperChar = new Regex(@"[A-Z]+");
+    private Regex hasMinimum8Chars = new Regex(@".{8,}");
+
+    private bool validPassword = false;
+
+    private string status = "ready";
+    private string sMessage = "";
+
+
+    InputFile filePicker;
+
+    private IBrowserFile? loadedFile = null;
+
+    private string previewPfp = "";
+
+    protected override void OnInitialized()
+    {
+        if (state.LoggedIn)
+        {
+            previewPfp = state.You.ProfilePicture;
+            ur.Username = state.You.Username;
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Login");
+        }
+    }
+
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/Profile/Settings");
+    }
+
+    private async void ClickFilePicker()
+    {
+        await js.InvokeAsync<object>("triggerClick", filePicker.Element);
+    }
+
+    private async void LoadFile(InputFileChangeEventArgs e)
+    {
+        loadedFile = e.File;
+        byte[] bytes = new byte[loadedFile.Size];
+        var stream = loadedFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10);
+        await stream.ReadAsync(bytes);
+        previewPfp = "data:image/png;base64," + Convert.ToBase64String(bytes);
+        StateHasChanged();
+    }
+
+
+
+    public async void Submit()
+    {
+
+        status = "loading...";
+
+        StateHasChanged();
+
+        var hasMadeChanges = false;
+
+        if (loadedFile != null)
+        {
+            sMessage = "Uploading Profile Picture . . ."; ;
+            StateHasChanged();
+            var urlRequest = await mediaUploadService.GetPresignedUrl();
+            if (urlRequest.IsSuccessStatusCode)
+            {
+                var url = await urlRequest.Content.ReadAsStringAsync();
+                StreamContent sc = new(loadedFile.OpenReadStream());
+                sc.Headers.Add("Content-Type", "image/png");
+                var mediaUploadRequest = await mediaUploadService.UploadToS3(url, sc);
+                if (mediaUploadRequest.IsSuccessStatusCode)
+                {
+                    ur.ProfilePicture = Regex.Match(url, "^.*?(?=\\?)").Value;
+                    //var changePfpRequest = await userService.ChangeProfilePicture(Regex.Match(url, "^.*?(?=\\?)").Value); // gets the url up until the query ?
+                    hasMadeChanges = true;
+                }
+                else
+                {
+                    status = "error";
+                    sMessage = "Error Uploading Profile Picture";
+                }
+            }
+            else
+            {
+                status = "error";
+                sMessage = "Error Uploading Profile Picture";
+            }
+        }
+
+        var beforeUsername = ur.Username;
+        if(ur.Username == state.You.Username)
+        {
+            ur.Username = null;
+        }
+        else
+        {
+            hasMadeChanges = true;
+        }
+
+
+
+        if (status != "error")
+        {
+            if (hasMadeChanges)
+            {
+                sMessage = "Updating your profile . . .";
+                StateHasChanged();
+                var response = await userService.UpdateProfile(ur);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var youResponse = await userService.GetUserById("me");
+                    if (youResponse.IsSuccessStatusCode)
+                    {
+                        await state.SetYou(await youResponse.Content.ReadFromJsonAsync<You>());
+                        NavigationManager.NavigateTo("/Profile/me");
+                    }
+                    else
+                    {
+                        status = "error";
+                        sMessage = "Error Getting User Data";
+                    }
+                }
+                else
+                {
+                    status = "error";
+                    sMessage = await response.Content.ReadAsStringAsync();
+                }
+            }
+            else
+            {
+                status = "error";
+                sMessage = "No Changes have been Made";
+            }
+        }
+
+        if(status == "error")
+        {
+            ur.Username = beforeUsername;
+        }
+        
+
+        StateHasChanged();
+
+    }
+
+
+}
