@@ -90,7 +90,6 @@
 
     private void OnPause()
     {
-        Console.WriteLine("c# play");
         if (playingStatus)
         {
             playingStatus = false;
@@ -99,7 +98,6 @@
     }
     private void OnPlay()
     {
-        Console.WriteLine("c# pause");
         if(!playingStatus)
         {
             playingStatus = true;
@@ -147,7 +145,6 @@
 
     public async void Load()
     {
-
         vid = post.PostId.ToString();
         StateHasChanged();
         string[] recordings;
