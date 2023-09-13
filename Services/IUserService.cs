@@ -7,6 +7,7 @@ namespace Recipi_PWA
     {
         Task<HttpResponseMessage> Login(UserLogin login);
         Task<HttpResponseMessage> Register(UserRegistration registration);
+        Task<HttpResponseMessage> UpdateProfile(ProfileUpdate profileUpdate);
         Task<HttpResponseMessage> GetUserById(string userId);
         Task<HttpResponseMessage> GetFriends();
         Task<HttpResponseMessage> GetFriendRequests();
