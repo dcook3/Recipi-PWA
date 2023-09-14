@@ -1,7 +1,7 @@
 ﻿@using Recipi_PWA.Models;
 @inject NavigationManager NavigationManager;
 
-<i class="fa-solid flex-shrink-1 image-icon" style="background-image: url(@url); width: @width; height: @height; background-size: cover;"></i>
+<div @onclick="goToPost"><i class="fa-solid flex-shrink-1 image-icon" style="background-image: url(@url); width: @width; height: @height; background-size: cover;"></i></div>
 
 
 @code {
@@ -14,10 +14,9 @@
 
     private string url = "https://media.istockphoto.com/id/1311321054/photo/rosted-potato-side-dish.jpg?s=612x612&w=0&k=20&c=_eBrdR5gMq6rMLU6H6aK54I3b_G7s9JSiP4BldvlyJw=";
 
-    protected void OnInitialized()
+    protected override void OnParametersSet()
     {
-        Console.WriteLine(post.ThumbnailURL);
-        if(post.ThumbnailURL != null && post.ThumbnailURL != "https://example.com/thumbnail")
+        if(post.ThumbnailURL != null && !post.ThumbnailURL.Contains("https://example.com"))
         {
             url = post.ThumbnailURL;
         }
@@ -25,9 +24,10 @@
 
     private void goToPost()
     {
+        Console.WriteLine("click asdf");
         if (post != null)
         {
-            NavigationManager.NavigateTo($"/Post/${post.PostId}", false);
+            NavigationManager.NavigateTo($"/Post/{post.PostId}");
         }
     }
 }

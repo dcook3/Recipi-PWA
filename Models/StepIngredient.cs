@@ -3,19 +3,20 @@ using System.Text.Json.Serialization;
 
 namespace Recipi_PWA.Models
 {
-    public class StepIngredient
+    public class StepIngredient : IStepIngredient
     {
         public StepIngredient()
         {
-            ingredientMeasurementValue = 0;
-            ingredientMeasurementUnit = "";
-            ingredient = new();
+            IngredientMeasurementValue = 0;
+            IngredientMeasurementUnit = "";
+            Ingredient = new();
         }
+        
 
-        public int ingredientId { get; set; }
-        public string ingredientMeasurementUnit { get; set; }
-        public float ingredientMeasurementValue { get; set; }
+        public int IngredientId { get; set; }
+        public string IngredientMeasurementUnit { get; set; }
+        public float IngredientMeasurementValue { get; set; }
         [JsonIgnore]
-        public Ingredient ingredient { get; set; }
+        public Ingredient Ingredient { get; set; }
     }
 }

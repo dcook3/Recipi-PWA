@@ -1,5 +1,6 @@
 @using Recipi_PWA.Services
 @using Recipi_PWA.Models;
+@using Recipi_PWA.Models.Settings;
 @using System.Text.Json;
 @using Recipi_PWA.Shared.Profile;
 
@@ -35,9 +36,9 @@
     </Title>
     <Body>
         <div class="row m-0">
-            @if (!String.IsNullOrEmpty(selectedIngredient.ingredient.ingredientTitle))
+            @if (!String.IsNullOrEmpty(selectedIngredient.Ingredient.ingredientTitle))
             {
-                <span>Please Select a Measurement for "@selectedIngredient.ingredient.ingredientTitle":</span>
+                <span>Please Select a Measurement for "@selectedIngredient.Ingredient.ingredientTitle":</span>
             }
             else
             {
@@ -52,7 +53,14 @@
                 <select class="form-select" @onchange="HandleMeasurementSelectChange" name="measurement unit">
                     @foreach (string unit in metric)
                     {
-                        <option value="@unit">@unit</option>
+                        if(metric[0] == unit)
+                        {
+                            <option value="@unit" selected>@unit</option>
+                        }
+                        else 
+                        {
+                            <option value="@unit">@unit</option>
+                        }
                     }
                 </select>
             </div>
@@ -88,16 +96,18 @@
     [CascadingParameter]
     public bool isPosting { get; set; }
 
-    StepIngredient selectedIngredient = new();
+    StepIngredient selectedIngredient;
+
+    UserSettings settings;
 
     private Modal modal;
 
     private string[] imperial = { "lb", "tsp", "tbsp", "cup", "pint", "quart", "oz", "fl oz", "gal" };
     private string[] metric = { "g", "mg", "ml", "L", "kg" };
 
-    protected override void OnInitialized()
+    protected async void OnInitializedAsync()
     {
-        selectedIngredient.ingredientMeasurementUnit = metric[0];
+        settings = await state.GetSetting();
     }
 
     private async void HandleStepIngredientSelection()
@@ -109,20 +119,20 @@
 
     private void SelectIngredient(Ingredient ing)
     {
-        selectedIngredient.ingredient = ing;
-        selectedIngredient.ingredientId = ing.ingredientId;
+        selectedIngredient.Ingredient = ing;
+        selectedIngredient.IngredientId = ing.ingredientId;
         StateHasChanged();
         OpenModal();
     }
 
     private void HandleMeasurementSelectChange(ChangeEventArgs args)
     {
-        selectedIngredient.ingredientMeasurementUnit = args.Value.ToString() ?? "no unit";
+        selectedIngredient.IngredientMeasurementUnit = args.Value.ToString() ?? "no unit";
     }
 
     private void HandleMeasurementInputChange(ChangeEventArgs args)
     {
-        selectedIngredient.ingredientMeasurementValue = float.Parse(args.Value.ToString());
+        selectedIngredient.IngredientMeasurementValue = float.Parse(args.Value.ToString());
     }
 
     private void OpenModal() => modal.Open();

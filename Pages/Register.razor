@@ -12,6 +12,9 @@
 @inject IJSRuntime js;
 
 <div class="bg-primary" style="height: 100vh; width: 100vw; padding-top: 10vh;">
+    <div class="p-3" style="position:fixed; top:0; left: 0; ">
+        <Button onclick="@Back" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+    </div>
     <div class="container-fluid d-flex flex-column align-items-center justify-content-between" style="height: 80%">
         <div style="height: 10%" class="d-flex flex-column align-items-center justify-content-center">
             <h1 class="text-light">Welcome to Recipi</h1>
@@ -111,6 +114,10 @@
 
     private string previewPfp = "https://upload.wikimedia.org/wikipedia/commons/b/b5/Windows_10_Default_Profile_Picture.svg";
 
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
 
     private async void ClickFilePicker(){
         await js.InvokeAsync<object>("triggerClick", filePicker.Element);
