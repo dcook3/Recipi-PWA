@@ -1,9 +1,9 @@
-
-
 window.triggerClick = (el) => el.click();
 
 window.setClasses = (el) => {
     const isScrollable = el.scrollHeight > el.clientHeight;
+
+    Console.log(el);
 
     // GUARD: If element is not scrollable, remove all classes
     if (!isScrollable) {
@@ -17,5 +17,5 @@ window.setClasses = (el) => {
     const isScrolledToTop = isScrolledToBottom ? false : el.scrollTop === 0;
     el.classList.toggle('is-bottom-overflowing', !isScrolledToBottom);
     el.classList.toggle('is-top-overflowing', !isScrolledToTop);
-    }
+}
 

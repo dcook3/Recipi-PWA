@@ -9,18 +9,31 @@
 @inject IHelperService helpers;
 @inject IPostInteractionService interactionService;
 @inject IRecipeService recipeService;
+@inject StateContainer state;
 
-<div id="interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
-<div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: fixed;">
-    @if (showingComments)
-    {
-        <div id="comments" @onmousewheel="OnScrollOrDrag" @ondrag="OnScrollOrDrag">
-            @foreach(PostComment comment in comments)
+@if (isShowingComments)
+{
+    <div id="comments-container" class="fluid-container" style="position:absolute; bottom:0; left:0; margin-bottom:50px; padding-bottom: 5px">
+        <div id="comments" class="bg-transparent text-white" @onscroll="OnScrollOrDrag">
+            @if(hasComments)
             {
-                <CommentView Comment="@comment"></CommentView>
+                @foreach (PostComment comment in comments)
+                {
+                    <CommentView Comment="@comment"></CommentView>
+                }
+            }
+            else
+            {
+                <span class="text-white">There is no comments on this post.</span>
             }
         </div>
-    }
+
+        <div class="form-group d-flex">
+            <InputText @bind-Value="@newComment" DisplayName="New comment..." class="form-control col-6"></InputText>
+            <Button bgColor="bg-warning" Width="2" onclick="PostNewComment"><i class="fa-solid fa-paper-plane"></i></Button>
+        </div>
+    </div>
+}
 <div id="@(vid)-interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
 <div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: absolute; top: calc(100% - 100px)">
     <div id="@(vid)-draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%; position:relative;">
@@ -40,39 +53,42 @@
 
     @if (post != null)
     {
-        
+        //If not own post if statement here - need to account for potential self-liking and self-cookbook adding
         <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
-        <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture">
+            <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
 
-
-            </ProfilePicture>
-            @if(post.HasLiked)
+            @if(post.HasLiked || userHasLiked)
             {
-                <Button shape="circle" bgColor="bg-danger text-white">
-                    <i class="fa-solid fs-1 fa-heart">@post.Likes</i>
+                <Button shape="circle" bgColor="" onclick="LikePost">
+                    <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
+                </Button>
+            }
+            else if (isOwnPost)
+            {
+                <Button shape="circle" bgColor="" onclick="HandleLikeOwnPost">
+                    <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
                 </Button>
             }
             else
             {
-            
-                <Button shape="circle" bgColor="" onclick="LikeRecipe">
-                    <i class="fa-solid fs-1 fa-heart">@post.Likes</i>
+                <Button shape="circle" bgColor="" onclick="LikePost">
+                    <i class="fa-regular fs-1 fa-heart"><span class="text-white">@post.Likes</span></i>
                 </Button>
             }
 
-           @if(showingComments)
+            @if(isShowingComments)
             {
-                <Button shape="circle" bgColor="bg-danger text-white" onclick="HideComments">
-                    <i class="fa-solid fs-1 fa-comment">@post.Comments</i>
+                <Button shape="circle" bgColor="" onclick="HideComments">
+                    <i class="fa-solid fs-1 fa-comment-slash"></i>
                 </Button>
             }
             else
             {
                 <Button shape="circle" bgColor="" onclick="ShowComments">
-                    <i class="fa-solid fs-1 fa-comment">@post.Comments</i>
+                    <i class="fa-solid fs-1 fa-comment"><span>@post.Comments</span></i>
                 </Button>
             }
-        
+
             <Button shape="circle" bgColor="" onclick="AddToCookbook">
                 <i class="fa-solid fs-1 fa-book-medical"></i>
             </Button>
@@ -128,7 +144,6 @@
                         }
                     </ol>
                 </div>
-
             }
         </div>
     }
@@ -144,31 +159,80 @@
     }
 </style>
 
+<Modal @ref="feedbackModal">
+    <Body>
+        <h5>@feedback</h5>
+    </Body>
+    <ButtonGroup>
+        <Button Width="4" onclick="CloseFeedbackModal">Ok</Button>
+    </ButtonGroup>
+</Modal>
+
+<Modal @ref="reportModal">
+    <Title>
+        Report Post
+    </Title>
+    <Body>
+        <label for="Message">Please enter your message describing the issue, and we will look into it ASAP.</label>
+        <InputText DisplayName="Message" @bind-Value="@reportMessage"></InputText>
+    </Body>
+    <ButtonGroup>
+        <Button Width="4" bgColor="bg-danger" onclick="CloseReportModal">Cancel</Button>
+        <Button Width="4" bgColor="bg-warning" onclick="ReportPost">Report</Button>
+    </ButtonGroup>
+</Modal>
+
 @code {
     [Parameter]
     public Post? post { get; set; } = null;
 
-    private string vid { get; set; } = "";
+    public Modal feedbackModal { get; set; }
+    public Modal reportModal { get; set; }
 
+    private void OpenFeedbackModal() => feedbackModal.Open();
+    private void CloseFeedbackModal() => feedbackModal.Close();
+
+    private void OpenReportModal() => reportModal.Open();
+    private void CloseReportModal() => reportModal.Close();
+
+    private string vid { get; set; } = "";
+    private bool isOwnPost;
     private bool reInit = false;
-    public bool showingComments { get; set; }
+    public bool isShowingComments { get; set; }
+
+    private string newComment = "";
+    private string feedback = "";
+    private string reportMessage = "";
 
     List<PostComment> comments;
+    bool hasComments = false;
+
+    bool userHasLiked;
 
     protected override void OnInitialized()
     {
         if(post != null)
         {
             vid = post.PostId.ToString();
+            if(state.LoggedIn && post.User.UserId == state.You.UserId)
+            {
+                isOwnPost = true;
+            }
+            else
+            {
+                isOwnPost = false;
+            }
+            userHasLiked = post.HasLiked;
         }
         reInit = true;
     }
-    private async void LikeRecipe()
+    private async void LikePost()
     {
         HttpResponseMessage response = await interactionService.LikePost(post.PostId);
 
         if (response.IsSuccessStatusCode)
         {
+            userHasLiked = true;
             StateHasChanged();
         }
         else
@@ -177,20 +241,20 @@
         }
     }
 
-    private async void ShowComments()
+    private async Task FetchComments()
     {
-        showingComments = true;
         HttpResponseMessage response = await interactionService.GetComments(post.PostId);
         if (response.IsSuccessStatusCode)
         {
-            string content = await response.Content.ReadAsStringAsync();
-            var options = new JsonSerializerOptions { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
-            comments = JsonSerializer.Deserialize<List<PostComment>>(content, options) ?? new();
+            //string content = await response.Content.ReadAsStringAsync();
+            comments = await response.Content.ReadFromJsonAsync<List<PostComment>>() ?? new();
             if(comments.Count == 0)
             {
-                PostComment pc = new();
-                pc.comment = "No Comments on this Post.";
-                comments.Add(pc);
+                hasComments = false;
+            }
+            else
+            {
+                hasComments = true;
             }
             StateHasChanged();
         }
@@ -200,9 +264,18 @@
         }
     }
 
+    private async void ShowComments()
+    {
+        if(comments == null)
+            await FetchComments();
+        isShowingComments = true;
+        Console.WriteLine($"Username: {comments[0].Username} Profile Picture: {comments[0].ProfilePicture}");
+        StateHasChanged();
+    }
+
     private void HideComments()
     {
-        showingComments = false;
+        isShowingComments = false;
         StateHasChanged();
     }
 
@@ -216,7 +289,6 @@
         }
     }
 
-
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender || reInit)
@@ -228,6 +300,60 @@
 
     private async void OnScrollOrDrag()
     {
-        await JSRuntime.InvokeVoidAsync("setClasses", "comments");
+        //await JSRuntime.InvokeVoidAsync("setClasses", "comments");
+    }
+
+    private async void PostNewComment()
+    {
+        if(newComment.Length > 0)
+        {
+            HttpResponseMessage response = await interactionService.CommentPost(post.PostId, newComment);
+            if (response.IsSuccessStatusCode)
+            {
+                feedback = "Your comment was posted!";
+                FetchComments();
+            }
+            else
+            {
+                feedback = "A problem occured, please try again.";
+            }
+        }
+        else
+        {
+            feedback = "You must put a comment in the comment box.";
+        }
+        newComment = "";
+        OpenFeedbackModal();
+    }
+
+    private void HandleLikeOwnPost()
+    {
+        feedback = "You cannot like a post that you created.";
+        OpenFeedbackModal();
+    }
+
+    private async void ReportPost()
+    {
+        CloseReportModal();
+        HttpResponseMessage response = await interactionService.ReportPost(post.PostId, reportMessage);
+        if (response.IsSuccessStatusCode)
+        {
+            string content = await response.Content.ReadAsStringAsync();
+            if(content != null && content.Length > 0)
+            {
+                feedback = "Your report has been posted.";
+                OpenFeedbackModal();
+            }
+            else
+            {
+                feedback = "There was a problem posting a report.";
+                OpenFeedbackModal();
+            }
+        }
+        else
+        {
+            feedback = "There was a problem posting a report.";
+            OpenFeedbackModal();
+        }
     }
 }
