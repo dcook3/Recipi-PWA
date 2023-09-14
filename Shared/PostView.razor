@@ -4,8 +4,8 @@
 
 <style>
     .video-container {
-        float: left;
-        z-index: -999;
+        /*float: left;
+        z-index: -999;*/
         position: absolute;
         top: 0;
         bottom: 0;
@@ -34,13 +34,16 @@
 
 
 <div style="width:100%; height: 100%; position:relative; overflow:hidden;">
+    
     @if (post != null) {
         <div class="video-container">
+            
+                <video id="@(vid)-post-video" poster="@post.ThumbnailUrl" onpause="@OnPause" onplay="@OnPlay" autoplay />
 
-            <video id="@(vid)-post-video" poster="@post.ThumbnailUrl" autoplay />
+           
         </div>
 
-        <div id="@(vid)-post-top" class="d-flex flex-column justify-content-start align-items-center" style="padding-top:10px">
+        <div id="@(vid)-post-top" class="post-top d-flex flex-column justify-content-start align-items-center" style="padding-top:10px">
             @if(post.Recipe != null)
             {
                 <div class="container-fluid px-3 py-1 d-flex flex-row justify-content-start align-items-center text-light" style="font-size: 15px;">
@@ -63,12 +66,19 @@
         <RecipeView post="@post"></RecipeView>
     }
 </div>
-
+<style>
+    .post-top > div{
+        z-index:1;
+    }
+</style>
 @code {
     [Parameter]
     public Post? post { get; set; }
     [Parameter]
     public bool focused { get; set;  } = true;
+
+    [Parameter]
+    public Action? AfterInit { get; set; }
 
     private int stepIndex = 0; 
 
@@ -78,7 +88,22 @@
 
     private bool playingStatus = true;
 
-
+    private void OnPause()
+    {
+        if (playingStatus)
+        {
+            playingStatus = false;
+            StateHasChanged();
+        }
+    }
+    private void OnPlay()
+    {
+        if(!playingStatus)
+        {
+            playingStatus = true;
+            StateHasChanged();
+        }
+    }
 
     protected override void OnInitialized()
     {
@@ -111,13 +136,15 @@
             _objectReference = DotNetObjectReference.Create(this);
 
             await JSRuntime.InvokeVoidAsync("InitPost", vid, (object)recordings, _objectReference, focused);
-            
+            if (AfterInit != null)
+            {
+                AfterInit.Invoke();
+            }
         }
     }
 
     public async void Load()
     {
-
         vid = post.PostId.ToString();
         StateHasChanged();
         string[] recordings;

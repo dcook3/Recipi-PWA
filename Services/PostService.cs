@@ -16,5 +16,6 @@ namespace Recipi_PWA.Services
         public async Task<HttpResponseMessage> GetPost(int postId) => await client.GetAsync($"/api/Posts/{postId}");
 
         public async Task<HttpResponseMessage> GetReccomendedPosts() => await client.GetAsync("/api/Posts");
+        public async Task<HttpResponseMessage> GetFollowingPosts() => await client.GetAsync("/api/Posts/following");
     }
 }

@@ -9,5 +9,6 @@ namespace Recipi_PWA.Services
         Task<HttpResponseMessage> GetPost(int postId);
 
         Task<HttpResponseMessage> GetReccomendedPosts();
+        Task<HttpResponseMessage> GetFollowingPosts();
     }
 }
