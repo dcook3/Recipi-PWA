@@ -1,26 +1,34 @@
 ﻿@using Recipi_PWA.Models;
 @inject NavigationManager navi
 @inject IJSRuntime runtime
+@inject StateContainer state;
 
-<NavLink class="d-flex align-items-center justify-content-between py-2 px-3 m-1 bg-primary rounded-3 text-light" style="text-decoration: none; height: 60px; width: 95%;" @onclick="OnClick">
+
+
+<div class="d-flex align-items-center justify-content-between py-2 px-3 m-1 bg-primary rounded-3 text-light" style="text-decoration: none; height: 60px; width: 95%;" @onclick="(!editing) ? OnClick : new EventCallback()">
     <div class="d-flex align-items-center justify-content-between">
         <span>@recipe.RecipeTitle </span>
         @if (includeDate)
         {
-            <span class="text-white text-opacity-75" style="font-size: 12px;">&nbsp;&nbsp;&nbsp;@recipe.CreatedDatetime.ToString("MM-dd-yy")</span>
+        <span class="text-white text-opacity-75" style="font-size: 12px;">&nbsp;&nbsp;&nbsp;@recipe.CreatedDatetime.ToString("MM-dd-yy")</span>
         }
+        else if (recipe.UserId != null && recipe.UserId == state.You.UserId)
+        {
+            <span class="text-white text-opacity-75" style="font-size: 12px;">&nbsp;&nbsp;&nbsp;<i class="fa-solid fa-user"></i></span>
+        }
+        
     </div>
     <div>
         @if (editing)
         {
-            <Button onclick="OnDeleteClick" bgColor="" shape="circle"><i class="fa-solid fa-trash-can"></i></Button>
+            <Button onclick="OnDeleteClick" bgColor="bg-primary" shape="circle"><i class="fa-solid fa-trash-can"></i></Button>
         }
         else
         {
             <i class="fa-solid fa-angle-right"></i>
         }    
     </div>
-</NavLink>
+</div>
 
 @code {
 

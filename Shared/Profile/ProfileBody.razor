@@ -17,10 +17,19 @@
         <div class="d-flex flex-row align-items-center justify-content-around">
             @if(self){
                 <div class="m-1">
-                    <Button shape="circle" onclick="@ToggleEdit"><i class="fs-2 fa fa-pen-to-square"></i></Button>
+                    @if (editingCookbook)
+                    {
+
+                        <Button shape="circle" onclick="@ToggleEdit"><i class="fa-solid fa-check"></i></Button>
+                    }
+                    else
+                    {
+
+                        <Button shape="circle" onclick="@ToggleEdit"><i class="fa fa-pen-to-square"></i></Button>
+                    }
                 </div>
                 <div class="m-1">
-                    <Button shape="circle"><i class="fs-2 fas fa-plus" style="width: 1em;"></i></Button>
+                    <Button shape="circle"><i class="fas fa-plus" style="width: 1em;"></i></Button>
                 </div>
             }
         </div>
@@ -28,23 +37,29 @@
     <div class="d-flex flex-column align-items-center justify-content-start container-fluid">
         @if(status == "ready")
         {
-            if (editingCookbook)
+            if(recipes.Count() == 0)
             {
-                @foreach (var recipe in recipes)
-                {
-                    <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
-                    //OnDelete="@(() => Console.WriteLine("hello"))"
-                }
+                <div class="text-muted d-flex align-items-center justify-content-center m-1">No recipes found.</div>
             }
             else
             {
-                @foreach (var recipe in recipes)
+                if (editingCookbook)
                 {
-                    <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
-                    //OnDelete="@(() => Console.WriteLine("hello"))"
+                    @foreach (var recipe in recipes)
+                    {
+                        <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        //OnDelete="@(() => Console.WriteLine("hello"))"
+                    }
+                }
+                else
+                {
+                    @foreach (var recipe in recipes)
+                    {
+                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        //OnDelete="@(() => Console.WriteLine("hello"))"
+                    }
                 }
             }
-
         }
         else if (status == "loading")
         {
@@ -84,6 +99,16 @@ else
     </ButtonGroup>
 </Modal>
 
+<Modal @ref="dissociateModal">
+    <Body>
+        Recipe is currently in use! Dissociating it will remove your name from the recipe and allow others to use it. If you would like to permenantly delete please contact an administrator. Would you like to dissociate?
+    </Body>
+    <ButtonGroup>
+        <button @onclick="CloseDissociateModal" type="button" class="btn btn-primary">No</button>
+        <button @onclick="DissociateRecipe" type="button" class="btn btn-secondary">Yes</button>
+    </ButtonGroup>
+</Modal>
+
 @code {
     [Parameter]
     public bool self { get; set; } = false;
@@ -107,6 +132,10 @@ else
     private Modal deleteModal;
     private void ShowDeleteModal() => deleteModal.Open();
     private void CloseDeleteModal() => deleteModal.Close();
+
+    private Modal dissociateModal;
+    private void ShowDissociateModal() => dissociateModal.Open();
+    private void CloseDissociateModal() => dissociateModal.Close();
 
     private int selectedRecipeId;
 
@@ -138,12 +167,38 @@ else
 
     private async void DeleteRecipe()
     {
-        Console.WriteLine("perma delete");
+        var response = await recipeService.DeleteRecipe(selectedRecipeId);
+
+        if(response.IsSuccessStatusCode)
+        {
+            await GetRecipes();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(message);
+
+            if (message == "Recipe is being used in other posts or recipe revisions, you can dissociate yourself with the recipe or contact an adminstrator to forcefully remove the recipe with valid reasoning.")
+            {
+                CloseDeleteModal();
+                ShowDissociateModal();
+            }
+        }
     }
 
-    private async void DissacociateRecipe()
+    private async void DissociateRecipe()
     {
-        Console.WriteLine("dissacociate");
+        var response = await recipeService.DissociateRecipe(selectedRecipeId);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await GetRecipes();
+        }
+        else
+        {
+            var message = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(message);
+        }
     }
 
     private void ToggleEdit()
@@ -171,17 +226,8 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            recipes = await response.Content.ReadFromJsonAsync<List<CookbookRecipe>>();
-
-            if (recipes == null)
-            {
-                status = "error";
-                eMessage = "Error Loading Recipes";
-            }
-            else
-            {
-                status = "ready";
-            }
+            recipes = await response.Content.ReadFromJsonAsync<List<CookbookRecipe>>() ?? new();
+            status = "ready";
         }
         else
         {

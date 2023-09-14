@@ -7,7 +7,7 @@
 <div class="px-4 py-3 container-fluid d-flex flex-row align-items-center justify-content-between">
     <div class="d-flex flex-row align-items-center justify-content-start" onclick="@OnBodyClick">
         <div class="mx-1">
-        <ProfilePicture size="1"></ProfilePicture>
+        <ProfilePicture profilePictureUrl="@listingData.ProfilePicture" size="1"></ProfilePicture>
         </div>
         <div class="mx-1" style="line-height: none;">
             @listingData.Username
@@ -19,10 +19,10 @@
         {
             
             <div class="m-1">
-                <Button shape="circle" status ="@aStatus" onclick="@AcceptFR"><i class="fs-3 fas fa-check"></i></Button>
+                <Button shape="circle" status ="@aStatus" onclick="@AcceptFR"><i class="fas fa-check"></i></Button>
             </div>
             <div class="m-1">
-                <Button shape="circle" bgColor="bg-primary" status ="@dStatus" onclick="@DenyFR"><i class="fs-3 fas fa-x"></i></Button>
+                <Button shape="circle" bgColor="bg-primary" status ="@dStatus" onclick="@DenyFR"><i class="fas fa-x"></i></Button>
             </div>
            
         }

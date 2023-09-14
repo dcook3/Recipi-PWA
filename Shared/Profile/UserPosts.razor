@@ -12,22 +12,29 @@ else if(status == "error")
 }
 else
 {
-    <div class="d-flex flex-column container-fluid p-0 m-0">
-    @for(int i = 0; i < posts.Count; i+=3)
+    if(posts.Count == 0)
     {
-        <div class="d-flex flex-row container-fluid p-0" style="margin-top: 0; margin-bottom: .5vw;">
-        @for(int y = i; y < i+3; y++)
+        <div class="text-muted d-flex align-items-center justify-content-center m-1">No posts found.</div>
+    }
+    else
+    {  
+        <div class="d-flex flex-column container-fluid p-0 m-0">
+        @for(int i = 0; i < posts.Count; i+=3)
         {
-            if(y < posts.Count)
+            <div class="d-flex flex-row container-fluid p-0" style="margin-top: 0; margin-bottom: .5vw;">
+            @for(int y = i; y < i+3; y++)
             {
-                <div class="my-0" style="@((y-i == 1) ? "margin-left: .5vw; margin-right: .5vw;": "") height: 33vw;">
-                    <PostThumbnail post="@posts.ElementAt(y)"></PostThumbnail>
-                </div>
+                if(y < posts.Count)
+                {
+                    <div class="my-0" style="@((y-i == 1) ? "margin-left: .5vw; margin-right: .5vw;": "") height: 33vw;">
+                        <PostThumbnail post="@posts.ElementAt(y)"></PostThumbnail>
+                    </div>
+                }
             }
+            </div>
         }
         </div>
     }
-    </div>
 }
 
 @code {
@@ -46,7 +53,7 @@ else
 
         if (response.IsSuccessStatusCode)
         {
-            posts = await response.Content.ReadFromJsonAsync<List<PostPreview>>();
+            posts = await response.Content.ReadFromJsonAsync<List<PostPreview>>()?? new();
 
             status = "ready";
         }
