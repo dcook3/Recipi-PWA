@@ -32,7 +32,7 @@
             {
                 @foreach (var recipe in recipes)
                 {
-                    <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {DeleteRecipe(recipe.RecipeId);})" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                    <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                     //OnDelete="@(() => Console.WriteLine("hello"))"
                 }
             }
@@ -40,7 +40,7 @@
             {
                 @foreach (var recipe in recipes)
                 {
-                    <CookbookRecipeCard recipe="@recipe" editing="false" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                    <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                     //OnDelete="@(() => Console.WriteLine("hello"))"
                 }
             }
@@ -74,6 +74,16 @@ else
     <UserPosts userId="@userId"></UserPosts>
 }
 
+<Modal @ref="deleteModal">
+    <Body>
+        Removing your own recipe from your cookbook will permenantly delete it. Are you sure you want to continue?
+    </Body>
+    <ButtonGroup>
+        <button @onclick="CloseDeleteModal" type="button" class="btn btn-primary">No</button>
+        <button @onclick="DeleteRecipe" type="button" class="btn btn-secondary">Yes</button>
+    </ButtonGroup>
+</Modal>
+
 @code {
     [Parameter]
     public bool self { get; set; } = false;
@@ -94,12 +104,18 @@ else
 
     private bool editingCookbook = false;
 
+    private Modal deleteModal;
+    private void ShowDeleteModal() => deleteModal.Open();
+    private void CloseDeleteModal() => deleteModal.Close();
+
+    private int selectedRecipeId;
+
     protected async override Task OnInitializedAsync()
     {
         await GetRecipes();
     }
 
-    private async void DeleteRecipe(int recipeId)
+    private async void RemoveRecipe(int recipeId)
     {
         HttpResponseMessage response = await recipeService.RemoveRecipeFromCookbook(recipeId);
 
@@ -109,8 +125,25 @@ else
         }
         else
         {
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
+            var message = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(message);
+            if (message == "You cannot remove your own recipes from your cookbook, please delete or dissociate instead")
+            {
+                selectedRecipeId = recipeId;
+                ShowDeleteModal();
+            }
         }
+    }
+
+    private async void DeleteRecipe()
+    {
+        Console.WriteLine("perma delete");
+    }
+
+    private async void DissacociateRecipe()
+    {
+        Console.WriteLine("dissacociate");
     }
 
     private void ToggleEdit()
