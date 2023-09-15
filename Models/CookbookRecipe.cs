@@ -8,7 +8,7 @@
 
         public string RecipeDescription { get; set; }
 
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         public DateTime CreatedDatetime { get; set; }
     }

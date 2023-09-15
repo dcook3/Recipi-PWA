@@ -10,7 +10,7 @@
 @inject IPostInteractionService interactionService;
 @inject IRecipeService recipeService;
 @inject StateContainer state;
-
+@inject NavigationManager NavigationManager;
 @if (isShowingComments)
 {
     <div id="comments-container" class="fluid-container" style="position:absolute; bottom:0; left:0; margin-bottom:50px; padding-bottom: 5px">
@@ -35,19 +35,24 @@
     </div>
 }
 <div id="@(vid)-interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
-<div class="bg-primary text-white rounded-top-4 container-fluid" style="min-height: 100%; position: absolute; top: calc(100% - 100px)">
+<div class="bg-primary text-white @((post != null) ? "rounded-top-4" : "") container-fluid" style="min-height: 100%; position: absolute; top: @((post != null) ? "calc(100% - 100px)" : "0")">
     <div id="@(vid)-draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%; position:relative;">
-        <div class="d-flex flex-row justify-content-center align-items-center " style="width:100%; height: 5px; position:absolute; top:2px;">
-            <div class="bg-dark-subtle rounded" style="width:30px; height:100%;"></div>
-        </div>
         
+        @if (backUserId != null)
+        {
+            <Button onclick="@(() => NavigationManager.NavigateTo($"/Profile/{backUserId}"))" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+        }
         @if(post != null)
         {
-            <h3 class="p-2 m-0" style="user-select:none;">@post.PostTitle</h3>
+            <div class="d-flex flex-row justify-content-center align-items-center " style="width:100%; height: 5px; position:absolute; top:2px;">
+                <div class="bg-dark-subtle rounded" style="width:30px; height:100%;"></div>
+            </div>
+            <h3 class="p-2 m-0" style="user-select:none; white-space:nowrap;">@post.PostTitle</h3>
         }
-        else
+        else if (recipe != null)
         {
-            <h3 class="p-2 m-0" style="user-select:none;">Recipe Title</h3>
+
+            <h3 class="p-2 m-0" style="user-select:none; white-space:nowrap;">@recipe.recipe.recipeTitle</h3>
         }
     </div>
 
@@ -55,8 +60,9 @@
     {
         //If not own post if statement here - need to account for potential self-liking and self-cookbook adding
         <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
-            <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
-
+            <div onclick="@(() => NavigationManager.NavigateTo($"/Profile/{post.User.UserId}"))">
+                <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
+            </div>
             @if(post.HasLiked || userHasLiked)
             {
                 <Button shape="circle" bgColor="" onclick="LikePost">
@@ -88,10 +94,12 @@
                     <i class="fa-solid fs-1 fa-comment"><span>@post.Comments</span></i>
                 </Button>
             }
-
-            <Button shape="circle" bgColor="" onclick="AddToCookbook">
-                <i class="fa-solid fs-1 fa-book-medical"></i>
-            </Button>
+            @if (post.Recipe != null && !post.Recipe.HasAddedToCookbook && !isOwnRecipe && state.LoggedIn)
+            {
+                <Button shape="circle" bgColor="" onclick="AddToCookbook">
+                    <i class="fa-solid fs-1 fa-book-medical"></i>
+                </Button>
+            }
             <Button shape="circle" bgColor="" onclick="OpenReportModal">
                 <i class="fa-solid fs-1 fa-flag"></i>
             </Button>
@@ -147,9 +155,72 @@
             }
         </div>
     }
-    else
+    else if(recipe != null)
     {
+        <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
+            <div @onclick="@(() => NavigationManager.NavigateTo($"/Profile/{recipe.recipe.User.UserId}"))">
+                <ProfilePicture size="1" userId="@recipe.recipe.User.UserId.ToString()" profilePictureUrl="@recipe.recipe.User.ProfilePicture"></ProfilePicture>
+            </div>
+            @if (!recipe.recipe.HasAddedToCookbook && !isOwnRecipe && state.LoggedIn)
+            {
+                <Button shape="circle" bgColor="" onclick="AddToCookbook">
+                    <i class="fa-solid fs-1 fa-book-medical"></i>
+                </Button>
+            }
+            @if (isOwnRecipe)
+            {
+                <Button shape="circle" bgColor="" onclick="@(() => NavigationManager.NavigateTo($"/RecipeEditor/{recipe.recipeId}/false/true"))">
+                    <i class="fs-1 fas fa-edit"></i>
+                </Button>
+            }
+
+
+        </div>
+
         <div style="height:90vh; width:100%; overflow-y: scroll;">
+            @{
+
+                List<string> ingredients = new();
+            }
+               
+            
+            <div class="m-1">
+                <span>@recipe.recipe.recipeDescription</span>
+            
+                @foreach (var rs in recipe.recipe.recipeSteps)
+                {
+                    foreach (var si in rs.stepIngredients)
+                    {
+                        if (!ingredients.Contains(si.Ingredient.ingredientTitle))
+                        {
+                            ingredients.Add(si.Ingredient.ingredientTitle);
+                        }
+                    }
+                }
+                @if(ingredients.Count > 0)
+                {
+                    <h5 style="margin-top: 20px;">Ingredients: </h5>
+                    <ul>
+                        @foreach (var i in ingredients)
+                        {
+                            <li>
+                                @i
+                            </li>
+                        }
+                    </ul>
+                }
+                
+
+                <h5 style="margin-top: 20px;">Steps: </h5>
+                <ol>
+                    @foreach(var rs in recipe.recipe.recipeSteps)
+                    {
+                        <li>
+                            @helpers.FormatDescription(rs.stepDescription, rs.stepIngredients)
+                        </li>
+                    }
+                </ol>
+            </div>
         </div>
     }
 </div>
@@ -182,15 +253,26 @@
     </ButtonGroup>
 </Modal>
 
+<Modal @ref="eModal">
+    <Title>Something went wrong</Title>
+    <Body>
+        <p>@eMessage</p>
+    </Body>
+</Modal>
+
 @code {
     [Parameter]
     public Post? post { get; set; } = null;
 
     [Parameter]
-    public PostRecipe? recipe { get; set; } = null;
+    public RecipeInformation? recipe { get; set; } = null;
+
+    [Parameter]
+    public int? backUserId { get; set; }
 
     public Modal feedbackModal { get; set; }
     public Modal reportModal { get; set; }
+    public Modal eModal { get; set; }
 
     private void OpenFeedbackModal() => feedbackModal.Open();
     private void CloseFeedbackModal() => feedbackModal.Close();
@@ -198,8 +280,11 @@
     private void OpenReportModal() => reportModal.Open();
     private void CloseReportModal() => reportModal.Close();
 
+    private void OpenEModal() => eModal.Open();
+
     private string vid { get; set; } = "";
     private bool isOwnPost;
+    private bool isOwnRecipe;
     private bool reInit = false;
     public bool isShowingComments { get; set; }
 
@@ -212,19 +297,33 @@
 
     bool userHasLiked;
 
+    private string eMessage { get; set; } = "";
+
     protected override void OnInitialized()
     {
+        if (state.LoggedIn && (post?.Recipe?.User.UserId == state.You.UserId || recipe?.recipe.User.UserId == state.You.UserId))
+        {
+            isOwnRecipe = true;
+        }
+        else
+        {
+            isOwnRecipe = false;
+        }
+        if (state.LoggedIn && post?.User.UserId == state.You.UserId)
+        {
+            isOwnPost = true;
+        }
+        else
+        {
+            isOwnPost = false;
+        }
         if(post != null)
         {
             vid = post.PostId.ToString();
-            if(state.LoggedIn && post.User.UserId == state.You.UserId)
-            {
-                isOwnPost = true;
-            }
-            else
-            {
-                isOwnPost = false;
-            }
+
+
+
+
             userHasLiked = post.HasLiked;
         }
         reInit = true;
@@ -254,27 +353,27 @@
 
     private async Task FetchComments()
     {
-        
-            HttpResponseMessage response = await interactionService.GetComments(post.PostId);
-            if (response.IsSuccessStatusCode)
+
+        HttpResponseMessage response = await interactionService.GetComments(post.PostId);
+        if (response.IsSuccessStatusCode)
+        {
+            //string content = await response.Content.ReadAsStringAsync();
+            comments = await response.Content.ReadFromJsonAsync<List<PostComment>>() ?? new();
+            if (comments.Count == 0)
             {
-                //string content = await response.Content.ReadAsStringAsync();
-                comments = await response.Content.ReadFromJsonAsync<List<PostComment>>() ?? new();
-                if (comments.Count == 0)
-                {
-                    hasComments = false;
-                }
-                else
-                {
-                    hasComments = true;
-                }
-                StateHasChanged();
+                hasComments = false;
             }
             else
             {
-                Console.WriteLine("Something went wrong when commenting, please retry.");
+                hasComments = true;
             }
-        
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Something went wrong when commenting, please retry.");
+        }
+
     }
 
     private async void ShowComments()
@@ -302,12 +401,35 @@
 
     private async void AddToCookbook()
     {
-        int recipeId = post.Recipe.RecipeId;
-        HttpResponseMessage response = await recipeService.AddToCookbook(recipeId);
-        if (!response.IsSuccessStatusCode)
+        int recipeId = -1;
+        if(post != null)
         {
-            Console.WriteLine("A problem occurred when addding to cookbook.");
+
+            recipeId = post.Recipe.RecipeId;
         }
+        else if(recipe != null)
+        {
+            recipeId = recipe.recipeId;
+        }
+        HttpResponseMessage response = await recipeService.AddToCookbook(recipeId);
+        if (response.IsSuccessStatusCode)
+        {
+            if(post != null)
+            {
+                post.Recipe.HasAddedToCookbook = true;
+            }
+            else
+            {
+                recipe.recipe.HasAddedToCookbook = true;
+            }
+        }
+        else
+        {
+            eMessage = "An Error Has Occered: ";
+            eMessage += await response.Content.ReadAsStringAsync();
+            OpenEModal();
+        }
+        StateHasChanged();
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)

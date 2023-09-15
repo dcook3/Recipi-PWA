@@ -7,6 +7,9 @@
         public string RecipeTitle { get; set; }
 
         public string RecipeDescription { get; set; }
+
+        public bool HasAddedToCookbook { get; set; }
+
         public PostUser User { get; set; }
 
         public DateTime CreatedDateTime { get; set; }
