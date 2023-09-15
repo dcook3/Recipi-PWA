@@ -14,13 +14,13 @@ namespace Recipi_PWA.Services
             for (int i = 0; i < ingredients.Count; i++)
             {
                 string ingFormatted;
-                if (ingredients[i].IngredientMeasurementValue == 1)
+                if (ingredients[i].ingredientMeasurementValue == 1)
                 {
-                    ingFormatted = $"{ingredients[i].IngredientMeasurementValue} {ingredients[i].IngredientMeasurementUnit} {ingredients[i].Ingredient.ingredientTitle}";
+                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredient.ingredientTitle}";
                 }
                 else
                 {
-                    ingFormatted = $"{ingredients[i].IngredientMeasurementValue} {ingredients[i].IngredientMeasurementUnit}s {ingredients[i].Ingredient.ingredientTitle}";
+                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementValue}s {ingredients[i].ingredient.ingredientTitle}";
                 }
                 string checkString = "{" + i.ToString() + "}";
                 desc = desc.Replace(checkString, ingFormatted);

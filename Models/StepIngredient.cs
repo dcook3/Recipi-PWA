@@ -6,9 +6,9 @@ namespace Recipi_PWA.Models
     {
         public StepIngredient()
         {
-            IngredientMeasurementValue = 0;
-            IngredientMeasurementUnit = "";
-            Ingredient = new();
+            ingredientMeasurementValue = 0;
+            ingredientMeasurementUnit = "";
+            ingredient = new();
         }
         
 

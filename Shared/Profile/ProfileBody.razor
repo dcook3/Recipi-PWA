@@ -29,7 +29,7 @@
                     }
                 </div>
                 <div class="m-1">
-                    <Button shape="circle"><i class="fas fa-plus" style="width: 1em;"></i></Button>
+                    <Button shape="circle" onclick="@(() => NavigationManager.NavigateTo("/RecipeEditor/-1/false/false"))"><i class="fas fa-plus" style="width: 1em;"></i></Button>
                 </div>
             }
         </div>
@@ -55,7 +55,7 @@
                 {
                     @foreach (var recipe in recipes)
                     {
-                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/RecipeEditor/{recipe.RecipeId}/false"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/{userId}"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                         //OnDelete="@(() => Console.WriteLine("hello"))"
                     }
                 }
