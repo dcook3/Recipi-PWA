@@ -1,0 +1,502 @@
+﻿@using Recipi_PWA.Shared.Profile;
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Models.PostView;
+@using Recipi_PWA.Services;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
+
+@inject IJSRuntime JSRuntime;
+@inject IHelperService helpers;
+@inject IPostInteractionService interactionService;
+@inject IRecipeService recipeService;
+@inject StateContainer state;
+@inject NavigationManager NavigationManager;
+@if (isShowingComments)
+{
+    <div id="comments-container" class="fluid-container" style="position:absolute; bottom:0; left:0; margin-bottom:50px; padding-bottom: 5px">
+        <div id="comments" class="bg-transparent text-white" @onscroll="OnScrollOrDrag">
+            @if(hasComments)
+            {
+                @foreach (PostComment comment in comments)
+                {
+                    <CommentView Comment="@comment"></CommentView>
+                }
+            }
+            else
+            {
+                <span class="text-white">There is no comments on this post.</span>
+            }
+        </div>
+
+        <div class="form-group d-flex">
+            <InputText @bind-Value="@newComment" DisplayName="New comment..." class="form-control col-6"></InputText>
+            <Button bgColor="bg-warning" Width="2" onclick="PostNewComment"><i class="fa-solid fa-paper-plane"></i></Button>
+        </div>
+    </div>
+}
+<div id="@(vid)-interactionBG" style="position:absolute; bottom:0; right:0; background-color: rgba(0,0,0,.5)"></div>
+<div class="bg-primary text-white @((post != null) ? "rounded-top-4" : "") container-fluid" style="min-height: 100%; position: absolute; top: @((post != null) ? "calc(100% - 100px)" : "0")">
+    <div id="@(vid)-draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%; position:relative;">
+        
+        @if (backUserId != null)
+        {
+            <Button onclick="@(() => NavigationManager.NavigateTo($"/Profile/{backUserId}"))" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+        }
+        @if(post != null)
+        {
+            <div class="d-flex flex-row justify-content-center align-items-center " style="width:100%; height: 5px; position:absolute; top:2px;">
+                <div class="bg-dark-subtle rounded" style="width:30px; height:100%;"></div>
+            </div>
+            <h3 class="p-2 m-0" style="user-select:none; white-space:nowrap;">@post.PostTitle</h3>
+        }
+        else if (recipe != null)
+        {
+
+            <h3 class="p-2 m-0" style="user-select:none; white-space:nowrap;">@recipe.recipe.recipeTitle</h3>
+        }
+    </div>
+
+    @if (post != null)
+    {
+        //If not own post if statement here - need to account for potential self-liking and self-cookbook adding
+        <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
+            <div onclick="@(() => NavigationManager.NavigateTo($"/Profile/{post.User.UserId}"))">
+                <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
+            </div>
+            @if(post.HasLiked || userHasLiked)
+            {
+                <Button shape="circle" bgColor="" onclick="LikePost">
+                    <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
+                </Button>
+            }
+            else if (isOwnPost)
+            {
+                <Button shape="circle" bgColor="" onclick="HandleLikeOwnPost">
+                    <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
+                </Button>
+            }
+            else
+            {
+                <Button shape="circle" bgColor="" onclick="LikePost">
+                    <i class="fa-regular fs-1 fa-heart"><span class="text-white">@post.Likes</span></i>
+                </Button>
+            }
+
+            @if(isShowingComments)
+            {
+                <Button shape="circle" bgColor="" onclick="HideComments">
+                    <i class="fa-solid fs-1 fa-comment-slash"></i>
+                </Button>
+            }
+            else
+            {
+                <Button shape="circle" bgColor="" onclick="ShowComments">
+                    <i class="fa-solid fs-1 fa-comment"><span>@post.Comments</span></i>
+                </Button>
+            }
+            @if (post.Recipe != null && !post.Recipe.HasAddedToCookbook && !isOwnRecipe && state.LoggedIn)
+            {
+                <Button shape="circle" bgColor="" onclick="AddToCookbook">
+                    <i class="fa-solid fs-1 fa-book-medical"></i>
+                </Button>
+            }
+            <Button shape="circle" bgColor="" onclick="OpenReportModal">
+                <i class="fa-solid fs-1 fa-flag"></i>
+            </Button>
+        
+        </div>
+        <div class="px-2" style="height:90vh; width:85%; overflow-y: scroll; border-top: 1px solid white">
+            <span class="m-1">@post.PostDescription</span>
+
+            @if (post.Recipe != null)
+            {
+                List<string> ingredients = new();
+               
+                @*<span style="color: rgba(0,0,0, .3); font-size:13px; line-height: 10px; margin:0; margin-top:20px; text-decoration:underline;">Recipe</span>*@
+                <h4 class="d-flex align-items-center justify-content-start" style="margin:0; margin-top: 20px;">@post.Recipe.RecipeTitle -&nbsp;<span style="color: #ddd; font-size: 13px;"><ProfilePicture size="13" userId="@post.Recipe.User.UserId.ToString()" profilePictureUrl="@post.Recipe.User.ProfilePicture"></ProfilePicture> @post.Recipe.User.Username</span></h4>
+                <div class="container-fluid rounded" style="height:1px; background-color: white"></div>
+                <div class="m-1">
+                    <span>@post.Recipe.RecipeDescription</span>
+            
+                    @foreach (var rs in post.Recipe.RecipeSteps)
+                    {
+                        foreach (var si in rs.StepIngredients)
+                        {
+                            if (!ingredients.Contains(si.Ingredient.ingredientTitle))
+                            {
+                                ingredients.Add(si.Ingredient.ingredientTitle);
+                            }
+                        }
+                    }
+                    @if(ingredients.Count > 0)
+                    {
+                        <h5 style="margin-top: 20px;">Ingredients: </h5>
+                        <ul>
+                            @foreach (var i in ingredients)
+                            {
+                                <li>
+                                    @i
+                                </li>
+                            }
+                        </ul>
+                    }
+                
+
+                    <h5 style="margin-top: 20px;">Steps: </h5>
+                    <ol>
+                        @foreach(var rs in post.Recipe.RecipeSteps)
+                        {
+                            <li>
+                                @helpers.FormatDescription(rs.StepDescription, rs.StepIngredients)
+                            </li>
+                        }
+                    </ol>
+                </div>
+            }
+        </div>
+    }
+    else if(recipe != null)
+    {
+        <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
+            <div @onclick="@(() => NavigationManager.NavigateTo($"/Profile/{recipe.recipe.User.UserId}"))">
+                <ProfilePicture size="1" userId="@recipe.recipe.User.UserId.ToString()" profilePictureUrl="@recipe.recipe.User.ProfilePicture"></ProfilePicture>
+            </div>
+            @if (!recipe.recipe.HasAddedToCookbook && !isOwnRecipe && state.LoggedIn)
+            {
+                <Button shape="circle" bgColor="" onclick="AddToCookbook">
+                    <i class="fa-solid fs-1 fa-book-medical"></i>
+                </Button>
+            }
+            @if (isOwnRecipe)
+            {
+                <Button shape="circle" bgColor="" onclick="@(() => NavigationManager.NavigateTo($"/RecipeEditor/{recipe.recipeId}/false/true"))">
+                    <i class="fs-1 fas fa-edit"></i>
+                </Button>
+            }
+
+
+        </div>
+
+        <div style="height:90vh; width:100%; overflow-y: scroll;">
+            @{
+
+                List<string> ingredients = new();
+            }
+               
+            
+            <div class="m-1">
+                <span>@recipe.recipe.recipeDescription</span>
+            
+                @foreach (var rs in recipe.recipe.recipeSteps)
+                {
+                    foreach (var si in rs.stepIngredients)
+                    {
+                        if (!ingredients.Contains(si.Ingredient.ingredientTitle))
+                        {
+                            ingredients.Add(si.Ingredient.ingredientTitle);
+                        }
+                    }
+                }
+                @if(ingredients.Count > 0)
+                {
+                    <h5 style="margin-top: 20px;">Ingredients: </h5>
+                    <ul>
+                        @foreach (var i in ingredients)
+                        {
+                            <li>
+                                @i
+                            </li>
+                        }
+                    </ul>
+                }
+                
+
+                <h5 style="margin-top: 20px;">Steps: </h5>
+                <ol>
+                    @foreach(var rs in recipe.recipe.recipeSteps)
+                    {
+                        <li>
+                            @helpers.FormatDescription(rs.stepDescription, rs.stepIngredients)
+                        </li>
+                    }
+                </ol>
+            </div>
+        </div>
+    }
+</div>
+<style>
+    .post-interaction > * {
+        margin:10px 0;
+    }
+</style>
+
+<Modal @ref="feedbackModal">
+    <Body>
+        <h5>@feedback</h5>
+    </Body>
+    <ButtonGroup>
+        <Button Width="4" onclick="CloseFeedbackModal">Ok</Button>
+    </ButtonGroup>
+</Modal>
+
+<Modal @ref="reportModal">
+    <Title>
+        Report Post
+    </Title>
+    <Body>
+        <label for="Message">Please enter your message describing the issue, and we will look into it ASAP.</label>
+        <InputText DisplayName="Message" @bind-Value="@reportMessage"></InputText>
+    </Body>
+    <ButtonGroup>
+        <Button Width="4" bgColor="bg-danger" onclick="CloseReportModal">Cancel</Button>
+        <Button Width="4" bgColor="bg-warning" onclick="ReportPost">Report</Button>
+    </ButtonGroup>
+</Modal>
+
+<Modal @ref="eModal">
+    <Title>Something went wrong</Title>
+    <Body>
+        <p>@eMessage</p>
+    </Body>
+</Modal>
+
+@code {
+    [Parameter]
+    public Post? post { get; set; } = null;
+
+    [Parameter]
+    public RecipeInformation? recipe { get; set; } = null;
+
+    [Parameter]
+    public int? backUserId { get; set; }
+
+    public Modal feedbackModal { get; set; }
+    public Modal reportModal { get; set; }
+    public Modal eModal { get; set; }
+
+    private void OpenFeedbackModal() => feedbackModal.Open();
+    private void CloseFeedbackModal() => feedbackModal.Close();
+
+    private void OpenReportModal() => reportModal.Open();
+    private void CloseReportModal() => reportModal.Close();
+
+    private void OpenEModal() => eModal.Open();
+
+    private string vid { get; set; } = "";
+    private bool isOwnPost;
+    private bool isOwnRecipe;
+    private bool reInit = false;
+    public bool isShowingComments { get; set; }
+
+    private string newComment = "";
+    private string feedback = "";
+    private string reportMessage = "";
+
+    List<PostComment> comments;
+    bool hasComments = false;
+
+    bool userHasLiked;
+
+    private string eMessage { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        if (state.LoggedIn && (post?.Recipe?.User.UserId == state.You.UserId || recipe?.recipe.User.UserId == state.You.UserId))
+        {
+            isOwnRecipe = true;
+        }
+        else
+        {
+            isOwnRecipe = false;
+        }
+        if (state.LoggedIn && post?.User.UserId == state.You.UserId)
+        {
+            isOwnPost = true;
+        }
+        else
+        {
+            isOwnPost = false;
+        }
+        if(post != null)
+        {
+            vid = post.PostId.ToString();
+
+
+
+
+            userHasLiked = post.HasLiked;
+        }
+        reInit = true;
+    }
+    private async void LikePost()
+    {
+        if (state.LoggedIn)
+        {
+            HttpResponseMessage response = await interactionService.LikePost(post.PostId);
+
+            if (response.IsSuccessStatusCode)
+            {
+                userHasLiked = true;
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("Something went wrong when liking post, please retry.");
+            }
+        }
+        else
+        {
+            feedback = "You need to login to view post.";
+            OpenFeedbackModal();
+        }
+    }
+
+    private async Task FetchComments()
+    {
+
+        HttpResponseMessage response = await interactionService.GetComments(post.PostId);
+        if (response.IsSuccessStatusCode)
+        {
+            //string content = await response.Content.ReadAsStringAsync();
+            comments = await response.Content.ReadFromJsonAsync<List<PostComment>>() ?? new();
+            if (comments.Count == 0)
+            {
+                hasComments = false;
+            }
+            else
+            {
+                hasComments = true;
+            }
+            StateHasChanged();
+        }
+        else
+        {
+            Console.WriteLine("Something went wrong when commenting, please retry.");
+        }
+
+    }
+
+    private async void ShowComments()
+    {
+        if (state.LoggedIn)
+        {
+            if(comments == null)
+                await FetchComments();
+            isShowingComments = true;
+            Console.WriteLine($"Username: {comments[0].Username} Profile Picture: {comments[0].ProfilePicture}");
+            StateHasChanged();
+        }
+        else
+        {
+            feedback = "You need to login to view post.";
+            OpenFeedbackModal();
+        }
+    }
+
+    private void HideComments()
+    {
+        isShowingComments = false;
+        StateHasChanged();
+    }
+
+    private async void AddToCookbook()
+    {
+        int recipeId = -1;
+        if(post != null)
+        {
+
+            recipeId = post.Recipe.RecipeId;
+        }
+        else if(recipe != null)
+        {
+            recipeId = recipe.recipeId;
+        }
+        HttpResponseMessage response = await recipeService.AddToCookbook(recipeId);
+        if (response.IsSuccessStatusCode)
+        {
+            if(post != null)
+            {
+                post.Recipe.HasAddedToCookbook = true;
+            }
+            else
+            {
+                recipe.recipe.HasAddedToCookbook = true;
+            }
+        }
+        else
+        {
+            eMessage = "An Error Has Occered: ";
+            eMessage += await response.Content.ReadAsStringAsync();
+            OpenEModal();
+        }
+        StateHasChanged();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if ((firstRender || reInit) && post != null)
+        {
+            reInit = false;
+            await JSRuntime.InvokeVoidAsync("InitDraggable", vid);
+        }
+    }
+
+    private async void OnScrollOrDrag()
+    {
+        //await JSRuntime.InvokeVoidAsync("setClasses", "comments");
+    }
+
+    private async void PostNewComment()
+    {
+        if(newComment.Length > 0)
+        {
+            HttpResponseMessage response = await interactionService.CommentPost(post.PostId, newComment);
+            if (response.IsSuccessStatusCode)
+            {
+                feedback = "Your comment was posted!";
+                FetchComments();
+            }
+            else
+            {
+                feedback = "A problem occured, please try again.";
+            }
+        }
+        else
+        {
+            feedback = "You must put a comment in the comment box.";
+        }
+        newComment = "";
+        OpenFeedbackModal();
+    }
+
+    private void HandleLikeOwnPost()
+    {
+        feedback = "You cannot like a post that you created.";
+        OpenFeedbackModal();
+    }
+
+    private async void ReportPost()
+    {
+        CloseReportModal();
+        HttpResponseMessage response = await interactionService.ReportPost(post.PostId, reportMessage);
+        if (response.IsSuccessStatusCode)
+        {
+            string content = await response.Content.ReadAsStringAsync();
+            if(content != null && content.Length > 0)
+            {
+                feedback = "Your report has been posted.";
+                OpenFeedbackModal();
+            }
+            else
+            {
+                feedback = "There was a problem posting a report.";
+                OpenFeedbackModal();
+            }
+        }
+        else
+        {
+            feedback = "There was a problem posting a report.";
+            OpenFeedbackModal();
+        }
+    }
+}

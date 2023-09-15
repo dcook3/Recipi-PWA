@@ -1,0 +1,42 @@
+﻿@page "/Post/{postId:int}/{backUserId:int?}"
+@using Recipi_PWA.Models.PostView;
+@using Recipi_PWA.Services;
+
+@inject IPostService postService;
+
+@if(status == "loading")
+{
+    <LoadingSpinner></LoadingSpinner>
+}
+else
+{
+    <PostView post="@post" backUserId="backUserId"></PostView>
+}
+
+
+@code {
+    [Parameter]
+    public int postId { get; set; }
+
+    [Parameter]
+    public int? backUserId { get; set; }
+
+    private Post post { get; set; }
+
+    private string status = "loading";
+
+    protected override async void OnParametersSet()
+    {
+        var response = await postService.GetPost(postId);
+        if (response.IsSuccessStatusCode)
+        {
+            post = await response.Content.ReadFromJsonAsync<Post>();
+            status = "ready";
+        }
+        else
+        {
+            status="error";
+        }
+        StateHasChanged();
+    }
+}

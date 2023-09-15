@@ -1,4 +1,6 @@
-﻿using System.Text.Json.Serialization;
+﻿using Recipi_PWA.Models.PostView;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.Json.Serialization;
 
 namespace Recipi_PWA.Models
 {
@@ -15,7 +17,9 @@ namespace Recipi_PWA.Models
 
         public string? recipeDescription { get; set; }
 
-        private string _createdByUsername { get; set; }
+        public bool HasAddedToCookbook { get; set;  } 
+
+        public PostUser User { get; set; }
 
         private DateTime _createdDatetime { get; set; }
 

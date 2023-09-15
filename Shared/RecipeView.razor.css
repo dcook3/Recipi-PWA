@@ -1,0 +1,23 @@
+﻿
+#comments {
+    height: 251px !important;
+    overflow-y: auto;
+    -ms-overflow-style: none; /* for Internet Explorer, Edge */
+    scrollbar-width: none; /* for Firefox */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0, black var(--top-mask-size, 0), black calc(100% - var(--bottom-mask-size, 0)), transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0, black var(--top-mask-size, 0), black calc(100% - var(--bottom-mask-size, 0)), transparent 100%);
+    --top-mask-size: 0px;
+    --bottom-mask-size: 0px;
+}
+
+#comments.is-bottom-overflowing {
+    --top-mask-size: 48px !important;
+}
+
+#comments.is-top-overflowing {
+    --bottom-mask-size: 48px !important;
+}
+
+#comments::-webkit-scrollbar {
+    display: none; /* for Chrome, Safari, and Opera */
+}

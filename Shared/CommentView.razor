@@ -1,0 +1,29 @@
+﻿@using Recipi_PWA.Shared.Profile
+@using Recipi_PWA.Shared
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Models.PostView;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
+
+@inject StateContainer state;
+@inject IUserService userService;
+
+<div class="d-flex align-items-center">
+    <ProfilePicture profilePictureUrl="@Comment.ProfilePicture" size="1"></ProfilePicture>
+    <div class="d-flex flex-column justify-content-evenly">
+        <span class="fw-bold d-block">@Comment.Username.Insert(0, "@")</span>
+        @if (Comment.comment.Length < 50)
+        {
+            <span>@Comment.comment</span>
+        }
+        else
+        {
+            <span>@Comment.comment.Substring(0, 47)...</span>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public PostComment Comment { get; set; }
+}

@@ -1,4 +1,4 @@
-﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
 @inject IRecipeService recipeService;
 @inject NavigationManager NavigationManager;
@@ -63,7 +63,10 @@
         }
         else if (status == "loading")
         {
-            <LoadingSpinner></LoadingSpinner>
+            <div class="container-fluid d-flex p-1 align-items-center justify-content-center">
+               
+                <LoadingSpinner></LoadingSpinner>
+            </div>
         }
         else if(status == "error")
         {

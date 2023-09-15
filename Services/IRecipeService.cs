@@ -1,4 +1,4 @@
-﻿using Recipi_PWA.Models;
+using Recipi_PWA.Models;
 
 namespace Recipi_PWA.Services
 {
@@ -13,5 +13,6 @@ namespace Recipi_PWA.Services
         Task<HttpResponseMessage> PutRecipe(int recipeId, RecipeUpdate recipe);
         Task<HttpResponseMessage> DeleteRecipe(int recipeId);
         Task<HttpResponseMessage> DissociateRecipe(int recipeId);
+        Task<HttpResponseMessage> AddToCookbook(int recipeId);
     }
 }

@@ -7,12 +7,15 @@
 @inject NavigationManager NavigationManager;
 @inject StateContainer state;
 <div class="bg-primary" style="height: 100vh; width: 100vw; padding-top: 20vh;">
+    <div class="p-3" style="position:fixed; top:0; left: 0; ">
+        <Button onclick="@Back" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+    </div>
     <div class="container-fluid d-flex flex-column align-items-center justify-content-between" style="height: 65%">
         <div style="height: 10%" class="d-flex flex-column align-items-center justify-content-center">
             <h1 class="text-light">Recipi</h1>
             <p class="text-light">Welcome Back!</p>
         </div>
-        <form class="d-flex flex-column justify-content-between align-items-center"style="height: 40%;">
+        <form class="d-flex flex-column justify-content-between align-items-center"style="height: 50%;">
             <div class="form-group">
                 <label for="cred" class="text-light fs-8">Username or Email</label>
                 <InputText class="form-control" @bind-Value="credential" DisplayName="Username or Email" id="cred"></InputText>
@@ -22,12 +25,12 @@
                 <InputText class="form-control" type="password" @bind-Value="password" DisplayName="Password" id="pass"></InputText>
             </div>
 
-            <div class="container-fluid d-flex flex-row m-1 justify-content-evenly align-items-center">
-                <Button Height="2" Width="4" onclick="NavigateToRegister">
+            <div class="container-fluid d-flex flex-row justify-content-evenly align-items-center" style="margin-top: 20px;">
+                <Button Height="2" Width="6" onclick="NavigateToRegister">
                     Register
                 </Button>
 
-                <Button Height="2" Width="4" onclick="LoginReqest" status="@status"> 
+                <Button Height="2" Width="6" onclick="LoginReqest" status="@status"> 
                     Login
                 </Button>
 
@@ -51,7 +54,10 @@
     private string status = "ready";
     private string eMessage;
 
-
+    private void Back()
+    {
+        NavigationManager.NavigateTo("/");
+    }
 
 
     public async void LoginReqest()

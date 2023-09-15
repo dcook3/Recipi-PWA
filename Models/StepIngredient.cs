@@ -1,16 +1,16 @@
-﻿
 using System.Text.Json.Serialization;
 
 namespace Recipi_PWA.Models
 {
-    public class StepIngredient
+    public class StepIngredient : IStepIngredient
     {
         public StepIngredient()
         {
-            ingredientMeasurementValue = 0;
-            ingredientMeasurementUnit = "";
-            ingredient = new();
+            IngredientMeasurementValue = 0;
+            IngredientMeasurementUnit = "";
+            Ingredient = new();
         }
+        
 
         public int stepIngredientId { get; set; }
         public string ingredientMeasurementUnit { get; set; }

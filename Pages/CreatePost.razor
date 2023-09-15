@@ -11,6 +11,8 @@
 @inject IMediaUploadService mediaUploadService;
 @inject IRecipeService recipeService;
 @inject IPostService postService;
+@inject StateContainer state;
+@inject IHelperService helpers;
 <style>
     .hidden {
         display: none;
@@ -89,7 +91,7 @@
             @if(status == "postentry")
             {
                 <div class="my-3" style="width:100%;">
-                    <SeekBar videoSelector="#result"></SeekBar>
+                    <SeekBar vid="recording"></SeekBar>
                 </div>
                 
             }
@@ -175,7 +177,7 @@
                     @{
                         var currentStep = recipe.recipeSteps.ElementAt(stepIndex);
                     }
-                    <span>@(currentStep.stepOrder + 1)</span>. @currentStep.stepDescription
+                    <span>@(currentStep.stepOrder + 1)</span>. @helpers.FormatDescription(currentStep.stepDescription, currentStep.stepIngredients);
                 </div>
                 <div class="d-flex flex-row align-items-center justify-content-evenly">
                     @{
@@ -227,20 +229,28 @@
 
     protected async override Task OnInitializedAsync()
     {
-        if (!String.IsNullOrEmpty(recipeId) && Int32.TryParse(recipeId, out int _recipeIdInt))
+        if (!state.LoggedIn)
         {
-
-            var response = await recipeService.GetRecipeById(_recipeIdInt);
-            if (response.IsSuccessStatusCode)
-            {
-                recipeIdInt = _recipeIdInt;
-                recipePost = true;
-                recipe = await response.Content.ReadFromJsonAsync<Recipe>();
-                recipeLoading = false;
-                rStatus = Enumerable.Repeat(false, recipe.recipeSteps.Count()).ToArray();
-            }
+            NavigationManager.NavigateTo("/Login");
         }
-        StateHasChanged();
+        else
+        {
+            if (!String.IsNullOrEmpty(recipeId) && Int32.TryParse(recipeId, out int _recipeIdInt))
+            {
+
+                var response = await recipeService.GetRecipeById(_recipeIdInt);
+                if (response.IsSuccessStatusCode)
+                {
+                    recipeIdInt = _recipeIdInt;
+                    recipePost = true;
+                    recipe = await response.Content.ReadFromJsonAsync<Recipe>();
+                    Console.WriteLine(recipe.recipeSteps.First().stepId);
+                    recipeLoading = false;
+                    rStatus = Enumerable.Repeat(false, recipe.recipeSteps.Count()).ToArray();
+                }
+            }
+            StateHasChanged();
+        }
     }
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
@@ -309,7 +319,7 @@
 
     private async void TogglePlayback()
     {
-        playingStatus = await JSRuntime.InvokeAsync<bool>("TogglePlayback");
+        playingStatus = await JSRuntime.InvokeAsync<bool>("TogglePlayback", "recording");
         StateHasChanged();
     }
 
@@ -375,7 +385,8 @@
             var response = await postService.CreatePost(post);
             if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine("yayya");
+                int postId = (await response.Content.ReadFromJsonAsync<CreatePostResponse>()).postId;
+                NavigationManager.NavigateTo($"/Post/{postId}");
             }
             else
             {

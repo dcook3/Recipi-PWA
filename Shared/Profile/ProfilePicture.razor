@@ -10,10 +10,10 @@
 @if(size > 6)
 {
     var sizeString = size + "px";
-    <i class="fa-solid flex-shrink-1 image-icon" style="background-image: url(@profilePictureUrl); font-size: @sizeString;"></i>
+    <i class="fa-solid flex-shrink-1 image-icon rounded-circle" style="background-image: url(@profilePictureUrl); font-size: @sizeString;"></i>
 }
 else{
-    <i class="fa-solid flex-shrink-1 image-icon fs-@size" style="background-image: url(@profilePictureUrl)"></i>
+    <i class="fa-solid flex-shrink-1 image-icon rounded-circle fs-@size" style="background-image: url(@profilePictureUrl)"></i>
 }
 
 @code {

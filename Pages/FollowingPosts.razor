@@ -1,0 +1,174 @@
+﻿@page "/Following"
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Models.PostView;
+@using Recipi_PWA.Services;
+@inject IPostService postService;
+@inject IJSRuntime JSRuntime;
+@inject StateContainer state;
+@inject NavigationManager NavigationManager;
+<PageTitle>Following Posts Feed</PageTitle>
+
+
+@if (status == "loading")
+{
+    <div class="d-flex align-items-center justify-content-center" style="width:100%; height:100%;">
+        <LoadingSpinner></LoadingSpinner>
+    </div>
+}
+@if (status == "error")
+{
+    <div>
+        @eMessage
+    </div>
+}
+else
+{
+    <div style="width: 100%; height:100%; position:relative; overflow:hidden;">
+        <div class="d-flex flex-column" style="width:100%; height: 300%; position:absolute; top:0px; transition-duration:500ms; transition-property:top;">
+            @for (int i = 0; i < posts.Count(); i++)
+            {
+
+                <div id="@i-post-wrapper" class="post-wrapper" style="width:100%; height: 33.4%; position:relative;">
+                    @posts[i]
+                </div>
+
+            }
+        </div>
+    </div>
+}
+
+
+@code {
+    private RenderFragment[] posts = new RenderFragment[3];
+
+
+    private List<PostPreview> postPreviews = new List<PostPreview>();
+
+    private DotNetObjectReference<FollowingPosts> _objectReference;
+
+    private string status = "loading";
+
+    private string eMessage = "";
+
+    private int postIndex = 0;
+
+    private bool inited = false;
+
+    protected override async void OnInitialized()
+    {
+        if (!state.LoggedIn)
+        {
+            NavigationManager.NavigateTo("/Login");
+        }
+        else
+        {
+            inited = false;
+            var response = await postService.GetFollowingPosts();
+        if (response.IsSuccessStatusCode)
+        {
+            postPreviews = await response.Content.ReadFromJsonAsync<List<PostPreview>>();
+            Console.WriteLine("Posts: " + postPreviews.Count());
+            var post1Res = await postService.GetPost(postPreviews[0].PostId);
+            var post2Res = await postService.GetPost(postPreviews[1].PostId);
+            var post3Res = await postService.GetPost(postPreviews[1].PostId);
+            if (post1Res.IsSuccessStatusCode && post2Res.IsSuccessStatusCode)
+            {
+                var post1 = await post1Res.Content.ReadFromJsonAsync<Post>();
+                var post2 = await post2Res.Content.ReadFromJsonAsync<Post>();
+                var post3 = await post3Res.Content.ReadFromJsonAsync<Post>();
+                posts[0] = (__builder) =>
+                {
+                    <PostView post="@post1"></PostView>
+                };
+                posts[1] = (__builder) =>
+                {
+                    <PostView post="@post2" focused="false"></PostView>
+                };
+                posts[2] = (__builder) =>
+                {
+                    <PostView focused="false"></PostView>
+                };
+                status = "ready";
+            }
+            else
+            {
+                status = "error";
+                eMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        else
+        {
+            status = "error";
+            eMessage = await response.Content.ReadAsStringAsync();
+        }
+        StateHasChanged();
+        }
+    }
+
+    public async void LoadPost(int postContainerIndex, int nextPostIndex)
+    {
+        var postRes = await postService.GetPost(postPreviews[nextPostIndex].PostId);
+        if (postRes.IsSuccessStatusCode)
+        {
+            var post = await postRes.Content.ReadFromJsonAsync<Post>();
+            posts[postContainerIndex] = (__builder) =>
+                {
+                    <PostView post="@post" focused="false" AfterInit="@(() => {
+                        JSRuntime.InvokeVoidAsync("InitPostSwipe", $"{postContainerIndex}-post-wrapper", _objectReference);
+                    })"></PostView>
+                };
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public int NextPost(string direction, int index)
+    {
+        int nextPostIndex = -1;
+        if (direction == "up")
+        {
+            if (postIndex > 0)
+            {
+                postIndex--;
+                nextPostIndex = postIndex - 1;
+
+
+            }
+        }
+        else
+        {
+            if (postIndex < postPreviews.Count())
+            {
+                postIndex++;
+                nextPostIndex = postIndex + 1;
+            }
+        }
+        if (nextPostIndex >= 0 && nextPostIndex < postPreviews.Count())
+        {
+            try
+            {
+                LoadPost(index, nextPostIndex);
+            }
+            catch
+            {
+                Console.WriteLine("catch");
+            }
+        }
+        Console.WriteLine("c#: " + postIndex);
+        return postIndex;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+
+        }
+        if (!inited && status == "ready")
+        {
+            inited = true;
+            _objectReference = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("InitPostsSwipe", _objectReference);
+        }
+    }
+}
