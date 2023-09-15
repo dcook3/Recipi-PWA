@@ -1,0 +1,52 @@
+﻿@page "/Recipe/{recipeId:int}/{backUserId:int?}"
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Services;
+@inject IRecipeService recipeService;
+@if(status == "loading")
+{
+    <LoadingSpinner></LoadingSpinner>
+}
+else if(status == "error")
+{
+    <div class="text-danger">
+        @eMessage
+    </div>
+}
+else
+{
+    <RecipeView recipe="recipe" backUserId="backUserId"></RecipeView>
+}
+@code {
+    [Parameter]
+    public int recipeId { get; set; }
+    
+    [Parameter]
+    public int? backUserId { get; set; }
+
+    private RecipeInformation recipe { get; set; } = new();
+
+    private string status = "loading";
+
+    private string eMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await recipeService.GetRecipeById(recipeId);
+        if (response.IsSuccessStatusCode)
+        {
+            recipe.recipeId = recipeId;
+            recipe.isNewRecipe = false;
+            
+            recipe.recipe = await response.Content.ReadFromJsonAsync<Recipe>();
+            
+            status = "ready";
+        }
+        else
+        {
+            status = "error";
+            eMessage = await response.Content.ReadAsStringAsync();
+        }
+        StateHasChanged();
+    }
+
+}

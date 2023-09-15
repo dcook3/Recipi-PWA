@@ -62,7 +62,8 @@ else
         }
         else
         {
-        var response = await postService.GetFollowingPosts();
+            inited = false;
+            var response = await postService.GetFollowingPosts();
         if (response.IsSuccessStatusCode)
         {
             postPreviews = await response.Content.ReadFromJsonAsync<List<PostPreview>>();

@@ -235,7 +235,7 @@ var initSinglePostSwipe = async (post, obj) => {
 
 window.InitPostsSwipe = async (obj) => {
     posts = document.querySelectorAll(".post-wrapper");
-    
+    currentIndex = 0;
     posts.forEach((post) => initSinglePostSwipe(post, obj))
 }
 

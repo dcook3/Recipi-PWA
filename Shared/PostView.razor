@@ -63,7 +63,7 @@
                 <Button onclick="@TogglePlayback" shape="circle" bgColor=""><i class="fs-1 fa-solid fa-play text-light"></i></Button>
             }
         </div>
-        <RecipeView post="@post"></RecipeView>
+        <RecipeView post="@post" backUserId="backUserId"></RecipeView>
     }
 </div>
 <style>
@@ -79,6 +79,9 @@
 
     [Parameter]
     public Action? AfterInit { get; set; }
+
+    [Parameter]
+    public int? backUserId { get; set; }
 
     private int stepIndex = 0; 
 

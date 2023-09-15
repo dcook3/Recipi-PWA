@@ -73,6 +73,7 @@ else
 
     protected override async void OnInitialized()
     {
+        inited = false;
         var response = await postService.GetReccomendedPosts();
         if (response.IsSuccessStatusCode)
         {

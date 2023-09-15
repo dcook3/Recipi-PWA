@@ -16,7 +16,6 @@ namespace Recipi_PWA.Models
         public int IngredientId { get; set; }
         public string IngredientMeasurementUnit { get; set; }
         public float IngredientMeasurementValue { get; set; }
-        [JsonIgnore]
         public Ingredient Ingredient { get; set; }
     }
 }
