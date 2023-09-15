@@ -186,6 +186,9 @@
     [Parameter]
     public Post? post { get; set; } = null;
 
+    [Parameter]
+    public PostRecipe? recipe { get; set; } = null;
+
     public Modal feedbackModal { get; set; }
     public Modal reportModal { get; set; }
 
@@ -309,7 +312,7 @@
 
     protected async override Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender || reInit)
+        if ((firstRender || reInit) && post != null)
         {
             reInit = false;
             await JSRuntime.InvokeVoidAsync("InitDraggable", vid);
