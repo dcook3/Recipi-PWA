@@ -92,7 +92,7 @@
             <Button shape="circle" bgColor="" onclick="AddToCookbook">
                 <i class="fa-solid fs-1 fa-book-medical"></i>
             </Button>
-            <Button shape="circle" bgColor="">
+            <Button shape="circle" bgColor="" onclick="OpenReportModal">
                 <i class="fa-solid fs-1 fa-flag"></i>
             </Button>
         
@@ -228,49 +228,67 @@
     }
     private async void LikePost()
     {
-        HttpResponseMessage response = await interactionService.LikePost(post.PostId);
-
-        if (response.IsSuccessStatusCode)
+        if (state.LoggedIn)
         {
-            userHasLiked = true;
-            StateHasChanged();
+            HttpResponseMessage response = await interactionService.LikePost(post.PostId);
+
+            if (response.IsSuccessStatusCode)
+            {
+                userHasLiked = true;
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine("Something went wrong when liking post, please retry.");
+            }
         }
         else
         {
-            Console.WriteLine("Something went wrong when liking post, please retry.");
+            feedback = "You need to login to view post.";
+            OpenFeedbackModal();
         }
     }
 
     private async Task FetchComments()
     {
-        HttpResponseMessage response = await interactionService.GetComments(post.PostId);
-        if (response.IsSuccessStatusCode)
-        {
-            //string content = await response.Content.ReadAsStringAsync();
-            comments = await response.Content.ReadFromJsonAsync<List<PostComment>>() ?? new();
-            if(comments.Count == 0)
+        
+            HttpResponseMessage response = await interactionService.GetComments(post.PostId);
+            if (response.IsSuccessStatusCode)
             {
-                hasComments = false;
+                //string content = await response.Content.ReadAsStringAsync();
+                comments = await response.Content.ReadFromJsonAsync<List<PostComment>>() ?? new();
+                if (comments.Count == 0)
+                {
+                    hasComments = false;
+                }
+                else
+                {
+                    hasComments = true;
+                }
+                StateHasChanged();
             }
             else
             {
-                hasComments = true;
+                Console.WriteLine("Something went wrong when commenting, please retry.");
             }
-            StateHasChanged();
-        }
-        else
-        {
-            Console.WriteLine("Something went wrong when commenting, please retry.");
-        }
+        
     }
 
     private async void ShowComments()
     {
-        if(comments == null)
-            await FetchComments();
-        isShowingComments = true;
-        Console.WriteLine($"Username: {comments[0].Username} Profile Picture: {comments[0].ProfilePicture}");
-        StateHasChanged();
+        if (state.LoggedIn)
+        {
+            if(comments == null)
+                await FetchComments();
+            isShowingComments = true;
+            Console.WriteLine($"Username: {comments[0].Username} Profile Picture: {comments[0].ProfilePicture}");
+            StateHasChanged();
+        }
+        else
+        {
+            feedback = "You need to login to view post.";
+            OpenFeedbackModal();
+        }
     }
 
     private void HideComments()
