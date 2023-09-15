@@ -1,4 +1,3 @@
-﻿
 using System.Text.Json.Serialization;
 
 namespace Recipi_PWA.Models
@@ -13,9 +12,9 @@ namespace Recipi_PWA.Models
         }
         
 
-        public int IngredientId { get; set; }
-        public string IngredientMeasurementUnit { get; set; }
-        public float IngredientMeasurementValue { get; set; }
-        public Ingredient Ingredient { get; set; }
+        public int stepIngredientId { get; set; }
+        public string ingredientMeasurementUnit { get; set; }
+        public float ingredientMeasurementValue { get; set; }
+        public Ingredient ingredient { get; set; }
     }
 }

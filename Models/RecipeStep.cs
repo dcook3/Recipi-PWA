@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Recipi_PWA.Models
 {
@@ -18,7 +18,6 @@ namespace Recipi_PWA.Models
             this.stepIngredients = new();
         }
 
-        
         public int stepId { get; set; }
         public string stepDescription { get; set; }
         public int stepOrder { get; set; }

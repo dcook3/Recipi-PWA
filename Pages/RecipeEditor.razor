@@ -1,4 +1,4 @@
-﻿@page "/RecipeEditor/{recipeId:int}/{isPosting:bool}"
+﻿@page "/RecipeEditor/{recipeId:int}/{isPosting:bool}/{isUpdating:bool}"
 
 @using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
@@ -8,13 +8,14 @@
 @inject NavigationManager navi;
 @layout EmptyLayout
 
-<div class="bg-primary container-fluid pt-1" style="height: 100%">
-    <div class="d-flex justify-content-between">
-        <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
-        <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
-    </div>
-    @if (isReady)
-    {
+@if (isReady)
+{
+    <div class="bg-primary container-fluid pt-1" style="height: 100%">
+        <div class="d-flex justify-content-between">
+            <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
+            <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
+        </div>
+    
         <CascadingValue Value="@recipeInfo">
             <CascadingValue Value="@isPosting">
                 <div class="d-flex flex-column align-items-center">
@@ -33,16 +34,16 @@
                 </div>
             </CascadingValue>
         </CascadingValue>
-    }
     
-    <div class="bg-secondary fixed-bottom d-flex align-items-center justify-content-between" id="footer">
-        <div class="d-flex flex-column me-2">
-            <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipeInfo.recipe.recipeTitle" style="width: 100%"/>
-            <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipeInfo.recipe.recipeDescription" style="width: 100%" />
+        <div class="bg-secondary fixed-bottom d-flex align-items-center justify-content-between" id="footer">
+            <div class="d-flex flex-column me-2">
+                <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipeInfo.recipe.recipeTitle" style="width: 100%"/>
+                <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipeInfo.recipe.recipeDescription" style="width: 100%" />
+            </div>
+            <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
         </div>
-        <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
     </div>
-</div>
+}
 
 <Modal @ref="GoBackConfirmation">
     <Body>
@@ -57,7 +58,7 @@
 @code {
     private RecipeInformation recipeInfo { get; set; }
     private int cursorPosition;
-    private bool isReady = false;
+
     private Modal GoBackConfirmation { get; set; }
 
     private void closeModal() => GoBackConfirmation.Close();
@@ -70,16 +71,45 @@
     [Parameter]
     public int recipeId { get; set; }
 
+    [Parameter]
+    public bool isUpdating { get; set; }
+
+    private bool isReady = false;
+
     protected async override Task OnInitializedAsync()
     {
         recipeInfo = await state.GetRecipe();
-        isReady = true;
+        if (recipeInfo?.recipe != null && recipeInfo.recipeId == recipeId) //Can use isUpdating?
+        {
+            isReady = true;
+        }
+        else
+        {
+            HttpResponseMessage response;
+            response = await recipeService.GetRecipeById(recipeId);
+            if (response.IsSuccessStatusCode)
+            {
+                recipeInfo = new()
+                {
+                    isNewRecipe = false,
+                    recipeId = recipeId
+                };
+                Recipe recipe = await response.Content.ReadFromJsonAsync<Recipe>() ?? new();
+                recipeInfo.recipe = recipe;
+                await state.SaveRecipe(recipeInfo);
+                isReady = true;
+            }
+            else
+            {
+                Console.WriteLine($"Server responded with status code {response.StatusCode}");
+            }
+        }
         StateHasChanged();
     }
 
     private async void HandleSubmit()
     {
-        if (recipeInfo.isNewRecipe)
+        if (!isUpdating)
         {
             HttpResponseMessage response = await recipeService.PostRecipe(recipeInfo.recipe);
             if (!response.IsSuccessStatusCode)
@@ -87,9 +117,9 @@
         }
         else
         {
-            //Its possible this will return with a 400 error. I am leaving it as it currently is not in use. This will be in use on a recipe edit.
             recipeInfo.recipeId = recipeId;
-            await recipeService.PutRecipe(recipeInfo.recipeId, recipeInfo.recipe);
+            Console.WriteLine($"{recipeInfo.recipe.recipeSteps[0].stepIngredients[0].ingredient.ingredientId}");
+            await recipeService.PutRecipe(recipeInfo.recipeId, new RecipeUpdate(recipeInfo.recipe));
         }
 
         if(isPosting)
@@ -98,13 +128,18 @@
         }
         else
         {
-            navi.NavigateTo("/me");
+            //navi.NavigateTo("/Profile/me");
         }
     }
 
     private void HandleRedirect()
     {
         openModal();
+    }
+
+    private void HandleModalCancel()
+    {
+        closeModal();
     }
 
     private async void HandleModalConfirm()
@@ -114,11 +149,6 @@
 
         await state.SaveRecipe(new());
         navi.NavigateTo("/CookbookViewer");
-    }
-
-    private void HandleModalCancel()
-    {
-        closeModal();
     }
 
     private async void AddStep()
@@ -164,5 +194,4 @@
         recipeInfo.recipe.OrganizeSteps();
         StateHasChanged();
     }
-
 }

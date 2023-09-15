@@ -28,31 +28,31 @@ else
             <div class="d-flex flex-row align-items-center justify-content-evenly container-fluid" style="font-size: 10px;">
                 @if (user.YourRelationships.Contains("friend"))
                 {
-                    <Button status="@friendStatus" onclick="@RemoveFriend">Remove Friend</Button>
+                    <Button status="@friendStatus" Width="9" Height="3" onclick="@RemoveFriend">Remove Friend</Button>
                 }
                 else
                 {
                     if (user.YourRelationships.Contains("friendRequesting"))
                     {
-                        <Button status="@friendStatus" disabled bgColor="bg-dark-subtle">Request Sent</Button>
+                        <Button status="@friendStatus" Width="9" Height="3" disabled bgColor="bg-dark-subtle">Request Sent</Button>
                     }
                     else if (user.YourRelationships.Contains("friendRequested"))
                     {
-                        <Button status="@friendStatus" onclick="@AcceptFriendRequest">Accept Friend</Button>
+                        <Button status="@friendStatus" Width="9" Height="3" onclick="@AcceptFriendRequest">Accept Friend</Button>
                     }
                     else
                     {
-                        <Button status="@friendStatus" onclick="@SendFriendRequest">Add Friend</Button>
+                        <Button status="@friendStatus" Width="9" Height="3" onclick="@SendFriendRequest">Add Friend</Button>
                     }
                 }
 
                 @if (user.YourRelationships.Contains("following"))
                 {
-                    <Button status="@followStatus" onclick="@ToggleFollow">Unfollow</Button>
+                    <Button status="@followStatus" Width="9" Height="3" onclick="@ToggleFollow">Unfollow</Button>
                 }
                 else
                 {
-                    <Button status="@followStatus" onclick="@ToggleFollow">Follow</Button>
+                    <Button status="@followStatus" Width="9" Height="3" onclick="@ToggleFollow">Follow</Button>
                 }
             </div>
         </div>

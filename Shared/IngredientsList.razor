@@ -114,13 +114,20 @@
     {
         recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Add(selectedIngredient);
         await state.SaveRecipe(recipeInfo);
-        navi.NavigateTo($"/RecipeEditor/{recipeId}/{isPosting}");
+        if (recipeInfo.isNewRecipe)
+        {
+            navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/{isPosting}/false");
+        }
+        else
+        {
+            navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/{isPosting}/true");
+        }
     }
 
     private void SelectIngredient(Ingredient ing)
     {
-        selectedIngredient.Ingredient = ing;
-        selectedIngredient.IngredientId = ing.ingredientId;
+        selectedIngredient.ingredient = ing;
+        selectedIngredient.ingredient.ingredientId = ing.ingredientId;
         StateHasChanged();
         OpenModal();
     }

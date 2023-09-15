@@ -138,6 +138,8 @@
     protected override async Task OnInitializedAsync()
     {
         recipeInfo = await state.GetRecipe();
+
+        Console.WriteLine($"IngredientSelector Recipe:{recipeInfo.recipe.recipeSteps[0].stepDescription}");
         HttpResponseMessage response = await ingredientService.GetIngredients();
         if (response.IsSuccessStatusCode)
         {
@@ -153,7 +155,14 @@
 
     private void BackToRecipeEditor()
     {
-        navi.NavigateTo($"/RecipeEditor/{recipeId}/{isPosting}");
+        if (recipeInfo.isNewRecipe)
+        {
+            navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/{isPosting}/false");
+        }
+        else
+        {
+            navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/{isPosting}/true");
+        }
     }
 
     private async void PerformSearch()
