@@ -18,7 +18,7 @@ namespace Recipi_PWA.Services
 
         public async Task<HttpResponseMessage> PostRecipe(Recipe recipe) => await client.PostAsJsonAsync($"/api/Recipes", recipe);
 
-        public async Task<HttpResponseMessage> PutRecipe(int recipeId, Recipe recipe) => await client.PutAsJsonAsync($"/api/Recipes/{recipeId}", recipe);
+        public async Task<HttpResponseMessage> PutRecipe(int recipeId, RecipeUpdate recipe) => await client.PutAsJsonAsync($"/api/Recipes/{recipeId}", recipe);
 
         public async Task<HttpResponseMessage> DeleteRecipe(int recipeId) => await client.DeleteAsync($"/api/Recipes/{recipeId}");
         public async Task<HttpResponseMessage> DissociateRecipe(int recipeId) => await client.DeleteAsync($"/api/Recipes/{recipeId}/dissociate");

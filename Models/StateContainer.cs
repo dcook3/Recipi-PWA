@@ -200,6 +200,7 @@ namespace Recipi_PWA.Models
 
         public async Task SaveRecipe(RecipeInformation recipeInfo)
         {
+            currentRecipe = recipeInfo;
             var json = JsonSerializer.Serialize(recipeInfo);
             Console.WriteLine($"Saving the following recipe: \n{json}");
             await jsr.InvokeVoidAsync("sessionStorage.setItem", "recipe", json).ConfigureAwait(false);

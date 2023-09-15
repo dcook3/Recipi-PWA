@@ -1,12 +1,15 @@
 ﻿@page "/EditProfile";
 @layout EmptyLayout;
 @using System.Text.RegularExpressions;
+@using Newtonsoft.Json;
+@using Newtonsoft.Json.Linq;
 @using Recipi_PWA.Models;
 @using System.Net;
 @using Recipi_PWA.Services;
 @using Recipi_PWA.Shared.Profile;
 @inject IUserService userService;
 @inject IMediaUploadService mediaUploadService;
+@inject IRecipeService recipeService;
 @inject NavigationManager NavigationManager;
 @inject StateContainer state;
 @inject IJSRuntime js;
@@ -116,8 +119,6 @@
         previewPfp = "data:image/png;base64," + Convert.ToBase64String(bytes);
         StateHasChanged();
     }
-
-
 
     public async void Submit()
     {

@@ -18,7 +18,6 @@ namespace Recipi_PWA.Models
             this.stepIngredients = new();
         }
 
-        [JsonIgnore]
         public int stepId { get; set; }
         public string stepDescription { get; set; }
         public int stepOrder { get; set; }

@@ -1,4 +1,10 @@
 ﻿@page "/"
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Models;
+@using Newtonsoft.Json;
+@using Newtonsoft.Json.Linq;
+@inject IRecipeService recipeService;
+@inject NavigationManager navi;
 
 <PageTitle>Posts Feed</PageTitle>
 
@@ -7,6 +13,10 @@
     <hr />
 </SearchBar>
 
+<div>
+    <h1>DELETE ME</h1>
+    <Button shape="circle" Height="100" Width="100" onclick="TestUpdateRecipe"></Button>
+</div>
 
     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam id tortor ac ante congue tempus. In vel turpis fermentum, facilisis massa vitae, feugiat nisi. Vestibulum magna nunc, porttitor vel dapibus et, hendrerit sit amet ipsum. Pellentesque ut consequat arcu. In consectetur tempor ex a feugiat. Nunc quis dolor tincidunt, egestas ante vel, elementum elit. Sed sollicitudin, ante non pellentesque ullamcorper, risus erat volutpat massa, a lacinia sapien risus quis lectus. Ut sed dapibus est. Suspendisse convallis orci est, quis mollis risus rutrum a. In vitae lorem ac nulla vestibulum aliquam vitae eu libero. Phasellus laoreet ornare ligula in auctor. Vestibulum ornare nunc at magna eleifend, quis efficitur mauris ullamcorper.</p>
     <p>Suspendisse felis dui, venenatis in urna in, sollicitudin venenatis nibh. Fusce dapibus faucibus orci, quis ultricies ligula commodo elementum. Phasellus scelerisque et purus sed tristique. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Proin consectetur augue non nisi molestie, et tincidunt mi sodales. Integer in nulla vitae erat viverra dignissim vitae quis ligula. Donec egestas mauris vel lorem tincidunt suscipit. Integer efficitur arcu ut nunc porta, sit amet faucibus nulla luctus.</p>
@@ -16,3 +26,29 @@
     <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Quisque id finibus purus. Integer ac leo leo. Quisque nisl justo, imperdiet et elit id, ultrices vehicula velit. Curabitur vitae urna nec mi ullamcorper vestibulum sed in metus. Nulla laoreet dictum nisi. Sed lacus mauris, ornare eu nisi in, mollis euismod felis. Nunc elementum ante lorem, eu pretium elit volutpat vitae. Quisque elit libero, porta quis porta non, tincidunt et leo. Morbi ullamcorper accumsan odio sit amet malesuada. Donec nec lectus vulputate, blandit erat ut, pellentesque justo. Praesent interdum nibh in malesuada luctus. Duis eu nisl a sapien imperdiet accumsan.</p>
 
 <BottomViewport></BottomViewport>
+
+@code{
+    private async void TestUpdateRecipe()
+    {
+        RecipeInformation info = new RecipeInformation();
+        HttpResponseMessage response = await recipeService.GetRecipeById(20);
+
+        if (response.IsSuccessStatusCode)
+        {
+            info.recipe = await response.Content.ReadFromJsonAsync<Recipe>();
+            if (info.recipe != null)
+            {
+                info.isNewRecipe = false;
+                var parsedObject = JObject.Parse(await response.Content.ReadAsStringAsync());
+                var json = parsedObject["RecipeId"].ToString();
+                var id = JsonConvert.DeserializeObject<int>(json);
+                info.recipeId = id;
+                navi.NavigateTo($"/RecipeEditor/{id}/false/true");
+            }
+            else
+            {
+                Console.WriteLine("The recipe sucks.");
+            }
+        }
+    }
+}

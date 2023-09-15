@@ -95,10 +95,11 @@
         int stepIndex = recipeInfo.recipe.recipeSteps.IndexOf(Step);
         string desc = recipeInfo.recipe.recipeSteps[stepIndex].stepDescription;
         string toInsert = "{" + (recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Count) + "}";
-
+        recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Capacity++;
         recipeInfo.recipe.recipeSteps[stepIndex].stepDescription = desc.Insert(pos, toInsert);
         await state.SaveRecipe(recipeInfo);
-
+        RecipeInformation infoFromState = await state.GetRecipe();
+        Console.WriteLine($"EditableStepCard Recipe:{infoFromState.recipe.recipeSteps[0].stepDescription}");
         navi.NavigateTo($"/IngredientSelector/{recipeInfo.recipeId}/{recipeInfo.recipe.recipeSteps.IndexOf(Step)}/{isPosting}");
     }
 }
