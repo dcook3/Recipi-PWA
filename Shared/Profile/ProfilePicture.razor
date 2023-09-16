@@ -10,10 +10,10 @@
 @if(size > 6)
 {
     var sizeString = size + "px";
-    <i class="fa-solid flex-shrink-1 image-icon rounded-circle" style="background-image: url(@profilePictureUrl); font-size: @sizeString;"></i>
+    <i class="fa-solid flex-shrink-1 image-icon rounded-circle" style="background-image: url(@(pfp)); font-size: @sizeString;"></i>
 }
 else{
-    <i class="fa-solid flex-shrink-1 image-icon rounded-circle fs-@size" style="background-image: url(@profilePictureUrl)"></i>
+    <i class="fa-solid flex-shrink-1 image-icon rounded-circle fs-@size" style="background-image: url(@(pfp))"></i>
 }
 
 @code {
@@ -24,6 +24,13 @@ else{
     [Parameter]
     public int size { get; set; } = 2;
 
+    private string pfp { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        pfp = profilePictureUrl;
+        StateHasChanged();
+    }
 
 
 

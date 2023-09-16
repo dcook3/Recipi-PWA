@@ -44,6 +44,10 @@
         </div>
 
         <div id="@(vid)-post-top" class="post-top d-flex flex-column justify-content-start align-items-center" style="padding-top:10px">
+            @if((bool)searchBar){
+                <div style="height: calc(5vh + 10px);">
+                </div>
+            }
             @if(post.Recipe != null)
             {
                 <div class="container-fluid px-3 py-1 d-flex flex-row justify-content-start align-items-center text-light" style="font-size: 15px;">
@@ -82,6 +86,9 @@
 
     [Parameter]
     public int? backUserId { get; set; }
+
+    [Parameter]
+    public bool? searchBar { get; set; } = false;
 
     private int stepIndex = 0; 
 

@@ -8,6 +8,7 @@
 @inject NavigationManager NavigationManager;
 <PageTitle>Following Posts Feed</PageTitle>
 
+<SearchBar></SearchBar>
 
 @if (status == "loading")
 {
@@ -78,15 +79,15 @@ else
                 var post3 = await post3Res.Content.ReadFromJsonAsync<Post>();
                 posts[0] = (__builder) =>
                 {
-                    <PostView post="@post1"></PostView>
+                    <PostView post="@post1" searchBar="true"></PostView>
                 };
                 posts[1] = (__builder) =>
                 {
-                    <PostView post="@post2" focused="false"></PostView>
+                    <PostView post="@post2" focused="false" searchBar="true"></PostView>
                 };
                 posts[2] = (__builder) =>
                 {
-                    <PostView focused="false"></PostView>
+                    <PostView focused="false" searchBar="true"></PostView>
                 };
                 status = "ready";
             }
@@ -115,7 +116,7 @@ else
                 {
                     <PostView post="@post" focused="false" AfterInit="@(() => {
                         JSRuntime.InvokeVoidAsync("InitPostSwipe", $"{postContainerIndex}-post-wrapper", _objectReference);
-                    })"></PostView>
+                    })" searchBar="true"></PostView>
                 };
             StateHasChanged();
         }
