@@ -36,10 +36,20 @@ window.InitDraggable = async (id) => {
         init();
 
         new ResizeObserver(init).observe(draggable.parentElement.parentElement);
-
+        new ResizeObserver(() => {
+            if (parseInt(draggable.parentElement.style.top, 10) > draggable.parentElement.parentElement.offsetHeight / 2) {
+                interaction.style.top = "-" + interaction.offsetHeight + "px";
+            }
+            else {
+                interaction.style.top = null;
+            }
+            interactionBG.style.width = interaction.offsetWidth + "px";
+            interactionBG.style.height = interaction.offsetHeight + draggableHeight + "px";
+        }).observe(interaction);
         var handleMouseDown = (e) => {
 
             var handleMouseMove = (e) => {
+                e.preventDefault();
                 var mousePx = e.pageY - (draggableHeight / 2)
                 if (mousePx < ogTop) {
                     if (mousePx > (ogTop - draggableHeight) - interaction.offsetHeight) {
@@ -112,6 +122,9 @@ var initSinglePostSwipe = async (post, obj) => {
     console.log(video);
     if (video) {
         var handleMouseDown = async (e) => {
+            if (currentIndex > 0) {
+                e.preventDefault();
+            }
             console.log("hello")
             if (e.pageY) {
 
@@ -179,6 +192,9 @@ var initSinglePostSwipe = async (post, obj) => {
             }
 
             var handleMouseMove = (e) => {
+                if (currentIndex > 0) {
+                    e.preventDefault();
+                }
                 if (e.pageY) {
 
                     var py = e.pageY;
@@ -189,7 +205,7 @@ var initSinglePostSwipe = async (post, obj) => {
                 var mouseDiff = py - lastMousePos;
                 lastMousePos = py;
 
-                if (Math.abs(py - ogMousePX) < 200) {
+                if (Math.abs(py - ogMousePX) < 165) {
                     wrapper.style.top = parseInt(wrapper.style.top, 10) + mouseDiff + "px";
                 }
                 else {
@@ -202,11 +218,17 @@ var initSinglePostSwipe = async (post, obj) => {
                     video.removeEventListener("mousemove", handleMouseMove)
                     video.removeEventListener("touchmove", handleMouseMove)
                     window.removeEventListener("mouseup", (e) => {
+                        if (currentIndex > 0) {
+                            e.preventDefault();
+                        }
                         video.removeEventListener("mousemove", handleMouseMove)
                         video.removeEventListener("touchmove", handleMouseMove)
                         setPostPos();
                     })
                     window.removeEventListener("touchend", (e) => {
+                        if (currentIndex > 0) {
+                            e.preventDefault();
+                        }
                         video.removeEventListener("mousemove", handleMouseMove)
                         video.removeEventListener("touchmove", handleMouseMove)
                         setPostPos();
@@ -217,11 +239,15 @@ var initSinglePostSwipe = async (post, obj) => {
             video.addEventListener("mousemove", handleMouseMove)
             video.addEventListener("touchmove", handleMouseMove)
             window.addEventListener("mouseup", (e) => {
+                if (currentIndex > 0) {
+                    e.preventDefault();
+                }
                 video.removeEventListener("mousemove", handleMouseMove)
                 video.removeEventListener("touchmove", handleMouseMove)
                 setPostPos();
             })
             window.addEventListener("touchend", (e) => {
+                e.preventDefault();
                 video.removeEventListener("mousemove", handleMouseMove)
                 video.removeEventListener("touchmove", handleMouseMove)
                 setPostPos();

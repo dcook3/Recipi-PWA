@@ -48,7 +48,7 @@
                 <div style="height: calc(5vh + 10px);">
                 </div>
             }
-            @if(post.Recipe != null)
+            @if(post.Recipe != null && stepIndex < post.Recipe.RecipeSteps.Count())
             {
                 <div class="container-fluid px-3 py-1 d-flex flex-row justify-content-start align-items-center text-light" style="font-size: 15px;">
                     <span>Step @(stepIndex + 1): @post.Recipe.RecipeSteps.ElementAt(stepIndex).StepDescription</span>

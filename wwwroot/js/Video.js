@@ -225,7 +225,7 @@ window.TogglePlayback = (vid) => {
     }
 }
 
-
+var vidEls;
 window.InitPost = async (vid, recordings, objectReference, focused) => {
 
     videos[vid] = {
@@ -279,10 +279,14 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
         videoEls[0].src = recordings[0];
         videoEls[0].load();
     })
-    await sleep(500);
+    //await sleep(500);
     
-
+    vidEls = videoEls
     for (var i = 0; i < videoEls.length; i++) {
+        while (videoEls[i].duration === Infinity || videoEls.duration === NaN) {
+            await new Promise(r => setTimeout(r, 100));
+            videoEls[i].currentTime = 10000000 * Math.random();
+        }
         videos[vid].lengths[i] = videoEls[i].duration;
     }
     window.InitSeekBar(vid);
@@ -302,6 +306,7 @@ window.InitSeekBar = (vid) => {
         var seekPoint = document.createElement("div");
         seekPoint.appendChild(document.createElement("div"));
         seekPoint.classList.add("seek-point");
+        console.log("Seek Point Width: " + (videos[vid].lengths[i] / totalLength) * 100 + "%")
         seekPoint.style.width = (videos[vid].lengths[i] / totalLength) * 100 + "%";
         seekPoint.setAttribute("data-index", i);
         seekPoint.addEventListener("click", (e) => {
@@ -324,6 +329,7 @@ window.InitSeekBar = (vid) => {
                 }
                 n++;
                 videos[vid].seekBar.children[index].children[0].style.backgroundColor = "#874356";
+                videos[vid].seekBar.children[index].children[0].style.width = "0%";
                 videos[vid].seekBar.children[index].children[0].style.borderTopRightRadius = "25px";
                 videos[vid].seekBar.children[index].children[0].style.borderBottomRightRadius = "25px";
                 for (n; n < videos[vid].seekBar.children.length; n++) {
@@ -338,7 +344,7 @@ window.InitSeekBar = (vid) => {
             var totalWidth = e.target.offsetWidth;
             var percentage = left / totalWidth;
             var vidTime = videos[vid].lengths[index] * percentage;
-            videos[vid].video.currentTime = vidTime;
+            videos[vid].video.currentTime = 0;
 
             if (paused) {
                 videos[vid].video.paused = true;
@@ -357,14 +363,20 @@ window.InitSeekBar = (vid) => {
             // seekVideo.addEventListener("onloadedmetadata", play);
 
         })
-        videos[vid].seekBar.appendChild(seekPoint);
+        if (videos[vid].seekBar) {
+            videos[vid].seekBar.appendChild(seekPoint);
+        }
     }
-    videos[vid].seekBar.children[0].children[0].style.backgroundColor = "#874356";
-    videos[vid].seekBar.children[0].children[0].style.borderTopRightRadius = "25px"
-    videos[vid].seekBar.children[0].children[0].style.borderBottomRightRadius = "25px"
+    if (videos[vid].seekBar) {
+        videos[vid].seekBar.children[0].children[0].style.backgroundColor = "#874356";
+        videos[vid].seekBar.children[0].children[0].style.borderTopRightRadius = "25px"
+        videos[vid].seekBar.children[0].children[0].style.borderBottomRightRadius = "25px"
+    }
 
     videos[vid].video.addEventListener("timeupdate", () => {
-        videos[vid].seekBar.children[videos[vid].videoIndex].children[0].style.width = (videos[vid].video.currentTime / videos[vid].video.duration) * 100 + "%";
+        if (videos[vid].seekBar) {
+            videos[vid].seekBar.children[videos[vid].videoIndex].children[0].style.width = (videos[vid].video.currentTime / videos[vid].video.duration) * 100 + "%";
+        }
     })
 
 
