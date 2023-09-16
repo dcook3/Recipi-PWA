@@ -5,6 +5,7 @@
 @using Newtonsoft.Json.Linq;
 @inject IRecipeService recipeService;
 @inject NavigationManager navi;
+@inject StateContainer state;
 @using Recipi_PWA.Models.PostView;
 @inject IPostService postService;
 @inject IJSRuntime JSRuntime;
@@ -115,6 +116,7 @@ else
             status = "error";
             eMessage = await response.Content.ReadAsStringAsync();
         }
+
         StateHasChanged();
     }
 

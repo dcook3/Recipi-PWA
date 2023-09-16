@@ -7,5 +7,6 @@ namespace Recipi_PWA.Services
     {
         string FormatDescription(string desc, List<StepIngredient> ings);
         string FormatDescription(string desc, List<PostStepIngredient> ings);
+        void GoBackAPage();
     }
 }

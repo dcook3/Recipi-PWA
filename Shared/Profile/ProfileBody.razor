@@ -47,7 +47,7 @@
                 {
                     @foreach (var recipe in recipes)
                     {
-                        <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/{userId}"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/true"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                         //OnDelete="@(() => Console.WriteLine("hello"))"
                     }
                 }
@@ -55,7 +55,7 @@
                 {
                     @foreach (var recipe in recipes)
                     {
-                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/{userId}"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/true"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                         //OnDelete="@(() => Console.WriteLine("hello"))"
                     }
                 }

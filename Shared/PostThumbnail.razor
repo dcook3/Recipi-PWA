@@ -11,8 +11,6 @@
     public string width { get; set; } = "33vw";
     [Parameter]
     public string height { get; set; } = "33vw";
-    [Parameter]
-    public int backUserId { get; set; }
     private string url = "https://media.istockphoto.com/id/1311321054/photo/rosted-potato-side-dish.jpg?s=612x612&w=0&k=20&c=_eBrdR5gMq6rMLU6H6aK54I3b_G7s9JSiP4BldvlyJw=";
 
     protected override void OnParametersSet()
@@ -28,7 +26,7 @@
         Console.WriteLine("click asdf");
         if (post != null)
         {
-            NavigationManager.NavigateTo($"/Post/{post.PostId}/{backUserId}");
+            NavigationManager.NavigateTo($"/Post/{post.PostId}/true");
         }
     }
 }

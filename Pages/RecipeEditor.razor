@@ -4,6 +4,7 @@
 @using Recipi_PWA.Services;
 @using System.Text.Json;
 @inject IRecipeService recipeService;
+@inject IHelperService helpers;
 @inject StateContainer state;
 @inject NavigationManager navi;
 @layout EmptyLayout
@@ -12,7 +13,7 @@
 {
     <div class="bg-primary container-fluid pt-1" style="height: 100%">
         <div class="d-flex justify-content-between">
-            <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
+            <button class="btn btn-warning rounded" @onclick="@helpers.GoBackAPage"><i class="fa-solid fa-chevron-left text-white"></i></button>
             <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
         </div>
     
