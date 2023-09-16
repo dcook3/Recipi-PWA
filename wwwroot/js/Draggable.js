@@ -80,6 +80,7 @@ window.InitDraggable = async (id) => {
 
         var handleTouch = (e) => {
             var handleMouseMove = (e) => {
+                e.preventDefault();
                 var mousePx = e.touches[0].pageY - (draggableHeight / 2)
                 if (mousePx < ogTop) {
                     if (mousePx > (ogTop - draggableHeight) - interaction.offsetHeight) {
@@ -239,15 +240,11 @@ var initSinglePostSwipe = async (post, obj) => {
             video.addEventListener("mousemove", handleMouseMove)
             video.addEventListener("touchmove", handleMouseMove)
             window.addEventListener("mouseup", (e) => {
-                if (currentIndex > 0) {
-                    e.preventDefault();
-                }
                 video.removeEventListener("mousemove", handleMouseMove)
                 video.removeEventListener("touchmove", handleMouseMove)
                 setPostPos();
             })
             window.addEventListener("touchend", (e) => {
-                e.preventDefault();
                 video.removeEventListener("mousemove", handleMouseMove)
                 video.removeEventListener("touchmove", handleMouseMove)
                 setPostPos();
