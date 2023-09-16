@@ -13,7 +13,7 @@
 @inject NavigationManager NavigationManager;
 @if (isShowingComments)
 {
-    <div id="comments-container" class="fluid-container" style="position:absolute; bottom:0; left:0; margin-bottom:50px; padding-bottom: 5px">
+    <div id="comments-container" class="fluid-container" style="position:absolute; bottom:0; left:0; margin-bottom:50px; padding-bottom: 5px; width: calc(100vw - 60px);">
         <div id="comments" class="bg-transparent text-white" @onscroll="OnScrollOrDrag">
             @if(hasComments)
             {
@@ -28,8 +28,8 @@
             }
         </div>
 
-        <div class="form-group d-flex">
-            <InputText @bind-Value="@newComment" DisplayName="New comment..." class="form-control col-6"></InputText>
+        <div class="form-group d-flex" style="width: calc(100vw - 60px);">
+            <InputText @bind-Value="@newComment" DisplayName="New comment..." class="form-control flex-grow-1"></InputText>
             <Button bgColor="bg-warning" Width="2" onclick="PostNewComment"><i class="fa-solid fa-paper-plane"></i></Button>
         </div>
     </div>
@@ -63,24 +63,22 @@
             <div onclick="@(() => NavigationManager.NavigateTo($"/Profile/{post.User.UserId}"))">
                 <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
             </div>
-            @if(post.HasLiked || userHasLiked)
+            @if (!isOwnPost)
             {
-                <Button shape="circle" bgColor="" onclick="LikePost">
-                    <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
-                </Button>
-            }
-            else if (isOwnPost)
-            {
-                <Button shape="circle" bgColor="" onclick="HandleLikeOwnPost">
-                    <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
-                </Button>
-            }
-            else
-            {
-                <Button shape="circle" bgColor="" onclick="LikePost">
-                    <i class="fa-regular fs-1 fa-heart"><span class="text-white">@post.Likes</span></i>
-                </Button>
-            }
+                @if (userHasLiked)
+                {
+                    <Button shape="circle" bgColor="" onclick="LikePost">
+                        <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
+                    </Button>
+                }
+                else
+                {
+                    <Button shape="circle" bgColor="" onclick="LikePost">
+                        <i class="fa-regular fs-1 fa-heart"><span class="text-white">@post.Likes</span></i>
+                    </Button>
+                }       
+                }
+            
 
             @if(isShowingComments)
             {
@@ -94,11 +92,20 @@
                     <i class="fa-solid fs-1 fa-comment"><span>@post.Comments</span></i>
                 </Button>
             }
-            @if (post.Recipe != null && !post.Recipe.HasAddedToCookbook && !isOwnRecipe && state.LoggedIn)
+            @if (post.Recipe != null && !isOwnRecipe && state.LoggedIn)
             {
-                <Button shape="circle" bgColor="" onclick="AddToCookbook">
-                    <i class="fa-solid fs-1 fa-book-medical"></i>
-                </Button>
+                @if (!post.Recipe.HasAddedToCookbook)
+                {
+                    <Button shape="circle" bgColor="" onclick="AddToCookbook">
+                        <i class="fa-solid fs-1 fa-book-medical"></i>
+                    </Button>
+                }
+                else
+                {
+                    <Button shape="circle" bgColor="" onclick="RemoveFromCookbook">
+                        <i class="fa-solid fs-1 fa-book-bookmark"></i>
+                    </Button>
+                }
             }
             <Button shape="circle" bgColor="" onclick="OpenReportModal">
                 <i class="fa-solid fs-1 fa-flag"></i>
@@ -161,12 +168,22 @@
             <div @onclick="@(() => NavigationManager.NavigateTo($"/Profile/{recipe.recipe.User.UserId}"))">
                 <ProfilePicture size="1" userId="@recipe.recipe.User.UserId.ToString()" profilePictureUrl="@recipe.recipe.User.ProfilePicture"></ProfilePicture>
             </div>
-            @if (!recipe.recipe.HasAddedToCookbook && !isOwnRecipe && state.LoggedIn)
+            @if (!isOwnRecipe && state.LoggedIn)
             {
-                <Button shape="circle" bgColor="" onclick="AddToCookbook">
-                    <i class="fa-solid fs-1 fa-book-medical"></i>
-                </Button>
+                @if (!recipe.recipe.HasAddedToCookbook)
+                {
+                    <Button shape="circle" bgColor="" onclick="AddToCookbook">
+                        <i class="fa-solid fs-1 fa-book-medical"></i>
+                    </Button>
+                }
+                else
+                {
+                    <Button shape="circle" bgColor="" onclick="RemoveFromCookbook">
+                        <i class="fa-solid fs-1 fa-book-bookmark"></i>
+                    </Button>
+                }
             }
+            
             @if (isOwnRecipe)
             {
                 <Button shape="circle" bgColor="" onclick="@(() => NavigationManager.NavigateTo($"/RecipeEditor/{recipe.recipeId}/false/true"))">
@@ -277,7 +294,17 @@
     private void OpenFeedbackModal() => feedbackModal.Open();
     private void CloseFeedbackModal() => feedbackModal.Close();
 
-    private void OpenReportModal() => reportModal.Open();
+    private void OpenReportModal()
+    {
+        if (state.LoggedIn)
+        {
+            reportModal.Open();
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/Login");
+        }
+    }
     private void CloseReportModal() => reportModal.Close();
 
     private void OpenEModal() => eModal.Open();
@@ -321,9 +348,6 @@
         {
             vid = post.PostId.ToString();
 
-
-
-
             userHasLiked = post.HasLiked;
         }
         reInit = true;
@@ -336,7 +360,7 @@
 
             if (response.IsSuccessStatusCode)
             {
-                userHasLiked = true;
+                userHasLiked = !userHasLiked;
                 StateHasChanged();
             }
             else
@@ -346,8 +370,7 @@
         }
         else
         {
-            feedback = "You need to login to view post.";
-            OpenFeedbackModal();
+            NavigationManager.NavigateTo("/Login");
         }
     }
 
@@ -378,24 +401,50 @@
 
     private async void ShowComments()
     {
-        if (state.LoggedIn)
-        {
-            if(comments == null)
-                await FetchComments();
-            isShowingComments = true;
-            Console.WriteLine($"Username: {comments[0].Username} Profile Picture: {comments[0].ProfilePicture}");
-            StateHasChanged();
-        }
-        else
-        {
-            feedback = "You need to login to view post.";
-            OpenFeedbackModal();
-        }
+        if(comments == null)
+            await FetchComments();
+        isShowingComments = true;
+        //Console.WriteLine($"Username: {comments[0].Username} Profile Picture: {comments[0].ProfilePicture}");
+        StateHasChanged();
+
     }
 
     private void HideComments()
     {
         isShowingComments = false;
+        StateHasChanged();
+    }
+
+    private async void RemoveFromCookbook()
+    {
+        int recipeId = -1;
+        if (post != null)
+        {
+
+            recipeId = post.Recipe.RecipeId;
+        }
+        else if (recipe != null)
+        {
+            recipeId = recipe.recipeId;
+        }
+        HttpResponseMessage response = await recipeService.RemoveRecipeFromCookbook(recipeId);
+        if (response.IsSuccessStatusCode)
+        {
+            if (post != null)
+            {
+                post.Recipe.HasAddedToCookbook = false;
+            }
+            else
+            {
+                recipe.recipe.HasAddedToCookbook = false;
+            }
+        }
+        else
+        {
+            eMessage = "An Error Has Occered: ";
+            eMessage += await response.Content.ReadAsStringAsync();
+            OpenEModal();
+        }
         StateHasChanged();
     }
 
@@ -448,25 +497,32 @@
 
     private async void PostNewComment()
     {
-        if(newComment.Length > 0)
+        if (state.LoggedIn)
         {
-            HttpResponseMessage response = await interactionService.CommentPost(post.PostId, newComment);
-            if (response.IsSuccessStatusCode)
+            if (newComment.Length > 0)
             {
-                feedback = "Your comment was posted!";
-                FetchComments();
+                HttpResponseMessage response = await interactionService.CommentPost(post.PostId, newComment);
+                if (response.IsSuccessStatusCode)
+                {
+                    feedback = "Your comment was posted!";
+                    FetchComments();
+                }
+                else
+                {
+                    feedback = await response.Content.ReadAsStringAsync();
+                }
             }
             else
             {
-                feedback = "A problem occured, please try again.";
+                feedback = "You must put a comment in the comment box.";
             }
+            newComment = "";
+            OpenFeedbackModal();
         }
         else
         {
-            feedback = "You must put a comment in the comment box.";
+            NavigationManager.NavigateTo("/Login");
         }
-        newComment = "";
-        OpenFeedbackModal();
     }
 
     private void HandleLikeOwnPost()
@@ -477,15 +533,23 @@
 
     private async void ReportPost()
     {
-        CloseReportModal();
-        HttpResponseMessage response = await interactionService.ReportPost(post.PostId, reportMessage);
-        if (response.IsSuccessStatusCode)
+        if (state.LoggedIn)
         {
-            string content = await response.Content.ReadAsStringAsync();
-            if(content != null && content.Length > 0)
+            CloseReportModal();
+            HttpResponseMessage response = await interactionService.ReportPost(post.PostId, reportMessage);
+            if (response.IsSuccessStatusCode)
             {
-                feedback = "Your report has been posted.";
-                OpenFeedbackModal();
+                string content = await response.Content.ReadAsStringAsync();
+                if (content != null && content.Length > 0)
+                {
+                    feedback = "Your report has been posted.";
+                    OpenFeedbackModal();
+                }
+                else
+                {
+                    feedback = "There was a problem posting a report.";
+                    OpenFeedbackModal();
+                }
             }
             else
             {
@@ -495,8 +559,7 @@
         }
         else
         {
-            feedback = "There was a problem posting a report.";
-            OpenFeedbackModal();
+            NavigationManager.NavigateTo("/Login");
         }
     }
 }
