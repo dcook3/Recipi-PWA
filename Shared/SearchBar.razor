@@ -1,10 +1,160 @@
-﻿<div class="fixed-top">
-    <img src="./placeholder_searchbar.png"  alt="searchbar placeholder image" class="img-fluid" />
-    @ChildContent
+﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared;
+@using Recipi_PWA.Shared.Profile;
+@inject ISearchService searchService;
+@inject NavigationManager NavigationManager;
+<div class="d-flex flex-column justify-content-start align-items-center" style="z-index: 1000; position:fixed; top:0; width:100vw; max-height: 70vh;">
+    <div class="bg-white d-flex flex-row justify-content-around" style="border: 1px solid black; margin-bottom:0; margin-top: 10px; height: 5vh; width: 90vw; border-radius: 25px;">
+        <input id="seachText" @bind="query" @bind:event="oninput" @bind:after="Search" style="height: 100%; width: calc((100% - 50px)*.9); margin-left: 20px; border: none" @onfocus="OnSearchEnter"></input>
+        @if (searching)
+        {
+            <div class="d-flex align-items-center justify-content-center" style="width: calc((100% - 50px)*.1); height: 100%;" @onclick="CloseSearch">
+                <i class="fs-2 fa-solid fa-x"></i>
+            </div>
+        }
+        else
+        {
+            <div class="d-flex align-items-center justify-content-center" style="width: calc((100% - 50px)*.1); height: 100%;">
+                <i class="fs-2 fa-solid fa-x text-white"></i>
+            </div>
+        }
+    </div>
+    @if (searching)
+    {
+        status = "loading";
+        newResults = false;
+        <div class="bg-white d-flex flex-column align-itmes-baseline justify-content-start" style="width: calc(90vw - 50px); max-height: calc(70vh - (5vh + 10px)); overflow-y: scroll;">
+            @if(searchResults.Users.Count() > 0)
+            {
+                <div class="color-dark-subtle d-flex flex-column align-items-center justify-content-start p-1" style="font-size: 13px;">
+                    <span style="padding-right: 10px; width: 100%;">Users</span>
+                    <div class="bg-dark-subtle container-fluid rounded-3" style="height: 1px;"></div>
+                </div>
+                <div class="userResults">
+                    @{
+                        var firstUser = true;
+                    }
+                    @foreach(var user in searchResults.Users)
+                    {
+                        Console.WriteLine("User Id: " + user.UserId.ToString());
+                        Console.WriteLine("Username: " + user.Username);
+                        Console.WriteLine("ProfilePic: " + user.ProfilePicture);
+
+                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Profile/{user.UserId.ToString()}") )" class="searchResult" style="@((firstUser) ? "padding-top: 2px;" : "")">
+                            <div id="@(user.UserId + "-pfp")" class="rounded-circle" style="background-image: url(@user.ProfilePicture); width: 20px; height: 20px; background-size: contain; background-repeat: no-repeat; display: inline-block;"></div>
+                            @user.Username
+
+                        </div>
+                        firstUser = false;
+                    }
+                </div>
+            }
+            @if(searchResults.Posts.Count() > 0)
+            {
+                <div class="color-dark-subtle d-flex flex-column align-items-center justify-content-start p-1" style="font-size: 13px;">
+                    <span style="padding-right: 10px; width: 100%;">Posts</span>
+                    <div class="bg-dark-subtle container-fluid rounded-3" style="height: 1px;"></div>
+                </div>
+                <div class="postResults">
+                    @{
+                        var firstPost = true;
+                    }
+                    @foreach (var post in searchResults.Posts)
+                    {
+                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Post/{post.PostId.ToString()}") )" class="searchResult" style="@((firstPost) ? "padding-top: 2px;" : "")">
+                            @post.PostTitle
+                        </div>
+                        firstPost = false;
+                    }
+                </div>
+            }
+            @if(searchResults.Recipes.Count() > 0)
+            {
+                <div class="color-dark-subtle d-flex flex-column align-items-center justify-content-start p-1" style="font-size: 13px;">
+                    <span style="padding-right: 10px; width: 100%;">Recipes</span>
+                    <div class="bg-dark-subtle container-fluid rounded-3" style="height: 1px;"></div>
+                </div>
+                <div class="recipeResults">
+                    @{
+                        var firstRecipe = true;
+                    }
+                    @foreach (var recipe in searchResults.Recipes)
+                    {
+                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId.ToString()}") )" class="searchResult" style="@((firstRecipe) ? "padding-top: 2px;" : "")">
+                            @recipe.RecipeTitle
+                        </div>
+                        firstRecipe = false;
+                    }
+                </div>
+            }
+        </div>
+        status = "ready";
+        if(newResults)
+        {
+            StateHasChanged();
+        }
+
+    }
 </div>
+<style>
+    #seachText:focus{
+        outline:none;
+    }
+    .searchResult{
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+    }
+    .userResults:nth-child(1) {
+        padding-top: 2px !important;
+    }
+</style>
 
 @code {
-    //presumably search function code...
-    [Parameter]
-    public RenderFragment ChildContent { get; set; }
+    private SearchResults searchResults = new();
+
+    private bool searching = false;
+
+    private string query = "";
+
+    private string status = "";
+
+    private bool newResults = false;
+
+    private void OnSearchEnter()
+    {
+        searching = true;
+        StateHasChanged();
+    }
+    private void CloseSearch()
+    {
+        searching = false;
+        StateHasChanged();
+    }
+
+    private async void Search()
+    {
+        try
+        {
+            var response = await searchService.Search(query);
+            if (response.IsSuccessStatusCode)
+            {
+                searchResults = await response.Content.ReadFromJsonAsync<SearchResults>() ?? new();
+                
+                newResults = true;
+            }
+            else
+            {
+                searchResults = new();
+            }
+
+            StateHasChanged();
+            
+        }
+        catch
+        {
+
+        }
+    }
 }

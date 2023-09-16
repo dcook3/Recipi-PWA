@@ -23,6 +23,7 @@ builder.Services.AddHttpClient<IPostService, PostService>(client => client.BaseA
 builder.Services.AddHttpClient<IMediaUploadService, MediaUploadService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IIngredientService, IngredientService>(client => client.BaseAddress = apiBA);
 builder.Services.AddHttpClient<IPostInteractionService, PostInteractionService>(client => client.BaseAddress= apiBA);
+builder.Services.AddHttpClient<ISearchService, SearchService>(client => client.BaseAddress= apiBA);
 builder.Services.AddSingleton<IHelperService, HelperService>();
 
 var host = builder.Build();
