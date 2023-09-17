@@ -61,15 +61,21 @@ window.NextCamera = () => {
         getNextCamera();
         navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: devices[deviceIndex].deviceId } }, audio: true })
             .then(stream => {
-                // Display webcam in preview video element
-                preview.srcObject = stream;
+                
+                    // Display webcam in preview video element
+                    preview.srcObject = stream;
 
-                // Handle browser compatibility issues
-                preview.captureStream = preview.captureStream || preview.mozCaptureStream;
+                    // Handle browser compatibility issues
+                    preview.captureStream = preview.captureStream || preview.mozCaptureStream;
 
-                preview.muted = true;
-                // Wait until the preview is visible before recording
-                //return new Promise(resolve => preview.onplaying = resolve);
+                    preview.muted = true;
+                    // Wait until the preview is visible before recording
+                    //return new Promise(resolve => preview.onplaying = resolve);
+                
+                
+            })
+            .catch(err => {
+                window.NextCamera();
             })
     }
 }
@@ -229,12 +235,13 @@ var vidEls;
 window.InitPost = async (vid, recordings, objectReference, focused) => {
 
     videos[vid] = {
-        video: document.getElementById(vid+"-post-video"),
+        video: document.getElementById(vid + "-post-video"),
         videoIndex: 0,
         urls: recordings,
         lengths: [],
         objectReference: objectReference
     };
+    
     videos[vid].video.src = recordings[0];
     videos[vid].video.load();
 
@@ -300,6 +307,7 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
 
 window.InitSeekBar = (vid) => {
     videos[vid].seekBar = document.getElementById(vid + "-seek-container");
+    videos[vid].seekBar.innerHTML = "";
     var totalLength = videos[vid].lengths.reduce((a, b) => a + b, 0);
 
     for (var i = 0; i < videos[vid].urls.length; i++) {
@@ -374,8 +382,8 @@ window.InitSeekBar = (vid) => {
     }
 
     videos[vid].video.addEventListener("timeupdate", () => {
-        if (videos[vid].seekBar) {
-            videos[vid].seekBar.children[videos[vid].videoIndex].children[0].style.width = (videos[vid].video.currentTime / videos[vid].video.duration) * 100 + "%";
+        if (videos[vid]?.seekBar?.children[videos[vid]?.videoIndex]?.children[0]) {
+            videos[vid].seekBar.children[videos[vid].videoIndex].children[0].style.width = (videos[vid].video.currentTime / videos[vid].lengths[videos[vid].videoIndex]) * 100 + "%";
         }
     })
 

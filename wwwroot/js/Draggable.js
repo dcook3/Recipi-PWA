@@ -116,7 +116,7 @@ window.InitDraggable = async (id) => {
 
 var posts;
 var currentIndex = 0; 
-
+var maxPosts = 0;
 var initSinglePostSwipe = async (post, obj) => {
     var wrapper = post.parentElement;
     var video = post.querySelector("video");
@@ -156,13 +156,12 @@ var initSinglePostSwipe = async (post, obj) => {
                         break;
                     case "down":
 
-                        if (currentIndex == 0) {
+                        if (currentIndex == 0 && maxPosts > 1) {
                             currentIndex = await obj.invokeMethodAsync("NextPost", "down", parseInt(wrapper.lastElementChild.id, 10))
                             wrapper.firstElementChild.querySelector("video").pause();
                             wrapper.children[1].querySelector("video").play();
                         }
-
-                        else {
+                        else if (currentIndex < maxPosts-1) {
 
 
                             wrapper.appendChild(wrapper.firstElementChild);
@@ -171,8 +170,6 @@ var initSinglePostSwipe = async (post, obj) => {
                             wrapper.children[1].querySelector("video").play();
                             currentIndex = await obj.invokeMethodAsync("NextPost", "down", parseInt(wrapper.lastElementChild.id, 10))
                         }
-
-
                         break;
                 }
                 console.log(currentIndex)
@@ -219,24 +216,18 @@ var initSinglePostSwipe = async (post, obj) => {
                     video.removeEventListener("mousemove", handleMouseMove)
                     video.removeEventListener("touchmove", handleMouseMove)
                     window.removeEventListener("mouseup", (e) => {
-                        if (currentIndex > 0) {
-                            e.preventDefault();
-                        }
                         video.removeEventListener("mousemove", handleMouseMove)
                         video.removeEventListener("touchmove", handleMouseMove)
                         setPostPos();
                     })
                     window.removeEventListener("touchend", (e) => {
-                        if (currentIndex > 0) {
-                            e.preventDefault();
-                        }
                         video.removeEventListener("mousemove", handleMouseMove)
                         video.removeEventListener("touchmove", handleMouseMove)
                         setPostPos();
                     })
                 }
             }
-
+            
             video.addEventListener("mousemove", handleMouseMove)
             video.addEventListener("touchmove", handleMouseMove)
             window.addEventListener("mouseup", (e) => {
@@ -250,15 +241,15 @@ var initSinglePostSwipe = async (post, obj) => {
                 setPostPos();
             })
         }
-
         video.addEventListener("mousedown", handleMouseDown)
         video.addEventListener("touchstart", handleMouseDown)
     }
 }
 
-window.InitPostsSwipe = async (obj) => {
+window.InitPostsSwipe = async (obj, _maxPosts) => {
     posts = document.querySelectorAll(".post-wrapper");
     currentIndex = 0;
+    maxPosts = _maxPosts;
     posts.forEach((post) => initSinglePostSwipe(post, obj))
 }
 
