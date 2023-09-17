@@ -1,0 +1,141 @@
+﻿@page "/Messages/Friends"
+
+@using Recipi_PWA.Models;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared.Messages;
+
+@inject IUserService userService;
+@inject IMessageService messageService;
+@inject StateContainer state;
+@inject NavigationManager NavigationManager;
+
+<div class="bg-secondary py-4 px-3 d-flex flex-row align-items-center justify-content-between text-light container-fluid">
+    <NavLink href="@backUrl"><i class="fa fa-angle-left text-light"></i></NavLink>
+    <div>@relationshipType</div>
+    <div></div>
+</div>
+@if (status == "error")
+{
+    <div class="container-fluid d-flex align-items-center justify-content-start">
+        <div>@eMessage</div>
+    </div>
+}
+else{
+    @if(status == "loading"){
+        <LoadingSpinner></LoadingSpinner>
+    }
+    else
+    {
+        for (int i = frIndex; i < friendData.Count(); i++)
+        {
+            <NewConversationItem userListData="@friendData.ElementAt(i)" createConversation="@CreateConversation">Start Conversation</NewConversationItem>
+        }
+    }
+}
+
+@code {
+    private int? userId;
+
+    public string relationshipType;
+    private string backUrl;
+
+    private List<UserListingData> friendData;
+    private List<UserConversation> conversationData;
+
+    private int frIndex = 0;
+
+    private string status = "loading";
+    private string eMessage = "";
+
+    private string creationStatus = "ready";
+
+    protected override async Task OnInitializedAsync()
+    {
+        userId = state.You?.UserId;
+        backUrl = $"./Messages";
+        relationshipType = "Friend";
+
+        await GetfriendData();
+    }
+
+    private async void FRUpdate(){
+        await GetfriendData();
+        StateHasChanged();
+    }
+
+    private async Task GetfriendData()
+    {
+        friendData = new();
+        conversationData = new();
+
+        HttpResponseMessage fResponse;
+        HttpResponseMessage convoResponse;
+        if (relationshipType == "Friend")
+        {
+            if (!state.LoggedIn)
+            {
+                NavigationManager.NavigateTo("/Login");
+            }
+
+            List<int> existingConvoUserIds = new List<int>();
+
+            convoResponse = await messageService.GetConversations();
+            if (convoResponse.IsSuccessStatusCode)
+            {
+                conversationData.AddRange(await convoResponse.Content.ReadFromJsonAsync<List<UserConversation>>());
+
+                foreach (var conversation in conversationData)
+                {
+                    //Add only the other user in the conversation to the list of existing ids
+                    if (conversation.UserId2 != userId && conversation.UserId1 == userId)
+                    {
+                        existingConvoUserIds.Add(conversation.UserId2);
+                    }
+                    if (conversation.UserId1 != userId && conversation.UserId2 == userId)
+                    {
+                        existingConvoUserIds.Add(conversation.UserId1);
+                    }
+                }
+            }
+            else
+            {
+                status = "error";
+                eMessage = "An Error has occurred";
+            }
+
+            fResponse = await userService.GetFriends();
+            if (fResponse.IsSuccessStatusCode)
+            {
+                friendData.AddRange(await fResponse.Content.ReadFromJsonAsync<List<UserListingData>>());
+                friendData.RemoveAll(item => existingConvoUserIds.Contains(item.UserId));
+                status = "ready";
+            }
+            else
+            {
+                status = "error";
+                eMessage = "An Error has occurred";
+            }
+        }
+    }
+
+    //Create Conversation
+    private async void CreateConversation(int userId)
+    {
+        status = "loading";
+        StateHasChanged();
+
+        HttpResponseMessage createResponse;
+        createResponse = await messageService.CreateConversation(userId);
+        Console.WriteLine(createResponse);
+
+        if (createResponse.IsSuccessStatusCode)
+        {
+            status = "ready";
+        }
+        else
+        {
+            status = "error";
+        }
+        FRUpdate();
+    }
+}

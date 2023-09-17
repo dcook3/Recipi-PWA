@@ -1,0 +1,85 @@
+﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Shared.Profile;
+@using Recipi_PWA.Services;
+@inject NavigationManager NavigationManager;
+@inject IUserService userService;
+@inject IMessageService messageService;
+@inject StateContainer state;
+
+<div class="px-4 py-3 container-fluid d-flex flex-row align-items-center justify-content-between">
+    <div class="d-flex flex-row align-items-center justify-content-start" onclick="@OnBodyClick">
+        <div class="mx-1">
+        <ProfilePicture size="1"></ProfilePicture>
+        </div>
+        <div class="mx-1" style="line-height: none;">
+            @partnerUserName
+        </div>
+    </div>
+    <div class="d-flex flex-row align-items-center justify-content-center">
+        <div class="mx-1" style="line-height: none;">
+            @latestMessage
+        </div>
+    </div>
+    <div class="d-flex flex-row align-items-center justify-content-around">
+        <Button onclick="@OpenConversation">@ChildContent</Button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public UserConversation conversationListData { get; set; } = new UserConversation();
+    [Parameter]
+    public Action<int>? openConversation { get; set; }
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+
+    private int currentUserId;
+    private int partnerId;
+
+    private string partnerUserName = "";
+    private string latestMessage = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (state != null && state.You != null)
+        {
+            currentUserId = state.You.UserId;
+        }
+        UserMessage? latestMsgModel = conversationListData.Messages.FirstOrDefault();
+        latestMessage = latestMsgModel?.MessageContents ?? "Why not say hi!";
+
+        if (conversationListData.UserId1 != currentUserId && conversationListData.UserId2 == currentUserId)
+        {
+            partnerId = conversationListData.UserId1;
+        }
+        else if (conversationListData.UserId2 != currentUserId && conversationListData.UserId1 == currentUserId)
+        {
+            partnerId = conversationListData.UserId2;
+        }
+
+        string conversationPartnerId = partnerId.ToString();
+        if (!string.IsNullOrEmpty(conversationPartnerId))
+        {
+            HttpResponseMessage response = await userService.GetUserById(conversationPartnerId);
+            UserProfile? userRes = await response.Content.ReadFromJsonAsync<UserProfile>();
+
+            if (userRes != null)
+            {
+                partnerUserName = userRes.Username;
+            }
+        }
+    }
+
+    //Open This Conversations Messages
+    private void OnBodyClick()
+    {
+        OpenConversation();
+    }
+
+    //Open This Conversations Messages
+    private void OpenConversation()
+    {
+        openConversation?.Invoke(conversationListData.ConversationId);
+    }
+}

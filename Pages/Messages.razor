@@ -1,0 +1,212 @@
+﻿@page "/Messages";
+@using Recipi_PWA.Models;
+@using System.Text.Json;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared.Messages;
+@inject StateContainer state;
+@inject IUserService userService;
+@inject IMessageService messageService;
+@inject ISocketConnection socketCon;
+@inject NavigationManager NavigationManager;
+@if (status == "error")
+{
+    <div>Error @eMessage</div>
+}
+else{
+    @if(status == "loading"){
+        <LoadingSpinner></LoadingSpinner>
+    }
+    else
+    {
+        <div class="d-flex flex-row align-items-center justify-content-between bg-secondary" style="width: 100%;">
+            <div class="spacer"></div>
+            <div class="d-flex flex-row align-items-center justify-content-center p-1" style="width: 50%">
+                <h1 class="text-bg-secondary">Messages</h1>
+            </div>
+            <div class="d-flex flex-row align-items-center justify-content-around p-2">
+                <NavLink href="/Messages/Friends" class="d-flex align-items-center justify-content-center flex-column text-bg-secondary stat"style="text-decoration: none;">
+                    <Button shape="circle"><i class="fs-2 fa fa-pen-to-square"></i></Button>
+                </NavLink>
+            </div>
+        </div>
+
+        for (int i = 0; i < conversationData.Count(); i++)
+        {
+            <UserConversationItem conversationListData="@conversationData.ElementAt(i)" openConversation="@OpenConversation"></UserConversationItem>
+        }
+
+        //Example with parameters
+        //<TestConversation self=@self user="@user"></TestConversation>
+        //<h1>Msg Details</h1>
+        //@foreach (var con in conDetails)
+        //{
+        //    <li>@con</li>
+        //}
+        //<h1>Msg Log</h1>
+        //@foreach (var msg in messages)
+        //{
+        //    <li>@msg</li>
+        //}
+
+        //<div class="bg-secondary p-2 d-flex align-items-center justify-content-between">
+        //    <div class="d-flex flex-column me-2">
+        //        <input type="text" class="minimal-input fs-2 m-2" @bind-value="currentMsg" style="width: 100%"/>
+        //    </div>
+        //    <button @onclick="HandleSendMsg" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Send Message<i class="fa-solid fa-chevron-right"></i></button>
+        //</div>
+    }
+}
+
+@code {
+    private bool self;
+    private string status = "loading";
+    private string eMessage = "Something went wrong";
+
+    //Message Input Argument
+    private string currentMsg = "";
+
+
+    private List<string> conDetails = new List<string>();
+    private List<string> messages = new List<string>();
+
+    private IUserProfile? user { get; set; } = null;
+
+    private List<UserConversation> conversationData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = "loading";
+
+        var userId = state.You?.UserId.ToString();
+
+        self = true;
+        if (self)
+        {
+            if (state.LoggedIn && userId != null)
+            {
+                var response = await userService.GetUserById(userId);
+                if (response.IsSuccessStatusCode)
+                {
+                    var you = await response.Content.ReadFromJsonAsync<You>();
+                    if (you != null)
+                    {
+                        await state.SetYou(you);
+                        user = you;
+                        Console.WriteLine(JsonSerializer.Serialize(you));
+
+                        /* 
+                         * -- Socket thread in theory will run continuously --
+                         * Start connecting the web socket synchronously
+                         * Run the task without await in hopes it works like make-shift multi-threading
+                         * Finally load conversation data while the connection is being established.
+                         */
+                        EstablishWebSocket();
+
+                        //Make sure we wait for the message to load before rendering
+                        await loadUserConversations();
+
+                        //Change from loading to ready once conversation data is loaded
+                        status = "ready";
+                    }
+                    else
+                    {
+                        status = "error";
+                        eMessage = "Error occurred: " + response.Content.ToString();
+                    }
+
+                }
+                else
+                {
+                    status = "error";
+                    eMessage = response.Content.ToString() ?? "An Error has occurred";
+                }
+            }
+            else
+            {
+                //navigate to login
+                Console.WriteLine("Navigate to login");
+            }
+        }
+        else {}
+    }
+
+    private async Task loadUserConversations()
+    {
+        conversationData = new();
+
+        HttpResponseMessage convoResponse;
+
+        convoResponse = await messageService.GetConversations();
+        if (convoResponse.IsSuccessStatusCode)
+        {
+            conversationData.AddRange(await convoResponse.Content.ReadFromJsonAsync<List<UserConversation>>());
+        }
+        else
+        {
+            status = "error";
+            eMessage = convoResponse.Content.ToString() ?? "An Error has occurred";
+        }
+    }
+
+    private async void OpenConversation(int userId)
+    {
+        conversationData = new();
+
+        HttpResponseMessage convoResponse;
+
+        convoResponse = await messageService.GetConversations();
+        if (convoResponse.IsSuccessStatusCode)
+        {
+            conversationData.AddRange(await convoResponse.Content.ReadFromJsonAsync<List<UserConversation>>());
+        }
+        else
+        {
+            status = "error";
+            eMessage = "An Error has occurred";
+        }
+    }
+
+    //May also need to be async if computing dependent tasks before re-render
+    /*async*/ void MessagesUpdate(){
+        //May have to do some renderer things with conversations
+        StateHasChanged();
+    }
+
+    private void HandleSendMsg()
+    {
+        SendSocketMessage(currentMsg);
+        currentMsg = "";
+    }
+
+    //Sustained connection will loop until socket is closed/terminated
+    private async Task EstablishWebSocket()
+    {
+        await socketCon.EstablishConnection(MsgReceived);
+    }
+
+    //Call back function provided to to connection to attain delivered messaged
+    private void MsgReceived(string msg)
+    {
+        if (msg.Contains("Socket") || msg.Contains("Id:"))
+        {
+            conDetails.Add(msg);
+        } else
+        {
+            messages.Add(msg);
+        }
+
+        StateHasChanged();
+        Console.WriteLine(msg);
+    }
+
+    //Call send message to the socket connection with an optional number of attempts (100ms between attempts)
+    private async Task<Boolean> SendSocketMessage(string msg)
+    {
+        int msgSendAttempts = 10;
+        Boolean trySendMsg = await socketCon.SendMessageAsync(msg, msgSendAttempts);
+        messages.Add(msg);
+
+        StateHasChanged();
+        return trySendMsg;
+    }
+}
