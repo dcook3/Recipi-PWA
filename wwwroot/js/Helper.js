@@ -18,4 +18,3 @@ window.setClasses = (el) => {
     el.classList.toggle('is-bottom-overflowing', !isScrolledToBottom);
     el.classList.toggle('is-top-overflowing', !isScrolledToTop);
 }
-

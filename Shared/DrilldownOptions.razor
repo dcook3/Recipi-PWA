@@ -63,6 +63,22 @@
                 </li>
             }
         }
+        else if (innerSettings != null && innerSettings.optionSettings.Count > 0)
+        {
+            for (int i = 0; i < innerSettings.optionSettings.Count; i++)
+            {
+                var ii = i;
+                <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+                    <label for="@innerSettings.optionSettings[ii].label">@innerSettings.optionSettings[i].label</label>
+                    <select @bind="@innerSettings.optionSettings[ii].value">
+                        @for(int j = 0; j < @innerSettings.optionSettings[i].options.Count(); j++)
+                        {
+                            <option value="@innerSettings.optionSettings[i].options[j]">@innerSettings.optionSettings[i].options[j]</option>
+                        }
+                    </select>
+                </li>
+            }
+        }
     }
 }
 <ul class="list-group list-group-flush" style="width: 100%;">
@@ -74,9 +90,8 @@
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a href="@settings.ChangePassword.label">Change password</a>
         </li>
-        <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between mx-3">
-            <label>@settings.AnonymousUsername.label</label>
-            <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" @bind="settings.AnonymousUsername.value" />
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a @onclick="UnitHandler" href="profile/settings#">Unit Standard Setting</a>
         </li>
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a @onclick="NotificationHandler" href="profile/settings#" >Notifications Settings</a>
@@ -90,6 +105,10 @@
         if(thisSetting == "Notifications")
         {
             GenerateInnerListItems(settings.Notifications);
+        }
+        else if(thisSetting == "Unit Standards")
+        {
+            GenerateInnerListItems(settings.MeasurementUnits);
         }
         //add on if there exist more root inner settings
     }
@@ -113,6 +132,14 @@
         await StateContainer.SaveSetting();
     }
 
+    private async void UnitHandler()
+    {
+        thisSetting = "Unit Standards";
+        isRoot = false;
+        selectedInners.Push(thisSetting);
+        await StateContainer.SaveSetting();
+    }
+
     private async void LoadLastSetting()
     {
         if (selectedInners.TryPop(out string toLoad))
@@ -121,6 +148,11 @@
             if (toLoad == "Notifications")
             {
                 thisSetting = "Notifications";
+                isRoot = false;
+            }
+            else if (toLoad == "Unit Standards")
+            {
+                thisSetting = "Unit Standards";
                 isRoot = false;
             }
         }

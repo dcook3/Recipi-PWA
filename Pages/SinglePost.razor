@@ -1,4 +1,4 @@
-﻿@page "/Post/{postId:int}/{backUserId:int?}"
+﻿@page "/Post/{postId:int}/{renderBackButton:bool}"
 @using Recipi_PWA.Models.PostView;
 @using Recipi_PWA.Services;
 
@@ -10,7 +10,7 @@
 }
 else
 {
-    <PostView post="@post" backUserId="backUserId"></PostView>
+    <PostView post="@post" renderBackButton="@renderBackButton"></PostView>
 }
 
 
@@ -19,7 +19,7 @@ else
     public int postId { get; set; }
 
     [Parameter]
-    public int? backUserId { get; set; }
+    public bool renderBackButton { get; set; }
 
     private Post post { get; set; }
 

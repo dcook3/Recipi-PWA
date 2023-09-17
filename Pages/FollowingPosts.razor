@@ -106,15 +106,15 @@ else
                 var post2 = await post2Res.Content.ReadFromJsonAsync<Post>();
                 posts[0] = (__builder) =>
                 {
-                    <PostView post="@post1" searchBar="true" AfterInit="PostLoaded"></PostView>
+                    <PostView post="@post1" searchBar="true" renderBackButton="false" AfterInit="PostLoaded"></PostView>
                 };
                 posts[1] = (__builder) =>
                 {
-                    <PostView post="@post2" focused="false" searchBar="true" AfterInit="PostLoaded"></PostView>
+                    <PostView post="@post2" focused="false" searchBar="true" renderBackButton="false" AfterInit="PostLoaded"></PostView>
                 };
                 posts[2] = (__builder) =>
                 {
-                    <PostView focused="false" searchBar="true"></PostView>
+                    <PostView focused="false" searchBar="true" renderBackButton="false"></PostView>
                 };
                 status = "ready";
             }
@@ -162,7 +162,7 @@ else
             StateHasChanged();
             posts[postContainerIndex] = (__builder) =>
                 {
-                    <PostView post="@post" focused="false" AfterInit="@(() => {
+                    <PostView post="@post" renderBackButton="false" focused="false" AfterInit="@(() => {
                         JSRuntime.InvokeVoidAsync("InitPostSwipe", $"{postContainerIndex}-post-wrapper", _objectReference);
                     })" searchBar="true"></PostView>
                 };

@@ -76,6 +76,8 @@
                 await state.SetYou(await youResponse.Content.ReadFromJsonAsync<You>());
             }
 
+            await state.GetSetting();
+
             NavigationManager.NavigateTo("/");
         }
         else

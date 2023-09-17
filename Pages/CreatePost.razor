@@ -73,7 +73,7 @@
     <div class="d-flex flex-column justify-content-between p-3 flex-grow-1" style="width:100%;">
         <div class="d-flex flex-column justify-content-start" style="width:100%;">
             <div class="d-flex flex-row justify-content-between" style="width:100%;">
-                <Button onclick="@Back" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+                <Button onclick="@helpers.GoBackAPage" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
                 <div>
                     @if (recipe != null && status != "postentry")
                     {
@@ -177,7 +177,7 @@
                     @{
                         var currentStep = recipe.recipeSteps.ElementAt(stepIndex);
                     }
-                    <span>@(currentStep.stepOrder + 1)</span>. @helpers.FormatDescription(currentStep.stepDescription, currentStep.stepIngredients);
+                    <span>@(currentStep.stepOrder + 1)</span>. @helpers.FormatDescription(currentStep.stepDescription, currentStep.stepIngredients)
                 </div>
                 <div class="d-flex flex-row align-items-center justify-content-evenly">
                     @{

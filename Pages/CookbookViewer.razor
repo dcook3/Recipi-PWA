@@ -11,12 +11,12 @@
 @inject IRecipeService recipeService;
 @inject HttpClient http
 @inject NavigationManager navi
-@inject PageHistoryState history
+@inject IHelperService helpers
 @layout EmptyLayout
 
 <TopViewport>
     <div class="row py-1 m-0">
-        <a href="@history.GetGoBackPage()" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
+        <a @onclick="helpers.GoBackAPage" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
         <h3 class="text-white mb-0 col-4 d-inline-block text-center pt-1">Your Cookbook</h3>
         <div class="col-4"></div>
     </div>
@@ -41,7 +41,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        history.AddPageToHistory("/CookbookViewer");
         if (state.LoggedIn)
         {
             HttpResponseMessage response = await recipeService.GetCookbook("");
@@ -84,6 +83,6 @@
         recipeInfo.isNewRecipe = true;
         recipeInfo.recipe = recipe;
         await state.SaveRecipe(recipeInfo);
-        navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/true");
+        navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/true/false");
     }
 }

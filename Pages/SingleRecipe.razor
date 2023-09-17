@@ -1,4 +1,4 @@
-﻿@page "/Recipe/{recipeId:int}/{backUserId:int?}"
+﻿@page "/Recipe/{recipeId:int}/{renderBackButton:bool}"
 @using Recipi_PWA.Models;
 @using Recipi_PWA.Services;
 @inject IRecipeService recipeService;
@@ -14,14 +14,14 @@ else if(status == "error")
 }
 else
 {
-    <RecipeView recipe="recipe" backUserId="backUserId"></RecipeView>
+    <RecipeView recipe="recipe" renderBackButton="@renderBackButton"></RecipeView>
 }
 @code {
     [Parameter]
     public int recipeId { get; set; }
     
     [Parameter]
-    public int? backUserId { get; set; }
+    public bool renderBackButton { get; set; }
 
     private RecipeInformation recipe { get; set; } = new();
 

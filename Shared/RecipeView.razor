@@ -11,6 +11,7 @@
 @inject IRecipeService recipeService;
 @inject StateContainer state;
 @inject NavigationManager NavigationManager;
+
 @if (isShowingComments)
 {
     <div id="comments-container" class="fluid-container" style="position:absolute; bottom:0; left:0; margin-bottom:50px; padding-bottom: 5px; width: calc(100vw - 60px);">
@@ -38,9 +39,9 @@
 <div class="bg-primary text-white @((post != null) ? "rounded-top-4" : "") container-fluid" style="min-height: 100%; position: absolute; top: @((post != null) ? "calc(100% - 100px)" : "0")">
     <div id="@(vid)-draggable" class="d-flex flex-row align-items-center" style="height:50px; width:100%; position:relative;">
         
-        @if (backUserId != null)
+        @if (renderBackButton)
         {
-            <Button onclick="@(() => NavigationManager.NavigateTo($"/Profile/{backUserId}"))" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
+            <Button onclick="@helpers.GoBackAPage" bgColor="" shape="circle"><i class="fa-solid fa-chevron-left"></i></Button>
         }
         @if(post != null)
         {
@@ -58,7 +59,6 @@
 
     @if (post != null)
     {
-        //If not own post if statement here - need to account for potential self-liking and self-cookbook adding
         <div id="@(vid)-interaction" class="post-interaction d-flex flex-column align-items-center" style="width:15%; position:absolute; right:0;">
             <div onclick="@(() => NavigationManager.NavigateTo($"/Profile/{post.User.UserId}"))">
                 <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
@@ -68,13 +68,19 @@
                 @if (userHasLiked)
                 {
                     <Button shape="circle" bgColor="" onclick="LikePost">
-                        <i class="fa-solid fs-1 fa-heart"><span>@post.Likes</span></i>
+                        <span class="fa-layers fa-fw">
+                            <i class="fa-solid fs-1 fa-heart"></i>
+                            <span class="fa-layers-text fa-inverse text-black text-center text-dark">@post.Likes</span>
+                        </span>
                     </Button>
                 }
                 else
                 {
                     <Button shape="circle" bgColor="" onclick="LikePost">
-                        <i class="fa-regular fs-1 fa-heart"><span class="text-white">@post.Likes</span></i>
+                        <span class="fa-layers fa-fw">
+                            <i class="fa-regular fs-1 fa-heart"></i>
+                            <span class="fa-layers-text fa-inverse text-white">@post.Likes</span>
+                        </span>
                     </Button>
                 }       
                 }
@@ -89,7 +95,10 @@
             else
             {
                 <Button shape="circle" bgColor="" onclick="ShowComments">
-                    <i class="fa-solid fs-1 fa-comment"><span>@post.Comments</span></i>
+                    <span class="fa-layers fa-fw">
+                        <i class="fa-solid fs-1 fa-comment"></i>
+                        <span class="fa-layers-text fa-inverse text-dark">@post.Comments</span>
+                    </span>
                 </Button>
             }
             @if (post.Recipe != null && !isOwnRecipe && state.LoggedIn)
@@ -285,7 +294,7 @@
     public RecipeInformation? recipe { get; set; } = null;
 
     [Parameter]
-    public int? backUserId { get; set; }
+    public bool renderBackButton { get; set; }
 
     public Modal feedbackModal { get; set; }
     public Modal reportModal { get; set; }
@@ -361,6 +370,14 @@
             if (response.IsSuccessStatusCode)
             {
                 userHasLiked = !userHasLiked;
+                if(userHasLiked == false)
+                {
+                    post.Likes--;
+                }
+                else
+                {
+                    post.Likes++;
+                }
                 StateHasChanged();
             }
             else
@@ -539,17 +556,8 @@
             HttpResponseMessage response = await interactionService.ReportPost(post.PostId, reportMessage);
             if (response.IsSuccessStatusCode)
             {
-                string content = await response.Content.ReadAsStringAsync();
-                if (content != null && content.Length > 0)
-                {
-                    feedback = "Your report has been posted.";
-                    OpenFeedbackModal();
-                }
-                else
-                {
-                    feedback = "There was a problem posting a report.";
-                    OpenFeedbackModal();
-                }
+                feedback = "Your report has been posted.";
+                OpenFeedbackModal();
             }
             else
             {

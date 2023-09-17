@@ -4,6 +4,7 @@
 @using Recipi_PWA.Services;
 @using System.Text.Json;
 @inject IRecipeService recipeService;
+@inject IHelperService helpers;
 @inject StateContainer state;
 @inject NavigationManager navi;
 @layout EmptyLayout
@@ -78,6 +79,10 @@
 
     protected async override Task OnInitializedAsync()
     {
+        if (!state.LoggedIn)
+        {
+            navi.NavigateTo("/Login");
+        }
         recipeInfo = await state.GetRecipe();
         if (recipeInfo?.recipe != null && recipeInfo.recipeId == recipeId) //Can use isUpdating?
         {
@@ -134,7 +139,14 @@
 
     private void HandleRedirect()
     {
-        openModal();
+        if ((bool)recipeInfo.justSelectedIngredient!)
+        {
+            openModal();
+        }
+        else
+        {
+            helpers.GoBackAPage();
+        }
     }
 
     private void HandleModalCancel()
@@ -144,11 +156,8 @@
 
     private async void HandleModalConfirm()
     {
-        if(!recipeInfo.isNewRecipe)
-            await recipeService.DeleteRecipe(recipeId);
-
         await state.SaveRecipe(new());
-        navi.NavigateTo("/CookbookViewer");
+        navi.NavigateTo("/");
     }
 
     private async void AddStep()
