@@ -13,7 +13,7 @@
 {
     <div class="bg-primary container-fluid pt-1" style="height: 100%">
         <div class="d-flex justify-content-between">
-            <button class="btn btn-warning rounded" @onclick="@helpers.GoBackAPage"><i class="fa-solid fa-chevron-left text-white"></i></button>
+            <button class="btn btn-warning rounded" @onclick="HandleRedirect"><i class="fa-solid fa-chevron-left text-white"></i></button>
             <button class="btn btn-warning rounded text-white" @onclick="AddStep">+</button>
         </div>
     
@@ -79,6 +79,10 @@
 
     protected async override Task OnInitializedAsync()
     {
+        if (!state.LoggedIn)
+        {
+            navi.NavigateTo("/Login");
+        }
         recipeInfo = await state.GetRecipe();
         if (recipeInfo?.recipe != null && recipeInfo.recipeId == recipeId) //Can use isUpdating?
         {
@@ -135,7 +139,14 @@
 
     private void HandleRedirect()
     {
-        openModal();
+        if ((bool)recipeInfo.justSelectedIngredient!)
+        {
+            openModal();
+        }
+        else
+        {
+            helpers.GoBackAPage();
+        }
     }
 
     private void HandleModalCancel()
@@ -145,11 +156,8 @@
 
     private async void HandleModalConfirm()
     {
-        if(!recipeInfo.isNewRecipe)
-            await recipeService.DeleteRecipe(recipeId);
-
         await state.SaveRecipe(new());
-        navi.NavigateTo("/CookbookViewer");
+        navi.NavigateTo("/");
     }
 
     private async void AddStep()

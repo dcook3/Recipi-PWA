@@ -51,9 +51,9 @@
             </div>
             <div class="col-8">
                 <select class="form-select" @onchange="HandleMeasurementSelectChange" name="measurement unit">
-                    @foreach (string unit in metric)
+                    @foreach (string unit in units)
                     {
-                        if(metric[0] == unit)
+                        if (units[0] == unit)
                         {
                             <option value="@unit" selected>@unit</option>
                         }
@@ -102,17 +102,34 @@
 
     private Modal modal;
 
-    private string[] imperial = { "lb", "tsp", "tbsp", "cup", "pint", "quart", "oz", "fl oz", "gal" };
-    private string[] metric = { "g", "mg", "ml", "L", "kg" };
+    private string[] units;
 
-    protected async void OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
         settings = await state.GetSetting();
+
+        if (settings.MeasurementUnits.optionSettings[0] != null)
+        {
+            if (settings.MeasurementUnits.optionSettings[0].value == "Metric")
+            {
+                units = new string[] { "g", "mg", "ml", "L", "kg" };
+            }
+            else if (settings.MeasurementUnits.optionSettings[0].value == "Imperial")
+            {
+                units = new string[] { "lb", "tsp", "tbsp", "cup", "pint", "quart", "oz", "fl oz", "gal" };
+            }
+        }
+        else
+        {
+            Console.WriteLine("Could not get unit preference setting. Assuming metric.");
+            //units = new string[] { "g", "mg", "ml", "L", "kg" };
+        }
     }
 
     private async void HandleStepIngredientSelection()
     {
         recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Add(selectedIngredient);
+        recipeInfo.justSelectedIngredient = true;
         await state.SaveRecipe(recipeInfo);
         if (recipeInfo.isNewRecipe)
         {
@@ -126,8 +143,10 @@
 
     private void SelectIngredient(Ingredient ing)
     {
+        selectedIngredient = new();
         selectedIngredient.ingredient = ing;
         selectedIngredient.ingredient.ingredientId = ing.ingredientId;
+        selectedIngredient.ingredientMeasurementUnit = units[0];
         StateHasChanged();
         OpenModal();
     }

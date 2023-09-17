@@ -20,11 +20,11 @@ namespace Recipi_PWA.Services
                 string ingFormatted;
                 if (ingredients[i].ingredientMeasurementValue == 1)
                 {
-                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredient.ingredientTitle}";
+                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementUnit} {ingredients[i].ingredient.ingredientTitle}";
                 }
                 else
                 {
-                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementValue}s {ingredients[i].ingredient.ingredientTitle}";
+                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementUnit}s {ingredients[i].ingredient.ingredientTitle}";
                 }
                 string checkString = "{" + i.ToString() + "}";
                 desc = desc.Replace(checkString, ingFormatted);

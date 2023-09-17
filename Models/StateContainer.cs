@@ -25,7 +25,7 @@ namespace Recipi_PWA.Models
         {
             _token = (await jsr.InvokeAsync<string?>("localStorage.getItem", "token").ConfigureAwait(false)) ?? String.Empty;
             _you = JsonSerializer.Deserialize<You>(await jsr.InvokeAsync<string?>("localStorage.getItem", "you").ConfigureAwait(false) ?? "{}");
-            //_settings = JsonSerializer.Deserialize<UserSettings>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
+            _settings = JsonSerializer.Deserialize<UserSettings>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
             Loaded = true;
         }
 
@@ -45,6 +45,7 @@ namespace Recipi_PWA.Models
         {
             await jsr.InvokeVoidAsync("localStorage.removeItem", "token");
             await jsr.InvokeVoidAsync("localStorage.removeItem", "you");
+            await jsr.InvokeVoidAsync("localStorage.removeItem", "settings");
             _token = "";
             _you = null;
         }
@@ -85,8 +86,17 @@ namespace Recipi_PWA.Models
 
         public async ValueTask<UserSettings> GetSetting()
         {
+            int userId;
+            if (!LoggedIn)
+            {
+                return null;
+            }
+            else
+            {
+                userId = _you!.UserId;
+            }
             Console.WriteLine("Getting settings");
-            if (_settings != null)
+            if (_settings != null && _settings.UserId == userId)
                 return _settings;
 
             if (!_initialized)
@@ -102,9 +112,14 @@ namespace Recipi_PWA.Models
 
             UserSettings defaultSettings = new();
             defaultSettings = new UserSettings();
-            defaultSettings.AnonymousUsername = new("Use Anonymous Username", false);
             defaultSettings.ChangeProfile = new("Change Profile", "https://recipiapp.com/profile/edit");
             defaultSettings.ChangePassword = new("Change Password", "https://recipiapp.com/login/change-password");
+            defaultSettings.MeasurementUnits = new();
+            defaultSettings.MeasurementUnits.optionSettings = new()
+            {
+                new OptionSetting("Unit type", new List<string> { "Imperial", "Metric" })
+            };
+            defaultSettings.UserId = userId;
             defaultSettings.Notifications = new();
             defaultSettings.Notifications.boolSettings = new()
             {

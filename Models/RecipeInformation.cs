@@ -13,5 +13,7 @@
         public bool isNewRecipe { get; set; }
 
         public Recipe recipe { get; set; }
+
+        public bool? justSelectedIngredient { get; set; } = false;
     }
 }

@@ -137,6 +137,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!state.LoggedIn)
+        {
+            navi.NavigateTo("/Login");
+        }
         recipeInfo = await state.GetRecipe();
 
         Console.WriteLine($"IngredientSelector Recipe:{recipeInfo.recipe.recipeSteps[0].stepDescription}");
@@ -153,8 +157,11 @@
         }
     }
 
-    private void BackToRecipeEditor()
+    private async void BackToRecipeEditor()
     {
+        recipeInfo.recipe.recipeSteps[stepIndex].stepDescription = recipeInfo.recipe.recipeSteps[stepIndex].stepDescription.Replace(("{" + $"{recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Count()}" + "}"), "");
+        recipeInfo.recipe.recipeSteps[stepIndex].stepIngredients.Capacity--;
+        await state.SaveRecipe(recipeInfo);
         if (recipeInfo.isNewRecipe)
         {
             navi.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/{isPosting}/false");
