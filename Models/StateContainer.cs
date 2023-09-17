@@ -25,7 +25,11 @@ namespace Recipi_PWA.Models
         {
             _token = (await jsr.InvokeAsync<string?>("localStorage.getItem", "token").ConfigureAwait(false)) ?? String.Empty;
             _you = JsonSerializer.Deserialize<You>(await jsr.InvokeAsync<string?>("localStorage.getItem", "you").ConfigureAwait(false) ?? "{}");
-            _settings = JsonSerializer.Deserialize<UserSettings>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
+            string? json = await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false);
+            if (json == null)
+                _settings = null;
+            else
+                _settings = JsonSerializer.Deserialize<UserSettings>(json);
             Loaded = true;
         }
 
@@ -77,7 +81,7 @@ namespace Recipi_PWA.Models
             get => _you ?? null;
         }
 
-        private UserSettings _settings;
+        private UserSettings? _settings;
         private bool _initialized;
 
         public event EventHandler Changed;
@@ -86,26 +90,10 @@ namespace Recipi_PWA.Models
 
         public async ValueTask<UserSettings> GetSetting()
         {
-            int userId;
-            if (!LoggedIn)
-            {
-                return null;
-            }
-            else
-            {
-                userId = _you!.UserId;
-            }
             Console.WriteLine("Getting settings");
-            if (_settings != null && _settings.UserId == userId)
+            if (_settings != null)
                 return _settings;
 
-            if (!_initialized)
-            {
-                // Create a reference to the current object, so the JS function can call the public method "OnStorageUpdated"
-                var reference = DotNetObjectReference.Create(this);
-                await jsr.InvokeVoidAsync("BlazorRegisterStorageEvent", reference);
-                _initialized = true;
-            }
             
             // Read the JSON string that contains the data from the local storage
             UserSettings result;
@@ -119,7 +107,6 @@ namespace Recipi_PWA.Models
             {
                 new OptionSetting("Unit type", new List<string> { "Imperial", "Metric" })
             };
-            defaultSettings.UserId = userId;
             defaultSettings.Notifications = new();
             defaultSettings.Notifications.boolSettings = new()
             {

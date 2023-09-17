@@ -21,7 +21,7 @@
         }
         else
         {
-            <a href="/Profile/me" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
+            <a @onclick="HandleLeave" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
             <h3 class="text-white mb-0 col-4 d-inline-block text-center pt-1">Settings</h3>
             <div class="col-4"></div>
         }
@@ -115,7 +115,6 @@
 </ul>
 
 @code {
-    [CascadingParameter]
     public UserSettings settings { get; set; }
     public Stack<string> selectedInners = new();
     public bool isRoot = true;
@@ -123,6 +122,11 @@
 
     //Root settings go here
     private bool anonymousName { get; set; } = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await StateContainer.GetSetting();
+    }
 
     private async void NotificationHandler()
     {
@@ -162,6 +166,12 @@
             thisSetting = "root";
         }
         await StateContainer.SaveSetting();
+    }
+
+    private async void HandleLeave()
+    {
+        await StateContainer.SaveSetting();
+        NavigationManager.NavigateTo("/Profile/me");
     }
 
     private async void Logout(){

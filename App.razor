@@ -22,7 +22,6 @@
             font-family: 'Inter', sans-serif;
         }
     </style>
-    <UserSettingsComponent>
         <Router AppAssembly="@typeof(App).Assembly">
             <Found Context="routeData">
                 <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
@@ -35,7 +34,6 @@
                 </LayoutView>
             </NotFound>
         </Router>
-    </UserSettingsComponent>
 }
 @inject StateContainer state;
 

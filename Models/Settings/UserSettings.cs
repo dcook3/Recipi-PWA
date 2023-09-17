@@ -12,8 +12,6 @@ namespace Recipi_PWA.Models.Settings
         private InnerSettingsGroup measurementUnits;
         private InnerSettingsGroup notifications;
 
-        public int UserId { get; set; }
-
 
         public StringSetting ChangeProfile 
         {
