@@ -29,7 +29,7 @@
                     }
                 </div>
                 <div class="m-1">
-                    <Button shape="circle" onclick="@(() => NavigationManager.NavigateTo("/RecipeEditor/-1/false/false"))"><i class="fas fa-plus" style="width: 1em;"></i></Button>
+                    <Button shape="circle" onclick="@HandleRecipeAdd"><i class="fas fa-plus" style="width: 1em;"></i></Button>
                 </div>
             }
         </div>
@@ -244,5 +244,20 @@ else
     {
         cookbook = !cookbook;
 
+    }
+
+    private async void HandleRecipeAdd()
+    {
+        
+        Recipe recipe = new();
+        recipe.recipeSteps.Add(new());
+        RecipeInformation recipeInfo = new();
+        recipeInfo.isNewRecipe = true;
+        recipeInfo.recipe = recipe;
+        await state.SaveRecipe(recipeInfo);
+        NavigationManager.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/true/false");
+        //await state.SaveRecipe(new());
+        //state.currentRecipe = null;
+        //NavigationManager.NavigateTo("/RecipeEditor/-1/false/false");
     }
 }

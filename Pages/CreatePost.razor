@@ -177,7 +177,7 @@
                     @{
                         var currentStep = recipe.recipeSteps.ElementAt(stepIndex);
                     }
-                    <span>@(currentStep.stepOrder + 1)</span>. @helpers.FormatDescription(currentStep.stepDescription, currentStep.stepIngredients);
+                    <span>@(currentStep.stepOrder + 1)</span>. @helpers.FormatDescription(currentStep.stepDescription, currentStep.stepIngredients)
                 </div>
                 <div class="d-flex flex-row align-items-center justify-content-evenly">
                     @{
