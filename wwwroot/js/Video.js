@@ -257,9 +257,11 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
 
     var videoEls = [] 
 
+    console.log(recordings);
+
     await new Promise(resolve => {
 
-        var loadVideo = (e) => {
+        var loadVideo = async (e) => {
             var i = e.target.getAttribute("i");
             if (i <= recordings.length) {
                 if (i < recordings.length-1) {
@@ -268,7 +270,7 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
                     videoEls[i] = document.createElement('video');
                     videoEls[i].addEventListener("loadedmetadata", loadVideo);
 
-                    videoEls[i].preload = "metadata";
+                    //videoEls[i].preload = "metadata";
                     videoEls[i].setAttribute("i", i);
                     videoEls[i].src = recordings[i];
                     videoEls[i].load();
@@ -281,7 +283,7 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
         videoEls[0] = document.createElement('video');
         videoEls[0].addEventListener("loadedmetadata", loadVideo);
 
-        videoEls[0].preload = "metadata";
+        //videoEls[0].preload = "metadata";
         videoEls[0].setAttribute("i", 0);
         videoEls[0].src = recordings[0];
         videoEls[0].load();
@@ -290,9 +292,12 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
     
     vidEls = videoEls
     for (var i = 0; i < videoEls.length; i++) {
-        while (videoEls[i].duration === Infinity || videoEls.duration === NaN) {
+        var checks = 0;
+        while (checks < 100 && (videoEls[i].duration === Infinity || videoEls[i].duration === NaN)) {
             await new Promise(r => setTimeout(r, 100));
+            console.log("checking")
             videoEls[i].currentTime = 10000000 * Math.random();
+            checks++;
         }
         videos[vid].lengths[i] = videoEls[i].duration;
     }
@@ -307,7 +312,9 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
 
 window.InitSeekBar = (vid) => {
     videos[vid].seekBar = document.getElementById(vid + "-seek-container");
-    videos[vid].seekBar.innerHTML = "";
+    if (videos[vid].seekBar) {
+        videos[vid].seekBar.innerHTML = "";
+    }
     var totalLength = videos[vid].lengths.reduce((a, b) => a + b, 0);
 
     for (var i = 0; i < videos[vid].urls.length; i++) {
