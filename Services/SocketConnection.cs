@@ -20,7 +20,7 @@ namespace Recipi_PWA.Services
 
         public async Task<string> EstablishConnection(ISocketConnection.msgReceivedCallback msgRec)
         {
-            Uri serviceUri = new Uri("ws://localhost:5232/api/UserMessaging/connect");
+            Uri serviceUri = new Uri("ws://recipiapp/api/UserMessaging/connect");
             try
             {
                 await webSocket.ConnectAsync(serviceUri, cts.Token);

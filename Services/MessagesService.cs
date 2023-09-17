@@ -9,7 +9,7 @@ namespace Recipi_PWA.Services
         {
         }
 
-        public async Task<HttpResponseMessage> GetConversations() => await client.GetAsync($"https://localhost:7223/api/UserMessaging/conversations");
-        public async Task<HttpResponseMessage> CreateConversation(int userId) => await client.PostAsync($"https://localhost:7223/api/UserMessaging/conversations?userId={userId}", null);
+        public async Task<HttpResponseMessage> GetConversations() => await client.GetAsync($"/api/UserMessaging/conversations");
+        public async Task<HttpResponseMessage> CreateConversation(int userId) => await client.PostAsync($"/api/UserMessaging/conversations?userId={userId}", null);
     }
 }
