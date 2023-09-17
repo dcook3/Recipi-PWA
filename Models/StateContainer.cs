@@ -25,7 +25,7 @@ namespace Recipi_PWA.Models
         {
             _token = (await jsr.InvokeAsync<string?>("localStorage.getItem", "token").ConfigureAwait(false)) ?? String.Empty;
             _you = JsonSerializer.Deserialize<You>(await jsr.InvokeAsync<string?>("localStorage.getItem", "you").ConfigureAwait(false) ?? "{}");
-            //_settings = JsonSerializer.Deserialize<UserSettings>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
+            _settings = JsonSerializer.Deserialize<UserSettings>(await jsr.InvokeAsync<string?>("localStorage.getItem", "settings").ConfigureAwait(false) ?? "{}");
             Loaded = true;
         }
 
