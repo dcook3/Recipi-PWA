@@ -386,7 +386,7 @@
             if (response.IsSuccessStatusCode)
             {
                 int postId = (await response.Content.ReadFromJsonAsync<CreatePostResponse>()).postId;
-                NavigationManager.NavigateTo($"/Post/{postId}");
+                NavigationManager.NavigateTo($"/Post/{postId}/false");
             }
             else
             {
