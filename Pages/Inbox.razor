@@ -1,0 +1,117 @@
+﻿@page "/Messages";
+@using Recipi_PWA.Models;
+@using System.Text.Json;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared.Messages;
+@inject StateContainer state;
+@inject IUserService userService;
+@inject IMessageService messageService;
+@inject ISocketConnection socketCon;
+@inject NavigationManager NavigationManager;
+@if (status == "error")
+{
+    <div>Error @eMessage</div>
+}
+else{
+    @if(status == "loading"){
+        <LoadingSpinner></LoadingSpinner>
+    }
+    else
+    {
+        <div class="d-flex flex-row align-items-center justify-content-between bg-secondary" style="width: 100%;">
+            <div class="spacer"></div>
+            <div class="d-flex flex-row align-items-center justify-content-center p-1" style="width: 50%">
+                <h1 class="text-bg-secondary">Messages</h1>
+            </div>
+            <div class="d-flex flex-row align-items-center justify-content-around p-2">
+                <NavLink href="/Messages/Friends" class="d-flex align-items-center justify-content-center flex-column text-bg-secondary stat"style="text-decoration: none;">
+                    <Button shape="circle"><i class="fs-2 fa fa-pen-to-square"></i></Button>
+                </NavLink>
+            </div>
+        </div>
+
+        for (int i = 0; i < conversationData.Count(); i++)
+        {
+            <UserConversationItem conversationListData="@conversationData.ElementAt(i)"></UserConversationItem>
+        }
+    }
+}
+
+@code {
+    private bool self;
+    private string status = "loading";
+    private string eMessage = "Something went wrong";
+
+    private string userId = "";
+    private IUserProfile? user { get; set; } = null;
+
+    private List<UserConversation> conversationData;
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = "loading";
+
+        userId = state.You?.UserId.ToString() ?? "";
+
+        self = true;
+        if (self)
+        {
+            if (state.LoggedIn && userId != null)
+            {
+                var response = await userService.GetUserById(userId);
+                if (response.IsSuccessStatusCode)
+                {
+                    var you = await response.Content.ReadFromJsonAsync<You>();
+                    if (you != null)
+                    {
+                        await state.SetYou(you);
+                        user = you;
+                        Console.WriteLine(JsonSerializer.Serialize(you));
+
+                        //Make sure we wait for the message to load before rendering
+                        await loadUserConversations();
+
+                        //Change from loading to ready once conversation data is loaded
+                        status = "ready";
+                    }
+                    else
+                    {
+                        status = "error";
+                        eMessage = "Error occurred: " + response.Content.ToString();
+                    }
+
+                }
+                else
+                {
+                    status = "error";
+                    eMessage = response.Content.ToString() ?? "An Error has occurred";
+                }
+            }
+            else
+            {
+                //navigate to login
+                Console.WriteLine("Navigate to login");
+            }
+        }
+        else {}
+    }
+
+    private async Task loadUserConversations()
+    {
+        conversationData = new();
+
+        HttpResponseMessage convoResponse;
+
+        convoResponse = await messageService.GetConversations();
+        if (convoResponse.IsSuccessStatusCode)
+        {
+            conversationData.AddRange(await convoResponse.Content.ReadFromJsonAsync<List<UserConversation>>());
+            Console.WriteLine(JsonSerializer.Serialize(conversationData));
+        }
+        else
+        {
+            status = "error";
+            eMessage = convoResponse.Content.ToString() ?? "An Error has occurred";
+        }
+    }
+}

@@ -1,0 +1,88 @@
+﻿@using Recipi_PWA.Models;
+@using Recipi_PWA.Shared.Profile;
+@using Recipi_PWA.Services;
+@using System.Text.Json;
+@inject NavigationManager NavigationManager;
+@inject IUserService userService;
+@inject IMessageService messageService;
+@inject StateContainer state;
+
+<div class="px-4 py-3 container-fluid d-flex flex-row align-items-center">
+    <div class="d-flex @messageDirection align-items-center justify-content-start" onclick="@GoToProfile">
+        <div class="mx-1">
+            @if (!string.IsNullOrEmpty(senderIcon))
+            {
+                <ProfilePicture profilePictureUrl="@senderIcon" size="-45"></ProfilePicture>
+            }
+            else
+            {
+                <LoadingSpinner></LoadingSpinner>
+            }
+        </div>
+        <div class="mx-2">
+            <div class="text-bg-secondary p-2 rounded-5">
+                @messageData.MessageContents
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public UserMessage messageData { get; set; }
+
+    private int currentUserId;
+
+    private string messageDirection = "flex-row";
+    private int? senderId;
+    private string senderName = "";
+    public string senderIcon = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (state != null && state.You != null)
+        {
+            currentUserId = state.You.UserId;
+        }
+
+        if (messageData.SendingUserId != currentUserId)
+        {
+            senderId = messageData.SendingUserId;
+        } else
+        {
+            senderId = currentUserId;
+        }
+
+        if (senderId != null)
+        {
+            //This is ghetto af but there is a race condition in our api I don't have time for <3
+            Thread.Sleep(100);
+            HttpResponseMessage response = await userService.GetUserById(senderId.ToString());
+            UserProfile? userRes = await response.Content.ReadFromJsonAsync<UserProfile>();
+            Thread.Sleep(50);
+
+            if (userRes != null)
+            {
+                senderName = userRes.Username;
+                senderIcon = userRes.ProfilePicture ?? "";
+            }
+            if (senderId == currentUserId)
+            {
+                messageDirection = "flex-row-reverse container-fluid";
+            }
+            else
+            {
+                messageDirection = "flex-row";
+            }
+            StateHasChanged();
+        }
+    }
+
+    private void GoToProfile()
+    {
+        if (senderId != null)
+        {
+            NavigationManager.NavigateTo($"/Messages/User?userId={senderId}");
+        }
+    }
+}

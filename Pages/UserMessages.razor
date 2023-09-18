@@ -1,0 +1,220 @@
+﻿@page "/Messages/{userId}";
+@using Recipi_PWA.Models;
+@using System.Text.Json;
+@using Recipi_PWA.Services;
+@using Recipi_PWA.Shared.Messages;
+@inject StateContainer state;
+@inject IUserService userService;
+@inject IMessageService messageService;
+@inject ISocketConnection socketCon;
+@inject NavigationManager NavigationManager;
+
+<div style="width:100%; height: 100%; position:relative; overflow:hidden;">
+    <div class="bg-secondary py-4 px-3 d-flex flex-row justify-content-between align-items-center text-light container-fluid">
+        <NavLink href="@backUrl"><i class="fa fa-angle-left text-light"></i></NavLink>
+        <div>@convoPartnerName</div>
+        <div></div>
+    </div>
+    @if (status == "error")
+    {
+        <div>Error @eMessage</div>
+    }
+    else{
+        @if(status == "loading"){
+            <LoadingSpinner></LoadingSpinner>
+        }
+        else
+        {
+            <div class="d-flex flex-column justify-content-end" style="height: calc(100% - 72px);">
+                @for (int i = 0; i < conversationMessages.Count(); i++)
+                {
+                    <UserMessageItem messageData="@conversationMessages.ElementAt(i)"></UserMessageItem>
+                }
+
+                <div class="d-flex justify-content-center p-2">
+                    <div class="d-flex justify-content-between align-items-center text-bg-secondary p-2 rounded-5" style="width: 75%">
+                        <div style="width: 88%"> 
+                            <input id="seachText" @bind="currentMsg" style="height: 100%; width: calc((100% - 50px)*.9); margin-left: 20px; border: none; background-color: transparent; outline: none; color: white"></input>
+                        </div>
+                        <div> 
+                            <Button shape="circle" onclick="@HandleSendMsg"><i class="fa-solid fa-check"></i></Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? userId { get; set; }
+
+    private string backUrl = "./Messages";
+
+    private bool self;
+    private string status = "loading";
+    private string eMessage = "Something went wrong";
+
+    //Message Input Argument
+    private string currentMsg = "";
+
+    private string currentUserId = "";
+    private IUserProfile? user { get; set; } = null;
+
+    private string convoPartnerName = "";
+
+    private UserConversation? conversationData;
+    private List<UserMessage> conversationMessages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        status = "loading";
+
+        currentUserId = state.You?.UserId.ToString() ?? "";
+
+        self = true;
+        if (self)
+        {
+            if (state.LoggedIn && currentUserId != null)
+            {
+                HttpResponseMessage? response = await userService.GetUserById(currentUserId);
+                if (response.IsSuccessStatusCode)
+                {
+                    var you = await response.Content.ReadFromJsonAsync<You>();
+                    if (you != null)
+                    {
+                        await state.SetYou(you);
+                        user = you;
+                        Console.WriteLine(JsonSerializer.Serialize(you));
+
+                        //Make sure we wait for the message to load before rendering
+                        if (!String.IsNullOrEmpty(userId))
+                        {
+                            await loadUserConversation(userId);
+
+                            Thread.Sleep(300);
+                            HttpResponseMessage res = await userService.GetUserById(userId);
+                            if (res.IsSuccessStatusCode)
+                            {
+                                UserProfile? userRes = await res.Content.ReadFromJsonAsync<UserProfile>();
+                                if (userRes != null)
+                                {
+                                    convoPartnerName = userRes.Username;
+                                }
+                            }
+                            Thread.Sleep(50);
+                        }
+
+                        /* 
+                        * -- Socket thread in theory will run continuously --
+                        * Start connecting the web socket synchronously
+                        */
+                        EstablishWebSocket();
+
+                        //Change from loading to ready once conversation data is loaded
+                        status = "ready";
+                    }
+                    else
+                    {
+                        status = "error";
+                        eMessage = "Error occurred: " + response.Content.ToString();
+                    }
+                }
+                else
+                {
+                    status = "error";
+                    eMessage = response.Content.ToString() ?? "An Error has occurred";
+                }
+            }
+            else
+            {
+                //navigate to login
+                Console.WriteLine("Navigate to login");
+            }
+        }
+        else {}
+    }
+
+    private async Task loadUserConversation(string userId)
+    {
+        conversationData = new();
+
+        HttpResponseMessage convoResponse;
+
+        int.TryParse(userId, out int userIdNum);
+        convoResponse = await messageService.GetConversationByUserId(userIdNum);
+        if (convoResponse.IsSuccessStatusCode)
+        {
+            conversationData = await convoResponse.Content.ReadFromJsonAsync<UserConversation>();
+        }
+
+        if (conversationData != null)
+        {
+            //Ideally this would be loaded by loading the conversations but it does only sometimes so quick fix
+            HttpResponseMessage convoMsgRes;
+            convoMsgRes= await messageService.GetConversationMessages(conversationData.ConversationId);
+            if (convoMsgRes.IsSuccessStatusCode)
+            {
+                conversationMessages = await convoMsgRes.Content.ReadFromJsonAsync<List<UserMessage>>();
+            }
+        }
+    }
+
+    //May also need to be async if computing dependent tasks before re-render
+    /*async*/ void MessagesUpdate(){
+        //May have to do some renderer things with conversations
+        StateHasChanged();
+    }
+
+    private void HandleSendMsg()
+    {
+        if (conversationData != null)
+        {
+            messageService.AddMessageToConversation(conversationData.ConversationId, currentMsg);
+        }
+        SendSocketMessage(currentMsg);
+        currentMsg = "";
+    }
+
+    //Sustained connection will loop until socket is closed/terminated
+    private async Task EstablishWebSocket()
+    {
+        if (conversationData != null && state.You?.UserId != null)
+        {
+            await socketCon.EstablishConnection(state.You.UserId, conversationData.ConversationId, MsgReceived);
+        }
+    }
+
+    //Call back function provided to to connection to attain delivered messaged
+    private void MsgReceived(string msg)
+    {
+        string[] msgVars = msg.Split("${}/-Itwouldbeanawfulcoincidence");
+        int.TryParse(msgVars[0], out int msgSenderId);
+        int.TryParse(msgVars[1], out int msgConId);
+
+        if (msgConId == conversationData?.ConversationId)
+        {
+            UserMessage msgModel = new()
+            {
+                SendingUserId = msgSenderId,
+                ConversationId = msgConId,
+                MessageContents = msgVars[2],
+            };
+            conversationMessages.Add(msgModel);
+
+            StateHasChanged();
+            Console.WriteLine($"Sender: {msgModel.SendingUserId}");
+            Console.WriteLine($"Conversation: {msgModel.ConversationId}");
+            Console.WriteLine($"Message: {msgModel.MessageContents}");
+        }
+    }
+
+    //Call send message to the socket connection with an optional number of attempts (100ms between attempts)
+    private async Task<Boolean> SendSocketMessage(string msg)
+    {
+        int msgSendAttempts = 10;
+        Boolean trySendMsg = await socketCon.SendMessageAsync(msg, msgSendAttempts);
+        return trySendMsg;
+    }
+}
