@@ -299,7 +299,12 @@ window.InitPost = async (vid, recordings, objectReference, focused) => {
             videoEls[i].currentTime = 10000000 * Math.random();
             checks++;
         }
-        videos[vid].lengths[i] = videoEls[i].duration;
+        if (videoEls[i].duration === Infinity || videoEls[i].duration === NaN) {
+            videos[vid].lengths[i] = 7;
+        }
+        else {
+            videos[vid].lengths[i] = videoEls[i].duration;
+        }
     }
     window.InitSeekBar(vid);
     videos[vid].video.addEventListener("ended", () => {

@@ -63,8 +63,7 @@
             <div onclick="@(() => NavigationManager.NavigateTo($"/Profile/{post.User.UserId}"))">
                 <ProfilePicture size="1" userId="@post.User.UserId.ToString()" profilePictureUrl="@post.User.ProfilePicture"></ProfilePicture>
             </div>
-            @if (!isOwnPost)
-            {
+            
                 @if (userHasLiked)
                 {
                     <Button shape="circle" bgColor="" onclick="LikePost">
@@ -83,7 +82,7 @@
                         </span>
                     </Button>
                 }       
-                }
+                
             
 
             @if(isShowingComments)
