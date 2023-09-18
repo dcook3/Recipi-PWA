@@ -1,4 +1,5 @@
 ﻿@page "/Messages/{userId}";
+@using Newtonsoft.Json;
 @using Recipi_PWA.Models;
 @using System.Text.Json;
 @using Recipi_PWA.Services;
@@ -26,9 +27,12 @@
         else
         {
             <div class="d-flex flex-column justify-content-end" style="height: calc(100% - 72px);">
-                @for (int i = 0; i < conversationMessages.Count(); i++)
+                @if (conversationMessages != null)
                 {
-                    <UserMessageItem messageData="@conversationMessages.ElementAt(i)"></UserMessageItem>
+                    @for (int i = 0; i < conversationMessages.Count(); i++)
+                    {
+                        <UserMessageItem messageData="@conversationMessages.ElementAt(i)"></UserMessageItem>
+                    }
                 }
 
                 <div class="d-flex justify-content-center p-2">
@@ -65,7 +69,7 @@
     private string convoPartnerName = "";
 
     private UserConversation? conversationData;
-    private List<UserMessage> conversationMessages;
+    private List<UserMessage>? conversationMessages;
 
     protected override async Task OnInitializedAsync()
     {
@@ -86,7 +90,7 @@
                     {
                         await state.SetYou(you);
                         user = you;
-                        Console.WriteLine(JsonSerializer.Serialize(you));
+                        Console.WriteLine(System.Text.Json.JsonSerializer.Serialize(you));
 
                         //Make sure we wait for the message to load before rendering
                         if (!String.IsNullOrEmpty(userId))
@@ -153,7 +157,8 @@
         {
             //Ideally this would be loaded by loading the conversations but it does only sometimes so quick fix
             HttpResponseMessage convoMsgRes;
-            convoMsgRes= await messageService.GetConversationMessages(conversationData.ConversationId);
+            convoMsgRes = await messageService.GetConversationMessages(conversationData.ConversationId);
+
             if (convoMsgRes.IsSuccessStatusCode)
             {
                 conversationMessages = await convoMsgRes.Content.ReadFromJsonAsync<List<UserMessage>>();

@@ -103,6 +103,7 @@ else{
         HttpResponseMessage convoResponse;
 
         convoResponse = await messageService.GetConversations();
+        Console.WriteLine(JsonSerializer.Serialize(convoResponse));
         if (convoResponse.IsSuccessStatusCode)
         {
             conversationData.AddRange(await convoResponse.Content.ReadFromJsonAsync<List<UserConversation>>());

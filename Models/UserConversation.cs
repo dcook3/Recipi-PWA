@@ -8,6 +8,6 @@
 
         public int UserId2 { get; set; }
 
-        public virtual ICollection<UserMessage> Messages { get; set; } = new List<UserMessage>();
+        public virtual ICollection<UserMessage>? Messages { get; set; } = new List<UserMessage>();
     }
 }
