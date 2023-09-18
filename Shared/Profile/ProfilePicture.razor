@@ -12,8 +12,11 @@
     var sizeString = size + "px";
     <i class="fa-solid flex-shrink-1 image-icon rounded-circle" style="background-image: url(@(pfp)); font-size: @sizeString;"></i>
 }
-else{
+else if (size > 0) {
     <i class="fa-solid flex-shrink-1 image-icon rounded-circle fs-@size" style="background-image: url(@(pfp))"></i>
+} else {
+    //Cheezy Workaround for custom font size
+    <i class="fa-solid image-icon rounded-circle" style="background-image: url(@(pfp)); font-size: @(Math.Abs(size))px"></i>
 }
 
 @code {
@@ -24,15 +27,13 @@ else{
     [Parameter]
     public int size { get; set; } = 2;
 
-    private string pfp { get; set; }
+    private string pfp { get; set; } = "";
 
-    protected override void OnParametersSet()
+    protected async override void OnParametersSet()
     {
-        pfp = profilePictureUrl;
+        pfp = profilePictureUrl ?? "";
         StateHasChanged();
     }
-
-
 
     private void goToProfile()
     {

@@ -32,28 +32,8 @@ else{
 
         for (int i = 0; i < conversationData.Count(); i++)
         {
-            <UserConversationItem conversationListData="@conversationData.ElementAt(i)" openConversation="@OpenConversation"></UserConversationItem>
+            <UserConversationItem conversationListData="@conversationData.ElementAt(i)"></UserConversationItem>
         }
-
-        //Example with parameters
-        //<TestConversation self=@self user="@user"></TestConversation>
-        //<h1>Msg Details</h1>
-        //@foreach (var con in conDetails)
-        //{
-        //    <li>@con</li>
-        //}
-        //<h1>Msg Log</h1>
-        //@foreach (var msg in messages)
-        //{
-        //    <li>@msg</li>
-        //}
-
-        //<div class="bg-secondary p-2 d-flex align-items-center justify-content-between">
-        //    <div class="d-flex flex-column me-2">
-        //        <input type="text" class="minimal-input fs-2 m-2" @bind-value="currentMsg" style="width: 100%"/>
-        //    </div>
-        //    <button @onclick="HandleSendMsg" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Send Message<i class="fa-solid fa-chevron-right"></i></button>
-        //</div>
     }
 }
 
@@ -62,13 +42,7 @@ else{
     private string status = "loading";
     private string eMessage = "Something went wrong";
 
-    //Message Input Argument
-    private string currentMsg = "";
-
-
-    private List<string> conDetails = new List<string>();
-    private List<string> messages = new List<string>();
-
+    private string userId = "";
     private IUserProfile? user { get; set; } = null;
 
     private List<UserConversation> conversationData;
@@ -77,7 +51,7 @@ else{
     {
         status = "loading";
 
-        var userId = state.You?.UserId.ToString();
+        userId = state.You?.UserId.ToString() ?? "";
 
         self = true;
         if (self)
@@ -93,14 +67,6 @@ else{
                         await state.SetYou(you);
                         user = you;
                         Console.WriteLine(JsonSerializer.Serialize(you));
-
-                        /* 
-                         * -- Socket thread in theory will run continuously --
-                         * Start connecting the web socket synchronously
-                         * Run the task without await in hopes it works like make-shift multi-threading
-                         * Finally load conversation data while the connection is being established.
-                         */
-                        EstablishWebSocket();
 
                         //Make sure we wait for the message to load before rendering
                         await loadUserConversations();
@@ -146,67 +112,5 @@ else{
             status = "error";
             eMessage = convoResponse.Content.ToString() ?? "An Error has occurred";
         }
-    }
-
-    private async void OpenConversation(int userId)
-    {
-        conversationData = new();
-
-        HttpResponseMessage convoResponse;
-
-        convoResponse = await messageService.GetConversations();
-        if (convoResponse.IsSuccessStatusCode)
-        {
-            conversationData.AddRange(await convoResponse.Content.ReadFromJsonAsync<List<UserConversation>>());
-        }
-        else
-        {
-            status = "error";
-            eMessage = "An Error has occurred";
-        }
-    }
-
-    //May also need to be async if computing dependent tasks before re-render
-    /*async*/ void MessagesUpdate(){
-        //May have to do some renderer things with conversations
-        StateHasChanged();
-    }
-
-    private void HandleSendMsg()
-    {
-        SendSocketMessage(currentMsg);
-        currentMsg = "";
-    }
-
-    //Sustained connection will loop until socket is closed/terminated
-    private async Task EstablishWebSocket()
-    {
-        await socketCon.EstablishConnection(MsgReceived);
-    }
-
-    //Call back function provided to to connection to attain delivered messaged
-    private void MsgReceived(string msg)
-    {
-        if (msg.Contains("Socket") || msg.Contains("Id:"))
-        {
-            conDetails.Add(msg);
-        } else
-        {
-            messages.Add(msg);
-        }
-
-        StateHasChanged();
-        Console.WriteLine(msg);
-    }
-
-    //Call send message to the socket connection with an optional number of attempts (100ms between attempts)
-    private async Task<Boolean> SendSocketMessage(string msg)
-    {
-        int msgSendAttempts = 10;
-        Boolean trySendMsg = await socketCon.SendMessageAsync(msg, msgSendAttempts);
-        messages.Add(msg);
-
-        StateHasChanged();
-        return trySendMsg;
     }
 }

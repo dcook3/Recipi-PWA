@@ -1,33 +1,38 @@
 ﻿@using Recipi_PWA.Models;
 @using Recipi_PWA.Shared.Profile;
 @using Recipi_PWA.Services;
+@using System.Text.Json;
 @inject NavigationManager NavigationManager;
 @inject IUserService userService;
 @inject IMessageService messageService;
 @inject StateContainer state;
 
 <div class="px-4 py-3 container-fluid d-flex flex-row align-items-center justify-content-between">
-    <div class="d-flex flex-row align-items-center justify-content-start" onclick="@OnBodyClick">
+    <div class="d-flex flex-row align-items-center justify-content-start" onclick="@OpenConversation">
         <div class="mx-1">
-        <ProfilePicture size="1"></ProfilePicture>
+            @if (!string.IsNullOrEmpty(partnerProfileIcon))
+            {
+                <ProfilePicture profilePictureUrl="@partnerProfileIcon" size="-45"></ProfilePicture>
+            }
+            else
+            {
+                <LoadingSpinner></LoadingSpinner>
+            }
         </div>
-        <div class="mx-1" style="line-height: none;">
-            @partnerUserName
+        <div class="mx-2">
+            <div>
+                @partnerUserName
+            </div>
+            <div class="text-secondary">
+                @latestMessage
+            </div>
         </div>
-    </div>
-    <div class="d-flex flex-row align-items-center justify-content-center">
-        <div class="mx-1" style="line-height: none;">
-            @latestMessage
-        </div>
-    </div>
-    <div class="d-flex flex-row align-items-center justify-content-around">
-        <Button onclick="@OpenConversation">@ChildContent</Button>
     </div>
 </div>
 
 @code {
     [Parameter]
-    public UserConversation conversationListData { get; set; } = new UserConversation();
+    public UserConversation conversationListData { get; set; }
     [Parameter]
     public Action<int>? openConversation { get; set; }
     [Parameter]
@@ -40,13 +45,15 @@
     private string partnerUserName = "";
     private string latestMessage = "";
 
-    protected override async Task OnParametersSetAsync()
+    public string partnerProfileIcon = "";
+
+    protected override async Task OnInitializedAsync()
     {
         if (state != null && state.You != null)
         {
             currentUserId = state.You.UserId;
         }
-        UserMessage? latestMsgModel = conversationListData.Messages.FirstOrDefault();
+        UserMessage? latestMsgModel = conversationListData.Messages.Last();
         latestMessage = latestMsgModel?.MessageContents ?? "Why not say hi!";
 
         if (conversationListData.UserId1 != currentUserId && conversationListData.UserId2 == currentUserId)
@@ -61,25 +68,23 @@
         string conversationPartnerId = partnerId.ToString();
         if (!string.IsNullOrEmpty(conversationPartnerId))
         {
+            //This is ghetto af but there is a race condition in our api I don't have time for <3
+            Thread.Sleep(200);
             HttpResponseMessage response = await userService.GetUserById(conversationPartnerId);
             UserProfile? userRes = await response.Content.ReadFromJsonAsync<UserProfile>();
+            Thread.Sleep(50);
 
             if (userRes != null)
             {
                 partnerUserName = userRes.Username;
+                partnerProfileIcon = userRes.ProfilePicture ?? "";
+                StateHasChanged();
             }
         }
     }
 
-    //Open This Conversations Messages
-    private void OnBodyClick()
+    private async void OpenConversation()
     {
-        OpenConversation();
-    }
-
-    //Open This Conversations Messages
-    private void OpenConversation()
-    {
-        openConversation?.Invoke(conversationListData.ConversationId);
+        NavigationManager.NavigateTo($"/Messages/{partnerId}");
     }
 }

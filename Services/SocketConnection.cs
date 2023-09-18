@@ -18,9 +18,9 @@ namespace Recipi_PWA.Services
 
         public delegate void msgReceivedCallback(string msg);
 
-        public async Task<string> EstablishConnection(ISocketConnection.msgReceivedCallback msgRec)
+        public async Task<string> EstablishConnection(int id1, int id2, ISocketConnection.msgReceivedCallback msgRec)
         {
-            Uri serviceUri = new Uri("ws://recipiapp/api/UserMessaging/connect");
+            Uri serviceUri = new Uri($"wss://www.recipiapp.com/api/UserMessaging/connect/{id1}/{id2}");
             try
             {
                 await webSocket.ConnectAsync(serviceUri, cts.Token);
@@ -62,7 +62,7 @@ namespace Recipi_PWA.Services
             return false;
         }
 
-        public Boolean ConnectionEstablished()
+        public bool ConnectionEstablished()
         {
             return isConnected;
         }
