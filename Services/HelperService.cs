@@ -1,13 +1,17 @@
-﻿using Recipi_PWA.Models;
+﻿using Microsoft.JSInterop;
+using Recipi_PWA.Models;
 using Recipi_PWA.Models.PostView;
 
 namespace Recipi_PWA.Services
 {
     public class HelperService : IHelperService
     {
-        public HelperService()
+        public HelperService(IJSRuntime js)
         {
+            jsr = js;
         }
+
+        private IJSRuntime jsr;
 
         public string FormatDescription(string desc, List<StepIngredient> ingredients)
         {
@@ -16,11 +20,11 @@ namespace Recipi_PWA.Services
                 string ingFormatted;
                 if (ingredients[i].ingredientMeasurementValue == 1)
                 {
-                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredient.ingredientTitle}";
+                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementUnit} {ingredients[i].ingredient.ingredientTitle}";
                 }
                 else
                 {
-                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementValue}s {ingredients[i].ingredient.ingredientTitle}";
+                    ingFormatted = $"{ingredients[i].ingredientMeasurementValue} {ingredients[i].ingredientMeasurementUnit}s {ingredients[i].ingredient.ingredientTitle}";
                 }
                 string checkString = "{" + i.ToString() + "}";
                 desc = desc.Replace(checkString, ingFormatted);
@@ -44,6 +48,11 @@ namespace Recipi_PWA.Services
                 desc = desc.Replace(checkString, ingFormatted);
             }
             return desc;
+        }
+
+        public async void GoBackAPage()
+        {
+            await jsr.InvokeVoidAsync("history.back");
         }
     }
 }

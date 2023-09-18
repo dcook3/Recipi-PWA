@@ -21,7 +21,7 @@
         }
         else
         {
-            <a href="/Profile/me" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
+            <a @onclick="HandleLeave" class="fs-3 ps-4 col-4 text-decoration-none text-white align-middle">‹</a> @*This will go back*@
             <h3 class="text-white mb-0 col-4 d-inline-block text-center pt-1">Settings</h3>
             <div class="col-4"></div>
         }
@@ -63,6 +63,22 @@
                 </li>
             }
         }
+        else if (innerSettings != null && innerSettings.optionSettings.Count > 0)
+        {
+            for (int i = 0; i < innerSettings.optionSettings.Count; i++)
+            {
+                var ii = i;
+                <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+                    <label for="@innerSettings.optionSettings[ii].label">@innerSettings.optionSettings[i].label</label>
+                    <select @bind="@innerSettings.optionSettings[ii].value">
+                        @for(int j = 0; j < @innerSettings.optionSettings[i].options.Count(); j++)
+                        {
+                            <option value="@innerSettings.optionSettings[i].options[j]">@innerSettings.optionSettings[i].options[j]</option>
+                        }
+                    </select>
+                </li>
+            }
+        }
     }
 }
 <ul class="list-group list-group-flush" style="width: 100%;">
@@ -74,9 +90,8 @@
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a href="@settings.ChangePassword.label">Change password</a>
         </li>
-        <li class="list-group-item form-check form-switch d-flex align-items-center justify-content-between mx-3">
-            <label>@settings.AnonymousUsername.label</label>
-            <input type="checkbox" role="switch" class="form-check-input" id="anonymousName" @bind="settings.AnonymousUsername.value" />
+        <li class="list-group-item d-flex align-items-center justify-content-between m-3">
+            <a @onclick="UnitHandler" href="profile/settings#">Unit Standard Setting</a>
         </li>
         <li class="list-group-item d-flex align-items-center justify-content-between m-3">
             <a @onclick="NotificationHandler" href="profile/settings#" >Notifications Settings</a>
@@ -91,12 +106,15 @@
         {
             GenerateInnerListItems(settings.Notifications);
         }
+        else if(thisSetting == "Unit Standards")
+        {
+            GenerateInnerListItems(settings.MeasurementUnits);
+        }
         //add on if there exist more root inner settings
     }
 </ul>
 
 @code {
-    [CascadingParameter]
     public UserSettings settings { get; set; }
     public Stack<string> selectedInners = new();
     public bool isRoot = true;
@@ -105,9 +123,22 @@
     //Root settings go here
     private bool anonymousName { get; set; } = false;
 
+    protected override async Task OnInitializedAsync()
+    {
+        settings = await StateContainer.GetSetting();
+    }
+
     private async void NotificationHandler()
     {
         thisSetting = "Notifications";
+        isRoot = false;
+        selectedInners.Push(thisSetting);
+        await StateContainer.SaveSetting();
+    }
+
+    private async void UnitHandler()
+    {
+        thisSetting = "Unit Standards";
         isRoot = false;
         selectedInners.Push(thisSetting);
         await StateContainer.SaveSetting();
@@ -123,6 +154,11 @@
                 thisSetting = "Notifications";
                 isRoot = false;
             }
+            else if (toLoad == "Unit Standards")
+            {
+                thisSetting = "Unit Standards";
+                isRoot = false;
+            }
         }
         else
         {
@@ -130,6 +166,12 @@
             thisSetting = "root";
         }
         await StateContainer.SaveSetting();
+    }
+
+    private async void HandleLeave()
+    {
+        await StateContainer.SaveSetting();
+        NavigationManager.NavigateTo("/Profile/me");
     }
 
     private async void Logout(){

@@ -29,7 +29,7 @@
                     }
                 </div>
                 <div class="m-1">
-                    <Button shape="circle" onclick="@(() => NavigationManager.NavigateTo("/RecipeEditor/-1/false/false"))"><i class="fas fa-plus" style="width: 1em;"></i></Button>
+                    <Button shape="circle" onclick="@HandleRecipeAdd"><i class="fas fa-plus" style="width: 1em;"></i></Button>
                 </div>
             }
         </div>
@@ -47,7 +47,7 @@
                 {
                     @foreach (var recipe in recipes)
                     {
-                        <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/{userId}"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        <CookbookRecipeCard recipe="@recipe" editing="true" OnDelete="@(() => {RemoveRecipe(recipe.RecipeId);})" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/true"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                         //OnDelete="@(() => Console.WriteLine("hello"))"
                     }
                 }
@@ -55,7 +55,7 @@
                 {
                     @foreach (var recipe in recipes)
                     {
-                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/{userId}"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
+                        <CookbookRecipeCard recipe="@recipe" editing="false" OnClick="@(() => { NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId}/true"); })" includeDate="@filterOptions[selectedIndex].Contains("Date")"></CookbookRecipeCard>
                         //OnDelete="@(() => Console.WriteLine("hello"))"
                     }
                 }
@@ -244,5 +244,20 @@ else
     {
         cookbook = !cookbook;
 
+    }
+
+    private async void HandleRecipeAdd()
+    {
+        
+        Recipe recipe = new();
+        recipe.recipeSteps.Add(new());
+        RecipeInformation recipeInfo = new();
+        recipeInfo.isNewRecipe = true;
+        recipeInfo.recipe = recipe;
+        await state.SaveRecipe(recipeInfo);
+        NavigationManager.NavigateTo($"/RecipeEditor/{recipeInfo.recipeId}/true/false");
+        //await state.SaveRecipe(new());
+        //state.currentRecipe = null;
+        //NavigationManager.NavigateTo("/RecipeEditor/-1/false/false");
     }
 }

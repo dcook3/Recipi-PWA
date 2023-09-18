@@ -1,9 +1,18 @@
 ﻿@page "/Profile/Settings"
 @using Recipi_PWA.Models;
 @inject StateContainer State
+@inject NavigationManager navi
 @layout EmptyLayout
 
 <DrilldownOptions />
 
 @code {
+    protected override void OnInitialized()
+    {
+        if (!State.LoggedIn)
+        {
+            navi.NavigateTo("/Login");
+        }
+        base.OnInitialized();
+    }
 }

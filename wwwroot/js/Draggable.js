@@ -47,7 +47,7 @@ window.InitDraggable = async (id) => {
             interactionBG.style.height = interaction.offsetHeight + draggableHeight + "px";
         }).observe(interaction);
         var handleMouseDown = (e) => {
-
+            e.preventDefault();
             var handleMouseMove = (e) => {
                 e.preventDefault();
                 var mousePx = e.pageY - (draggableHeight / 2)
@@ -78,7 +78,9 @@ window.InitDraggable = async (id) => {
             })
         }
 
-        var handleTouch = (e) => {
+    var handleTouch = (e) => {
+        if (e.target.nodeName != "svg" && e.target.children[0]?.nodeName != "svg" && e.target.children[0]?.children[0]?.nodeName != "svg") {
+            e.preventDefault();
             var handleMouseMove = (e) => {
                 e.preventDefault();
                 var mousePx = e.touches[0].pageY - (draggableHeight / 2)
@@ -108,6 +110,7 @@ window.InitDraggable = async (id) => {
                 }
             })
         }
+    }
 
         draggable.addEventListener("mousedown", handleMouseDown)
         draggable.addEventListener("touchstart", handleTouch)

@@ -62,7 +62,7 @@
                     }
                     @foreach (var post in searchResults.Posts)
                     {
-                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Post/{post.PostId.ToString()}") )" class="searchResult" style="@((firstPost) ? "padding-top: 2px;" : "")">
+                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Post/{post.PostId.ToString()}/false") )" class="searchResult" style="@((firstPost) ? "padding-top: 2px;" : "")">
                             @post.PostTitle
                         </div>
                         firstPost = false;
@@ -81,7 +81,7 @@
                     }
                     @foreach (var recipe in searchResults.Recipes)
                     {
-                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId.ToString()}") )" class="searchResult" style="@((firstRecipe) ? "padding-top: 2px;" : "")">
+                        <div @onclick="@(() => NavigationManager.NavigateTo($"/Recipe/{recipe.RecipeId.ToString()}/false") )" class="searchResult" style="@((firstRecipe) ? "padding-top: 2px;" : "")">
                             @recipe.RecipeTitle
                         </div>
                         firstRecipe = false;

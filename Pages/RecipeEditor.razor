@@ -4,6 +4,7 @@
 @using Recipi_PWA.Services;
 @using System.Text.Json;
 @inject IRecipeService recipeService;
+@inject IHelperService helpers;
 @inject StateContainer state;
 @inject NavigationManager navi;
 @layout EmptyLayout
@@ -37,10 +38,10 @@
     
         <div class="bg-secondary fixed-bottom d-flex align-items-center justify-content-between" id="footer">
             <div class="d-flex flex-column me-2">
-                <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipeInfo.recipe.recipeTitle" style="width: 100%"/>
-                <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipeInfo.recipe.recipeDescription" style="width: 100%" />
+                <input type="text" class="minimal-input fs-2 mb-1 text-white ps-1" @bind-value="recipeInfo.recipe.recipeTitle" style="width: 100%" tabindex="4"/>
+                <input type="text" class="minimal-input no-line fst-italic text-light ps-1" @bind-value="recipeInfo.recipe.recipeDescription" style="width: 100%" tabindex="5"/>
             </div>
-            <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right"></i></button>
+            <button @onclick="HandleSubmit" class="btn btn-warning rounded text-white d-flex align-items-center me-3" style="height: 50px; width: auto;">Done <i class="fa-solid fa-chevron-right" tabindex="6"></i></button>
         </div>
     </div>
 }
@@ -78,6 +79,10 @@
 
     protected async override Task OnInitializedAsync()
     {
+        if (!state.LoggedIn)
+        {
+            navi.NavigateTo("/Login");
+        }
         recipeInfo = await state.GetRecipe();
         if (recipeInfo?.recipe != null && recipeInfo.recipeId == recipeId) //Can use isUpdating?
         {
@@ -134,7 +139,14 @@
 
     private void HandleRedirect()
     {
-        openModal();
+        if ((bool)recipeInfo.justSelectedIngredient!)
+        {
+            openModal();
+        }
+        else
+        {
+            helpers.GoBackAPage();
+        }
     }
 
     private void HandleModalCancel()
@@ -144,11 +156,8 @@
 
     private async void HandleModalConfirm()
     {
-        if(!recipeInfo.isNewRecipe)
-            await recipeService.DeleteRecipe(recipeId);
-
         await state.SaveRecipe(new());
-        navi.NavigateTo("/CookbookViewer");
+        navi.NavigateTo("/");
     }
 
     private async void AddStep()

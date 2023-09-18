@@ -18,19 +18,19 @@
         <form class="d-flex flex-column justify-content-between align-items-center"style="height: 50%;">
             <div class="form-group">
                 <label for="cred" class="text-light fs-8">Username or Email</label>
-                <InputText class="form-control" @bind-Value="credential" DisplayName="Username or Email" id="cred"></InputText>
+                <InputText class="form-control" @bind-Value="credential" DisplayName="Username or Email" id="cred" tabindex="1"></InputText>
             </div>
             <div class ="form-group">
                 <label for="pass" class="text-light fs-8">Password</label>
-                <InputText class="form-control" type="password" @bind-Value="password" DisplayName="Password" id="pass"></InputText>
+                <InputText class="form-control" type="password" @bind-Value="password" DisplayName="Password" id="pass" tabindex="2"></InputText>
             </div>
 
             <div class="container-fluid d-flex flex-row justify-content-evenly align-items-center" style="margin-top: 20px;">
-                <Button Height="2" Width="6" onclick="NavigateToRegister">
+                <Button Height="2" Width="6" onclick="NavigateToRegister" tabIndex="3">
                     Register
                 </Button>
 
-                <Button Height="2" Width="6" onclick="LoginReqest" status="@status"> 
+                <Button Height="2" Width="6" onclick="LoginReqest" status="@status" tabIndex="4">
                     Login
                 </Button>
 
@@ -75,6 +75,8 @@
             {
                 await state.SetYou(await youResponse.Content.ReadFromJsonAsync<You>());
             }
+
+            await state.GetSetting();
 
             NavigationManager.NavigateTo("/");
         }

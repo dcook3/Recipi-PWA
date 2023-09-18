@@ -9,7 +9,7 @@ namespace Recipi_PWA.Models.Settings
     {
         private StringSetting changeProfile;
         private StringSetting changePassword;
-        private BoolSetting anonymousUsername;
+        private InnerSettingsGroup measurementUnits;
         private InnerSettingsGroup notifications;
 
 
@@ -32,14 +32,14 @@ namespace Recipi_PWA.Models.Settings
             }
         }
 
-        public BoolSetting AnonymousUsername 
+        public InnerSettingsGroup MeasurementUnits 
         { 
-            get { return anonymousUsername; } 
+            get { return measurementUnits; }
             set
             {
-                anonymousUsername = value;
+                measurementUnits = value;
             }
-        } 
+        }
 
         public InnerSettingsGroup Notifications
         {
