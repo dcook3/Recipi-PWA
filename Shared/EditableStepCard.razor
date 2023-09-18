@@ -10,10 +10,10 @@
     @if (IsEditing)
     {
         <div class="d-flex flex-column">
-            <InputText class="form-control mb-1" @bind-Value="Step.stepDescription" @ref="descriptionInput"></InputText>
+            <InputText class="form-control mb-1" @bind-Value="Step.stepDescription" @ref="descriptionInput" tabindex="1"></InputText>
             <div class="d-flex justify-content-between">
-                <a class="text-white" @onclick="HandleInsertIngredient">+ Insert Ingredient</a>
-                <a class="text-white" @onclick="ToggleEditing">✔</a>
+                <a class="text-white" @onclick="HandleInsertIngredient" tabindex="2">+ Insert Ingredient</a>
+                <a class="text-white" @onclick="ToggleEditing" tabindex="3">✔</a>
             </div>
         </div>
     }

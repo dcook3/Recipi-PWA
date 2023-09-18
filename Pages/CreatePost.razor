@@ -151,10 +151,10 @@
         @if(status == "postentry")
         {
             <div class="post-input-wrapper d-flex flex-column justify-content-evenly align-items-baseline flex-grow-1 ">
-                <InputText class="bg-primary text-light" style="border-bottom: 1px solid;" @bind-Value="postTitle" placeholder="Post Title"></InputText>
-                <InputText class="bg-primary text-light" @bind-Value="postDescription" placeholder="Post Description"></InputText>
+                <InputText class="bg-primary text-light" style="border-bottom: 1px solid;" @bind-Value="postTitle" placeholder="Post Title" tabindex="1"></InputText>
+                <InputText class="bg-primary text-light" @bind-Value="postDescription" placeholder="Post Description" tabindex="2"></InputText>
             </div>
-            <div class="d-flex align-items-center justify-content-center mx-2 my-1"><Button shape="circle" status="@peStatus" onclick="@Submit"><i class="fa-solid fa-check"></i></Button></div>
+            <div class="d-flex align-items-center justify-content-center mx-2 my-1"><Button shape="circle" status="@peStatus" onclick="@Submit" tabIndex="3"><i class="fa-solid fa-check"></i></Button></div>
         
         }
         else if (!recipePost)
