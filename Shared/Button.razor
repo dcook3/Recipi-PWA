@@ -3,16 +3,33 @@
     string cssStyle = $"cursor: pointer; width: {Width}em; height: {Height}em;";
 }
 
-<div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@cssStyle" @onclick="Click">
-    @if (status == "loading")
-    {
-        <LoadingSpinner colorClass="text-light"></LoadingSpinner>
-    }
-    else
-    {
-        <div class="text-light">@ChildContent</div>
-    }
-</div>
+@if(tabIndex != null)
+{
+    <div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@cssStyle" @onclick="Click" tabindex="@tabIndex">
+        @if (status == "loading")
+        {
+            <LoadingSpinner colorClass="text-light"></LoadingSpinner>
+        }
+        else
+        {
+            <div class="text-light">@ChildContent</div>
+        }
+    </div>
+}
+else
+{
+    <div class="@bgColor d-flex justify-content-center align-items-center p-2 hover @shapeClass" style="@cssStyle" @onclick="Click">
+        @if (status == "loading")
+        {
+            <LoadingSpinner colorClass="text-light"></LoadingSpinner>
+        }
+        else
+        {
+            <div class="text-light">@ChildContent</div>
+        }
+    </div>
+}
+
 
 @code {
     [Parameter]
@@ -31,6 +48,8 @@
     public double? Height { get; set; } = null;
     [Parameter]
     public double? Width { get; set; } = null;
+    [Parameter]
+    public int? tabIndex { get; set; } = null;
 
     private string shapeClass = "";
 

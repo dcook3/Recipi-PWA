@@ -69,7 +69,7 @@
                     <Button shape="circle" bgColor="" onclick="LikePost">
                         <span class="fa-layers fa-fw">
                             <i class="fa-solid fs-1 fa-heart"></i>
-                            <span class="fa-layers-text fa-inverse text-black text-center text-dark">@post.Likes</span>
+                            <span class="fa-layers-counter fa-layers-bottom-right fa-inverse fs-1" style="--fa-right:0.2em; --fa-bottom:0.2em; --fa-counter-background-color:#ffc107;">@FormatNumberForDisplay(post.Likes)</span>
                         </span>
                     </Button>
                 }
@@ -78,7 +78,7 @@
                     <Button shape="circle" bgColor="" onclick="LikePost">
                         <span class="fa-layers fa-fw">
                             <i class="fa-regular fs-1 fa-heart"></i>
-                            <span class="fa-layers-text fa-inverse text-white">@post.Likes</span>
+                            <span class="fa-layers-counter fa-layers-bottom-right fa-inverse fs-1" style="--fa-right:0.2em; --fa-bottom:0.2em; --fa-counter-background-color:#ffc107;">@FormatNumberForDisplay(post.Likes)</span>
                         </span>
                     </Button>
                 }       
@@ -96,7 +96,7 @@
                 <Button shape="circle" bgColor="" onclick="ShowComments">
                     <span class="fa-layers fa-fw">
                         <i class="fa-solid fs-1 fa-comment"></i>
-                        <span class="fa-layers-text fa-inverse text-dark">@post.Comments</span>
+                        <span class="fa-layers-counter fa-layers-bottom-right fa-inverse fs-1" style="--fa-right:0.2em; --fa-bottom:0.2em; --fa-counter-background-color:#ffc107;">@FormatNumberForDisplay(post.Comments)</span>
                     </span>
                 </Button>
             }
@@ -568,5 +568,22 @@
         {
             NavigationManager.NavigateTo("/Login");
         }
+    }
+
+    private string FormatNumberForDisplay(int num)
+    {
+        if (num >= 1000000)
+        {
+            double toTrunc = num / 1000000;
+            return Math.Floor(toTrunc).ToString() + "m";
+        }
+        else if (num >= 1000)
+        {
+            double toTrunc = num / 1000;
+            return Math.Floor(toTrunc).ToString() + "k";
+        }
+        
+        else
+            return num.ToString();
     }
 }
