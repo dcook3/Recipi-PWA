@@ -53,7 +53,16 @@
         {
             currentUserId = state.You.UserId;
         }
-        UserMessage? latestMsgModel = conversationListData.Messages.Last();
+
+        UserMessage? latestMsgModel; 
+        if (conversationListData.Messages.Count() > 0)
+        {
+            latestMsgModel = conversationListData.Messages.Last() ?? new UserMessage(); 
+        } else
+        {
+            latestMsgModel = new();
+        }
+
         latestMessage = latestMsgModel?.MessageContents ?? "Why not say hi!";
 
         if (conversationListData.UserId1 != currentUserId && conversationListData.UserId2 == currentUserId)
